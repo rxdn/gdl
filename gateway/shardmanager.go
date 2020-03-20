@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"github.com/Dot-Rar/gdl/cache"
 	"github.com/Dot-Rar/gdl/gateway/payloads/events"
 	"github.com/juju/ratelimit"
 	"time"
@@ -17,10 +18,12 @@ type ShardManager struct {
 
 	Shards map[int]*Shard
 
-	EventBus events.EventBus
+	EventBus *events.EventBus
+
+	CacheFactory cache.CacheFactory
 }
 
-func NewShardManager(token string, totalShards, minimumShard, maximumShard int) ShardManager {
+func NewShardManager(token string, totalShards, minimumShard, maximumShard int, cacheFactory cache.CacheFactory) ShardManager {
 	manager := ShardManager{
 		Token:         token,
 		GatewayBucket: ratelimit.NewBucket(time.Second * 5, 1),
@@ -30,6 +33,7 @@ func NewShardManager(token string, totalShards, minimumShard, maximumShard int) 
 		MaximumShard: maximumShard,
 
 		EventBus: events.NewEventBus(),
+		CacheFactory: cacheFactory,
 	}
 
 	shards := make(map[int]*Shard)
@@ -39,6 +43,8 @@ func NewShardManager(token string, totalShards, minimumShard, maximumShard int) 
 	}
 
 	manager.Shards = shards
+
+	RegisterCacheListeners(&manager)
 
 	return manager
 }
@@ -51,8 +57,8 @@ func (sm *ShardManager) Connect() error {
 	return nil
 }
 
-func (sm *ShardManager) RegisterEvents(events ...events.Event) {
-	for _, event := range events {
-		sm.EventBus.Register(event)
+func (sm *ShardManager) RegisterListeners(listeners ...interface{}) {
+	for _, listener := range listeners {
+		sm.EventBus.RegisterListener(listener)
 	}
 }

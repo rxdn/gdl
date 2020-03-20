@@ -1,23 +1,14 @@
 package events
 
 type EventBus struct {
-	Events []Event
+	Listeners []interface{}
 }
 
-func NewEventBus() EventBus {
-	return EventBus{}
-}
-
-func (e *EventBus) Register(ev Event) {
-	e.Events = append(e.Events, ev)
-}
-
-func (e *EventBus) GetEventByName(name string) *Event {
-	for _, event := range e.Events {
-		if string(event.Type()) == name {
-			return &event
-		}
+func NewEventBus() *EventBus {
+	return &EventBus{
 	}
+}
 
-	return nil
+func (e *EventBus) RegisterListener(fn interface{}) {
+	e.Listeners = append(e.Listeners, fn)
 }

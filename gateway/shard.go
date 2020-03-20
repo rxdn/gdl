@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Dot-Rar/gdl/cache"
 	"github.com/Dot-Rar/gdl/gateway/payloads"
+	"github.com/Dot-Rar/gdl/gateway/payloads/events"
 	"github.com/Dot-Rar/gdl/utils"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -35,9 +37,13 @@ type Shard struct {
 	KillHeartbeat                chan struct{}
 
 	SessionId string
+
+	Cache *cache.Cache
 }
 
 func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
+	cache := shardManager.CacheFactory()
+
 	return Shard{
 		ShardManager:                 shardManager,
 		Token:                        token,
@@ -45,6 +51,7 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		State:                        DEAD,
 		SequenceNumber:               nil,
 		LastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
+		Cache:                        &cache,
 	}
 }
 
@@ -126,7 +133,7 @@ func (s *Shard) Identify() {
 func (s *Shard) Read() error {
 	defer func() {
 		if r := recover(); r != nil {
-			logrus.Warnf("Recovered panic while reading")
+			logrus.Warnf("Recovered panic while reading: %s", r)
 			return
 		}
 	}()
@@ -155,21 +162,8 @@ func (s *Shard) Read() error {
 	switch payload.Opcode {
 	case 0: // Event
 		{
-			var event Event
-			if ev := w.EventBus.GetEventByName(p.Name); ev == nil {
-				continue
-			} else {
-				event = *ev
-			}
-
-			p.Data = event.New()
-
-			if err = json.Unmarshal(p.Raw, p.Data); err != nil {
-				fmt.Println(err.Error())
-				continue
-			}
-
-			go event.Handle(p.Data)
+			event := events.EventType(payload.EventName)
+			s.ExecuteEvent(event, payload.Data)
 		}
 	case 1: // Heartbeat
 		{

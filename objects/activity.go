@@ -5,7 +5,7 @@ type Activity struct {
 	Type          int
 	Url           string
 	Timestamps    Timestamp
-	ApplicationId uint64 `json:",string"`
+	ApplicationId string
 	Details       string
 	State         string
 	Party         Party

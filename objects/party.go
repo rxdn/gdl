@@ -1,6 +1,6 @@
 package objects
 
 type Party struct {
-	Id   uint64 `json:",string"`
+	Id   string
 	Size []int
 }
