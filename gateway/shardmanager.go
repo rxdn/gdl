@@ -23,21 +23,21 @@ type ShardManager struct {
 	CacheFactory cache.CacheFactory
 }
 
-func NewShardManager(token string, totalShards, minimumShard, maximumShard int, cacheFactory cache.CacheFactory) ShardManager {
+func NewShardManager(token string, shardOptions ShardOptions, cacheFactory cache.CacheFactory) ShardManager {
 	manager := ShardManager{
 		Token:         token,
 		GatewayBucket: ratelimit.NewBucket(time.Second * 5, 1),
 
-		TotalShards: totalShards,
-		MinimumShard: minimumShard,
-		MaximumShard: maximumShard,
+		TotalShards: shardOptions.Total,
+		MinimumShard: shardOptions.Lowest,
+		MaximumShard: shardOptions.Highest,
 
 		EventBus: events.NewEventBus(),
 		CacheFactory: cacheFactory,
 	}
 
 	shards := make(map[int]*Shard)
-	for i := minimumShard; i <= maximumShard; i++ {
+	for i := shardOptions.Lowest; i <= shardOptions.Highest; i++ {
 		shard := NewShard(&manager, token, i)
 		shards[i] = &shard
 	}

@@ -28,7 +28,7 @@ type Guild struct {
 	SystemChannelId             uint64        `json:"system_channel_id,string"`
 	JoinedAt                    time.Time     `json:"joined_at"`
 	Large                       bool          `json:"large"`
-	Unavailable                 bool          `json:"unavailable"`
+	Unavailable                 *bool         `json:"unavailable"`
 	MemberCount                 int           `json:"member_count"`
 	VoiceStates                 []*VoiceState `json:"voice_state"`
 	Members                     []*Member     `json:"members"`

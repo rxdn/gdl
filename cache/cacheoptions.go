@@ -1,9 +1,10 @@
 package cache
 
 type CacheOptions struct {
-	Guilds   bool
-	Users    bool
-	Channels bool
-	Roles    bool
-	Emojis   bool
+	Guilds      bool
+	Users       bool
+	Channels    bool
+	Roles       bool
+	Emojis      bool
+	VoiceStates bool
 }

@@ -3,28 +3,37 @@ package gateway
 import (
 	"encoding/json"
 	"github.com/Dot-Rar/gdl/gateway/payloads/events"
+	"github.com/sirupsen/logrus"
+	"reflect"
 )
 
 func (s *Shard) ExecuteEvent(eventType events.EventType, data json.RawMessage) {
-	switch eventType {
-	case events.GUILD_CREATE:
-		var decoded events.GuildCreate
-		if err := json.Unmarshal(data, &decoded); err == nil {
-			for _, listener := range s.ShardManager.EventBus.Listeners {
-				if fn, ok := listener.(func(s *Shard, e *events.GuildCreate)); ok {
-					fn(s, &decoded)
-				}
-			}
+	dataType := events.EventTypes[eventType]
+	if dataType == nil {
+		return
+	}
+
+	event := reflect.New(dataType)
+	if err := json.Unmarshal(data, event.Interface()); err != nil {
+		logrus.Warnf("error whilst decoding event data: %s", err.Error())
+	}
+
+	for _, listener := range s.ShardManager.EventBus.Listeners {
+		fn := reflect.TypeOf(listener)
+		if fn.NumIn() != 2 {
+			continue
 		}
 
-	case events.MESSAGE_CREATE:
-		var decoded events.MessageCreate
-		if err := json.Unmarshal(data, &decoded); err == nil {
-			for _, listener := range s.ShardManager.EventBus.Listeners {
-				if fn, ok := listener.(func(s *Shard, e *events.MessageCreate)); ok {
-					fn(s, &decoded)
-				}
-			}
+		ptr := fn.In(1)
+		if ptr.Kind() != reflect.Ptr {
+			continue
+		}
+
+		if ptr.Elem() == dataType {
+			reflect.ValueOf(listener).Call([]reflect.Value{
+				reflect.ValueOf(s),
+				event,
+			})
 		}
 	}
 }
