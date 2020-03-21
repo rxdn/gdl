@@ -35,9 +35,9 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 }
 
 func (s *Shard) Heartbeat() error {
-	s.SequenceLock.Lock()
+	s.SequenceLock.RLock()
 	payload := payloads.NewHeartbeat(s.SequenceNumber)
-	s.SequenceLock.Unlock()
+	s.SequenceLock.RUnlock()
 
 	s.HasDoneHeartbeat = true
 

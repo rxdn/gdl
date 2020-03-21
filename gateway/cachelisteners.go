@@ -3,6 +3,7 @@ package gateway
 import (
 	"github.com/Dot-Rar/gdl/gateway/payloads/events"
 	"github.com/Dot-Rar/gdl/objects"
+	"github.com/sirupsen/logrus"
 )
 
 func RegisterCacheListeners(sm *ShardManager) {
@@ -29,6 +30,8 @@ func RegisterCacheListeners(sm *ShardManager) {
 }
 
 func readyListener(s *Shard, e *events.Ready) {
+	logrus.Infof("shard %d: received ready", s.ShardId)
+
 	s.SessionId = e.SessionId
 
 	if (*s.Cache).GetOptions().Guilds {

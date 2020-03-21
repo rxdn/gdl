@@ -26,7 +26,7 @@ type ShardManager struct {
 func NewShardManager(token string, shardOptions ShardOptions, cacheFactory cache.CacheFactory) ShardManager {
 	manager := ShardManager{
 		Token:         token,
-		GatewayBucket: ratelimit.NewBucket(time.Second * 5, 1),
+		GatewayBucket: ratelimit.NewBucket(time.Second * 6, 1),
 
 		TotalShards: shardOptions.Total,
 		MinimumShard: shardOptions.Lowest,

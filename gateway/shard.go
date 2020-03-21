@@ -21,12 +21,12 @@ type Shard struct {
 	ShardId      int
 
 	State     State
-	StateLock sync.Mutex
+	StateLock sync.RWMutex
 
 	WebSocket *websocket.Conn
 	ReadLock  sync.Mutex
 
-	SequenceLock   sync.Mutex
+	SequenceLock   sync.RWMutex
 	SequenceNumber *int
 
 	HeartbeatInterval int
@@ -88,10 +88,10 @@ func (s *Shard) Connect() error {
 		return err
 	}
 
-	if s.SessionId == "" {
+	if s.SessionId == "" || s.SequenceNumber == nil {
 		s.Identify()
 	} else {
-		// TODO: Resume
+		s.Resume()
 	}
 
 	logrus.Infof("shard %d: Connected", s.ShardId)
@@ -103,9 +103,9 @@ func (s *Shard) Connect() error {
 	go func() {
 		for {
 			// Verify that we are still connected
-			s.StateLock.Lock()
+			s.StateLock.RLock()
 			state := s.State
-			s.StateLock.Unlock()
+			s.StateLock.RUnlock()
 			if state != CONNECTED {
 				break
 			}
@@ -130,13 +130,26 @@ func (s *Shard) Identify() {
 	}
 }
 
+func (s *Shard) Resume() {
+	s.SequenceLock.RLock()
+	resume := payloads.NewResume(s.Token, s.SessionId, *s.SequenceNumber)
+	s.SequenceLock.RUnlock()
+
+	logrus.Infof("shard %d: Resuming", s.ShardId)
+
+	if err := s.Write(resume); err != nil {
+		logrus.Warnf("shard %d: Error whilst sending Resume: %s", s.ShardId, err.Error())
+		s.Identify()
+	}
+}
+
 func (s *Shard) Read() error {
-	/*defer func() {
+	defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
 			return
 		}
-	}()*/
+	}()
 
 	s.ReadLock.Lock()
 	_, data, err := s.WebSocket.ReadMessage()
@@ -167,15 +180,16 @@ func (s *Shard) Read() error {
 		}
 	case 1: // Heartbeat
 		{
-
 		}
 	case 7: // Reconnect
 		{
-
+			s.Kill()
+			go s.EnsureConnect()
 		}
 	case 9: // Invalid session
 		{
-
+			s.Kill()
+			go s.EnsureConnect()
 		}
 	case 10: // Hello
 		{
@@ -185,7 +199,6 @@ func (s *Shard) Read() error {
 			}
 
 			s.HeartbeatInterval = hello.EventData.Interval
-			s.HeartbeatInterval = 10000
 			s.KillHeartbeat = make(chan struct{})
 
 			ticker := time.NewTicker(time.Duration(int32(s.HeartbeatInterval)) * time.Millisecond)
@@ -249,6 +262,8 @@ func (s *Shard) OnClose(code int, text string) error {
 }
 
 func (s *Shard) Kill() error {
+	logrus.Infof("killing shard %d", s.ShardId)
+
 	s.KillHeartbeat <- struct{}{}
 
 	s.StateLock.Lock()
