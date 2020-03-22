@@ -6,7 +6,7 @@ import (
 )
 
 type Overwrite struct {
-	Id    uint64 `json:"id,string"`
+	Id    uint64 `json:"id,string,omitempty"`
 	Type  string `json:"type"`
 	Allow int    `json:"allow"`
 	Deny  int    `json:"deny"`

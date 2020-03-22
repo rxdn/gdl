@@ -144,12 +144,12 @@ func (s *Shard) Resume() {
 }
 
 func (s *Shard) Read() error {
-	defer func() {
+	/*defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
 			return
 		}
-	}()
+	}()*/
 
 	s.ReadLock.Lock()
 	_, data, err := s.WebSocket.ReadMessage()
