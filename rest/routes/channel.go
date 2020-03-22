@@ -10,7 +10,7 @@ type ChannelRoute struct {
 func NewChannelRoute(id uint64) *ChannelRoute {
 	return &ChannelRoute{
 		Id:          id,
-		Ratelimiter: NewRatelimit(),
+		Ratelimiter: NewRatelimiter(),
 	}
 }
 

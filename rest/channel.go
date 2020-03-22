@@ -112,7 +112,7 @@ func GetChannelMessages(channelId uint64, token string, data GetChannelMessagesD
 
 	var messages []objects.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
-		return make([]objects.Message, 0), err
+		return nil, err
 	}
 
 	return messages, nil
@@ -291,7 +291,7 @@ func GetReactions(channelId, messageId uint64, emoji, token string, data GetReac
 
 	var users []objects.User
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &users); err != nil {
-		return make([]objects.User, 0), err
+		return nil, err
 	}
 
 	return users, nil
@@ -388,7 +388,7 @@ func GetChannelInvites(channelId uint64, token string) ([]objects.InviteMetadata
 
 	var invites []objects.InviteMetadata
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &invites); err != nil {
-		return make([]objects.InviteMetadata, 0), err
+		return nil, err
 	}
 
 	return invites, nil
@@ -440,7 +440,7 @@ func GetPinnedMessages(channelId uint64, token string) ([]objects.Message, error
 
 	var messages []objects.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
-		return make([]objects.Message, 0), err
+		return nil, err
 	}
 
 	return messages, nil

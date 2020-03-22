@@ -60,7 +60,7 @@ func (s *Shard) GetChannelMessages(channelId uint64, options rest.GetChannelMess
 	messages, err := rest.GetChannelMessages(channelId, s.Token, options)
 	if err != nil {
 		logrus.Warnf("error while executing GetChannelMessages: %s", err.Error())
-		return make([]objects.Message, 0)
+		return nil
 	}
 
 	return messages
@@ -117,7 +117,7 @@ func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options 
 	users, err := rest.GetReactions(channelId, messageId, emoji, s.Token, options)
 	if err != nil {
 		logrus.Warnf("error while executing GetReactions: %s", err.Error())
-		return make([]objects.User, 0)
+		return nil
 	}
 
 	return users
@@ -172,7 +172,7 @@ func (s *Shard) GetChannelInvites(channelId uint64) []objects.InviteMetadata {
 	invites, err := rest.GetChannelInvites(channelId, s.Token)
 	if err != nil {
 		logrus.Warnf("error while executing GetChannelInvites: %s", err.Error())
-		return make([]objects.InviteMetadata, 0)
+		return nil
 	}
 
 	return invites
@@ -206,7 +206,7 @@ func (s *Shard) GetPinnedMessages(channelId uint64) []objects.Message {
 	messages, err := rest.GetPinnedMessages(channelId, s.Token)
 	if err != nil {
 		logrus.Warnf("error while executing GetPinnedMessages: %s", err.Error())
-		return make([]objects.Message, 0)
+		return nil
 	}
 
 	return messages
@@ -225,3 +225,83 @@ func (s *Shard) DeletePinnedChannelMessage(channelId, messageId uint64) {
 		logrus.Warnf("error while executing DeletePinnedChannelMessage: %s", err.Error())
 	}
 }
+
+func (s *Shard) ListGuildEmojis(guildId uint64) []*objects.Emoji {
+	shouldCacheEmoji := (*s.Cache).GetOptions().Emojis
+	shouldCacheGuild := (*s.Cache).GetOptions().Guilds
+
+	if shouldCacheEmoji && shouldCacheGuild {
+		guild := (*s.Cache).GetGuild(guildId)
+		if guild != nil {
+			return guild.Emojis
+		}
+	}
+
+	emojis, err := rest.ListGuildEmojis(guildId, s.Token)
+	if err != nil {
+		logrus.Warnf("error while executing ListGuildEmojis: %s", err.Error())
+		return nil
+	}
+
+	if shouldCacheEmoji {
+		for _, emoji := range emojis {
+			(*s.Cache).StoreEmoji(emoji)
+		}
+
+		if shouldCacheGuild {
+			(*s.Cache).GetLock(guildId).Lock()
+
+			guild := (*s.Cache).GetGuild(guildId)
+			guild.Emojis = emojis
+			(*s.Cache).StoreGuild(guild)
+
+			(*s.Cache).GetLock(guildId).Unlock()
+		}
+	}
+
+	return emojis
+}
+
+func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) *objects.Emoji {
+	shouldCache := (*s.Cache).GetOptions().Emojis
+	if shouldCache {
+		emoji := (*s.Cache).GetEmoji(emojiId)
+		if emoji != nil {
+			return emoji
+		}
+	}
+
+	emoji, err := rest.GetGuildEmoji(guildId, emojiId, s.Token)
+	if err != nil {
+		logrus.Warnf("error while executing GetGuildEmoji: %s", err.Error())
+		return nil
+	}
+
+	if shouldCache {
+		(*s.Cache).StoreEmoji(emoji)
+	}
+
+	return emoji
+}
+
+func (s *Shard) CreateGuildEmoji(guildId uint64, data rest.CreateEmojiData) *objects.Emoji {
+	emoji, err := rest.CreateGuildEmoji(guildId, s.Token, data)
+	if err != nil {
+		logrus.Warnf("error while executing CreateGuildEmoji: %s", err.Error())
+		return nil
+	}
+
+	return emoji
+}
+
+// updating Image is not permitted
+func (s *Shard) ModifyGuildEmoji(guildId, emojiId uint64, data rest.CreateEmojiData) *objects.Emoji {
+	emoji, err := rest.ModifyGuildEmoji(guildId, emojiId, s.Token, data)
+	if err != nil {
+		logrus.Warnf("error while executing ModifyGuildEmoji: %s", err.Error())
+		return nil
+	}
+
+	return emoji
+}
+

@@ -15,7 +15,7 @@ type Ratelimiter struct {
 	taskQueue []chan struct{}
 }
 
-func NewRatelimit() Ratelimiter {
+func NewRatelimiter() Ratelimiter {
 	return Ratelimiter{
 		Limit:     5, // Default to some arbitrary value so that the first request will go through
 		Remaining: 5, // Default to some arbitrary value so that the first request will go through
