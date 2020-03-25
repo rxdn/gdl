@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/objects"
+import "github.com/rxdn/gdl/objects"
 
 // Sent when a user removes a reaction from a message.
 type MessageReactionRemove struct {

@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/objects"
+import "github.com/rxdn/gdl/objects"
 
 type ChannelDelete struct {
 	*objects.Channel

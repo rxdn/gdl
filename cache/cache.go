@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/Dot-Rar/gdl/objects"
+	"github.com/rxdn/gdl/objects"
 	"sync"
 )
 

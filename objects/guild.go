@@ -2,6 +2,21 @@ package objects
 
 import "time"
 
+type ExplicitContentFilterLevel int
+
+const (
+	DISABLED              ExplicitContentFilterLevel = 0
+	MEMBERS_WITHOUT_ROLES ExplicitContentFilterLevel = 1
+	ALL_MEMBERS           ExplicitContentFilterLevel = 2
+)
+
+type DefaultMessageNotificationLevel int
+
+const (
+	DefaultMessageNotificationLevelAllMessages DefaultMessageNotificationLevel = 0
+	DefaultMessageNotificationLevelOnlyMengions DefaultMessageNotificationLevel = 1
+)
+
 type Guild struct {
 	Id                          uint64        `json:"id,string"`
 	Name                        string        `json:"name"`

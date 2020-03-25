@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	"github.com/Dot-Rar/gdl/gateway/payloads"
-	"github.com/Dot-Rar/gdl/utils"
+	"github.com/rxdn/gdl/gateway/payloads"
+	"github.com/rxdn/gdl/utils"
 	"github.com/sirupsen/logrus"
 	"time"
 )

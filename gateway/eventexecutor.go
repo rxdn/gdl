@@ -2,7 +2,7 @@ package gateway
 
 import (
 	"encoding/json"
-	"github.com/Dot-Rar/gdl/gateway/payloads/events"
+	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )

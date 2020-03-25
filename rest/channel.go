@@ -3,10 +3,10 @@ package rest
 import (
 	"bytes"
 	"fmt"
-	"github.com/Dot-Rar/gdl/objects"
-	"github.com/Dot-Rar/gdl/rest/request"
-	"github.com/Dot-Rar/gdl/rest/routes"
-	"github.com/Dot-Rar/gdl/utils"
+	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/rest/request"
+	"github.com/rxdn/gdl/rest/routes"
+	"github.com/rxdn/gdl/utils"
 	"io"
 	"mime/multipart"
 	"net/textproto"
@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func GetChannel(channelId uint64, token string) (*objects.Channel, error) {
+func GetChannel(token string, channelId uint64) (*objects.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -31,18 +31,18 @@ func GetChannel(channelId uint64, token string) (*objects.Channel, error) {
 }
 
 type ModifyChannelData struct {
-	Name                 string                        `json:"name,omitempty"`
-	Position             int                           `json:"position,omitempty"`
-	Topic                string                        `json:"topic,omitempty"`
-	Nsfw                 bool                          `json:"nsfw,omitempty"`
-	RateLimitPerUser     int                           `json:"rate_limit_per_user,omitempty"`
-	Bitrate              int                           `json:"bitrate,omitempty"`
-	UserLimit            int                           `json:"user_limit,omitempty"`
-	PermissionOverwrites []objects.PermissionOverwrite `json:"permission_overwrites,omitempty"`
-	ParentId             uint64                        `json:"parent_id,string,omitempty"`
+	Name                 string                         `json:"name,omitempty"`
+	Position             int                            `json:"position,omitempty"`
+	Topic                string                         `json:"topic,omitempty"`
+	Nsfw                 bool                           `json:"nsfw,omitempty"`
+	RateLimitPerUser     int                            `json:"rate_limit_per_user,omitempty"`
+	Bitrate              int                            `json:"bitrate,omitempty"`
+	UserLimit            int                            `json:"user_limit,omitempty"`
+	PermissionOverwrites []*objects.PermissionOverwrite `json:"permission_overwrites,omitempty"`
+	ParentId             uint64                         `json:"parent_id,string,omitempty"`
 }
 
-func ModifyChannel(channelId uint64, token string, data ModifyChannelData) (*objects.Channel, error) {
+func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (*objects.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -57,7 +57,7 @@ func ModifyChannel(channelId uint64, token string, data ModifyChannelData) (*obj
 	return &channel, nil
 }
 
-func DeleteChannel(channelId uint64, token string) (*objects.Channel, error) {
+func DeleteChannel(token string, channelId uint64) (*objects.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -74,43 +74,43 @@ func DeleteChannel(channelId uint64, token string) (*objects.Channel, error) {
 
 // The before, after, and around keys are mutually exclusive, only one may be passed at a time.
 type GetChannelMessagesData struct {
-	Around *uint64 // get messages around this message ID
-	Before *uint64 // get messages before this message ID
-	After  *uint64 // get messages after this message ID
+	Around uint64 // get messages around this message ID
+	Before uint64 // get messages before this message ID
+	After  uint64 // get messages after this message ID
 	Limit  int     // 1 - 100
 }
 
 func (o *GetChannelMessagesData) Query() string {
 	query := url.Values{}
 
-	if o.Around != nil {
-		query.Set("around", strconv.FormatUint(*o.Around, 10))
+	if o.Around != 0 {
+		query.Set("around", strconv.FormatUint(o.Around, 10))
 	}
 
-	if o.Before != nil {
-		query.Set("before", strconv.FormatUint(*o.Before, 10))
+	if o.Before != 0 {
+		query.Set("before", strconv.FormatUint(o.Before, 10))
 	}
 
-	if o.After != nil {
-		query.Set("after", strconv.FormatUint(*o.After, 10))
+	if o.After != 0 {
+		query.Set("after", strconv.FormatUint(o.After, 10))
 	}
 
 	if o.Limit > 100 || o.Limit < 1 {
 		o.Limit = 50
-		query.Set("limit", strconv.Itoa(o.Limit))
 	}
+	query.Set("limit", strconv.Itoa(o.Limit))
 
 	return query.Encode()
 }
 
-func GetChannelMessages(channelId uint64, token string, data GetChannelMessagesData) ([]objects.Message, error) {
+func GetChannelMessages(token string, channelId uint64, data GetChannelMessagesData) ([]*objects.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages?%s", channelId, data.Query()),
 	}
 
-	var messages []objects.Message
+	var messages []*objects.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func GetChannelMessages(channelId uint64, token string, data GetChannelMessagesD
 	return messages, nil
 }
 
-func GetChannelMessage(channelId, messageId uint64, token string) (*objects.Message, error) {
+func GetChannelMessage(token string, channelId, messageId uint64) (*objects.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -197,7 +197,7 @@ func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
 	return []byte(string(body.Bytes()) + "\r\n--" + writer.Boundary() + "--"), writer.Boundary(), nil
 }
 
-func CreateMessage(channelId uint64, token string, data CreateMessageData) (*objects.Message, error) {
+func CreateMessage(token string, channelId uint64, data CreateMessageData) (*objects.Message, error) {
 	var endpoint request.Endpoint
 	if data.File == nil {
 		endpoint = request.Endpoint{
@@ -222,7 +222,7 @@ func CreateMessage(channelId uint64, token string, data CreateMessageData) (*obj
 }
 
 // emoji is the raw unicode emoji
-func CreateReaction(channelId, messageId uint64, emoji, token string) error {
+func CreateReaction(token string, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -234,7 +234,7 @@ func CreateReaction(channelId, messageId uint64, emoji, token string) error {
 }
 
 // emoji is the raw unicode emoji
-func DeleteOwnReaction(channelId, messageId uint64, emoji, token string) error {
+func DeleteOwnReaction(token string, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -246,7 +246,7 @@ func DeleteOwnReaction(channelId, messageId uint64, emoji, token string) error {
 }
 
 // emoji is the raw unicode emoji
-func DeleteUserReaction(channelId, messageId, userId uint64, emoji, token string) error {
+func DeleteUserReaction(token string, channelId, messageId, userId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -276,13 +276,13 @@ func (o *GetReactionsData) Query() string {
 
 	if o.Limit > 100 || o.Limit < 1 {
 		o.Limit = 25
-		query.Set("limit", strconv.Itoa(o.Limit))
 	}
+	query.Set("limit", strconv.Itoa(o.Limit))
 
 	return query.Encode()
 }
 
-func GetReactions(channelId, messageId uint64, emoji, token string, data GetReactionsData) ([]objects.User, error) {
+func GetReactions(token string, channelId, messageId uint64, emoji string, data GetReactionsData) ([]objects.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -297,7 +297,7 @@ func GetReactions(channelId, messageId uint64, emoji, token string, data GetReac
 	return users, nil
 }
 
-func DeleteAllReactions(channelId, messageId uint64, token string) error {
+func DeleteAllReactions(token string, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -308,7 +308,7 @@ func DeleteAllReactions(channelId, messageId uint64, token string) error {
 	return err
 }
 
-func DeleteAllReactionsEmoji(channelId, messageId uint64, emoji, token string) error {
+func DeleteAllReactionsEmoji(token string, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -325,7 +325,7 @@ type EditMessageData struct {
 	Flags   int            `json:"flags,omitempty"` // https://discordapp.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 }
 
-func EditMessage(channelId, messageId uint64, token string, data ModifyChannelData) (*objects.Message, error) {
+func EditMessage(token string, channelId, messageId uint64, data ModifyChannelData) (*objects.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -340,7 +340,7 @@ func EditMessage(channelId, messageId uint64, token string, data ModifyChannelDa
 	return &message, nil
 }
 
-func DeleteMessage(channelId, messageId uint64, token string) error {
+func DeleteMessage(token string, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -351,7 +351,7 @@ func DeleteMessage(channelId, messageId uint64, token string) error {
 	return err
 }
 
-func BulkDeleteMessages(channelId uint64, messages []uint64, token string) error {
+func BulkDeleteMessages(token string, channelId uint64, messages []uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -366,7 +366,7 @@ func BulkDeleteMessages(channelId uint64, messages []uint64, token string) error
 	return err
 }
 
-func EditChannelPermissions(channelId uint64, token string, updated objects.Overwrite) error {
+func EditChannelPermissions(token string, channelId uint64, updated objects.PermissionOverwrite) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -379,7 +379,7 @@ func EditChannelPermissions(channelId uint64, token string, updated objects.Over
 	return err
 }
 
-func GetChannelInvites(channelId uint64, token string) ([]objects.InviteMetadata, error) {
+func GetChannelInvites(token string, channelId uint64) ([]objects.InviteMetadata, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -394,7 +394,7 @@ func GetChannelInvites(channelId uint64, token string) ([]objects.InviteMetadata
 	return invites, nil
 }
 
-func CreateChannelInvite(channelId uint64, token string, data objects.InviteMetadata) (*objects.Invite, error) {
+func CreateChannelInvite(token string, channelId uint64, data objects.InviteMetadata) (*objects.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
@@ -409,7 +409,7 @@ func CreateChannelInvite(channelId uint64, token string, data objects.InviteMeta
 	return &invite, nil
 }
 
-func DeleteChannelPermissions(channelId, overwriteId uint64, token string) error {
+func DeleteChannelPermissions(token string, channelId, overwriteId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
@@ -420,7 +420,7 @@ func DeleteChannelPermissions(channelId, overwriteId uint64, token string) error
 	return err
 }
 
-func TriggerTypingIndicator(channelId uint64, token string) error {
+func TriggerTypingIndicator(token string, channelId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
@@ -431,14 +431,14 @@ func TriggerTypingIndicator(channelId uint64, token string) error {
 	return err
 }
 
-func GetPinnedMessages(channelId uint64, token string) ([]objects.Message, error) {
+func GetPinnedMessages(token string, channelId uint64) ([]*objects.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins", channelId),
 	}
 
-	var messages []objects.Message
+	var messages []*objects.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
 		return nil, err
 	}
@@ -446,7 +446,7 @@ func GetPinnedMessages(channelId uint64, token string) ([]objects.Message, error
 	return messages, nil
 }
 
-func AddPinnedChannelMessage(channelId, messageId uint64, token string) error {
+func AddPinnedChannelMessage(token string, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -457,7 +457,7 @@ func AddPinnedChannelMessage(channelId, messageId uint64, token string) error {
 	return err
 }
 
-func DeletePinnedChannelMessage(channelId, messageId uint64, token string) error {
+func DeletePinnedChannelMessage(token string, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,

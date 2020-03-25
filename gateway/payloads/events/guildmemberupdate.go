@@ -1,8 +1,8 @@
 package events
 
 import (
-	"github.com/Dot-Rar/gdl/objects"
-	"github.com/Dot-Rar/gdl/utils"
+	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/utils"
 	"time"
 )
 

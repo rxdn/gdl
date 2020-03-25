@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/Dot-Rar/gdl/objects"
+	"github.com/rxdn/gdl/objects"
 )
 
 type GuildMemberAdd struct {

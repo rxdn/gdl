@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/utils"
+import "github.com/rxdn/gdl/utils"
 
 type MessageDeleteBulk struct {
 	Id        utils.Uint64StringSlice `json:"ids,string"`

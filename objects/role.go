@@ -2,7 +2,7 @@ package objects
 
 import (
 	"fmt"
-	"github.com/Dot-Rar/gdl/utils"
+	"github.com/rxdn/gdl/utils"
 )
 
 type Role struct {

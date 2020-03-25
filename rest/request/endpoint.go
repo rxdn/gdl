@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Dot-Rar/gdl/rest/routes"
+	"github.com/rxdn/gdl/rest/routes"
 	"github.com/pasztorpisti/qs"
 	"io/ioutil"
 	"net/http"
@@ -22,11 +22,18 @@ type Endpoint struct {
 	AdditionalHeaders map[string]string
 }
 
-func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body interface{}, response interface{}) (error, *http.Response) {
-	// Ratelimiter
-	ch := make(chan struct{})
-	go ratelimiter.Queue(ch)
-	<-ch
+type ResponseWithContent struct {
+	*http.Response
+	Content []byte
+}
+
+func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body interface{}, response interface{}) (error, *ResponseWithContent) {
+	// Ratelimit
+	if ratelimiter != nil {
+		ch := make(chan struct{})
+		go ratelimiter.Queue(ch)
+		<-ch
+	}
 
 	url := BASE_URL + e.Endpoint
 	// Create req
@@ -73,7 +80,9 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 		return err, nil
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", token))
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bot %s", token))
+	}
 
 	for key, value := range e.AdditionalHeaders {
 		req.Header.Set(key, value)
@@ -88,7 +97,9 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 	}
 	defer res.Body.Close()
 
-	applyNewRatelimits(res.Header, ratelimiter)
+	if ratelimiter != nil {
+		applyNewRatelimits(res.Header, ratelimiter)
+	}
 
 	content, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -99,7 +110,17 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 		return errors.New(fmt.Sprintf("http status %d at %s: %s", res.StatusCode, e.Endpoint, string(content))), nil
 	}
 
-	return json.Unmarshal(content, response), res
+	if response != nil {
+		return json.Unmarshal(content, response), &ResponseWithContent{
+			Response: res,
+			Content:  content,
+		}
+	} else {
+		return nil, &ResponseWithContent{
+			Response: res,
+			Content:  content,
+		}
+	}
 }
 
 func applyNewRatelimits(header http.Header, ratelimiter *routes.Ratelimiter) {

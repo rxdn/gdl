@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/objects"
+import "github.com/rxdn/gdl/objects"
 
 // Sent when a bot removes all instances of a given emoji from the reactions of a message.
 type MessageReactionRemoveEmoji struct {

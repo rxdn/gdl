@@ -1,6 +1,6 @@
 package objects
 
-import "github.com/Dot-Rar/gdl/utils"
+import "github.com/rxdn/gdl/utils"
 
 type Message struct {
 	Id              uint64 `json:",string"`
@@ -30,4 +30,23 @@ type Message struct {
 type MessageMentionedUser struct {
 	*User
 	Member Member
+}
+
+type MessageActivity struct {
+	Type    int
+	PartyId uint64 `json:",string"`
+}
+
+type MessageApplication struct {
+	Id          uint64 `json:",string"`
+	CoverImage  string
+	Description string
+	Icon        string
+	Name        string
+}
+
+type Reaction struct {
+	Count int
+	Me    bool
+	Emoji Emoji
 }

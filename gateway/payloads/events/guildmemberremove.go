@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/objects"
+import "github.com/rxdn/gdl/objects"
 
 type GuildMemberRemove struct {
 	GuildId uint64        `json:"guild_id,string"`

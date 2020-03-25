@@ -1,17 +1,14 @@
 package rest
 
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/Dot-Rar/gdl/objects"
-	"github.com/Dot-Rar/gdl/rest/request"
-	"github.com/Dot-Rar/gdl/rest/routes"
-	"github.com/Dot-Rar/gdl/utils"
-	"io"
-	"io/ioutil"
+	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/rest/request"
+	"github.com/rxdn/gdl/rest/routes"
+	"github.com/rxdn/gdl/utils"
 )
 
-func ListGuildEmojis(guildId uint64, token string) ([]*objects.Emoji, error) {
+func ListGuildEmojis(token string, guildId uint64) ([]*objects.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -23,7 +20,7 @@ func ListGuildEmojis(guildId uint64, token string) ([]*objects.Emoji, error) {
 	return emojis, err
 }
 
-func GetGuildEmoji(guildId, emojiId uint64, token string) (*objects.Emoji, error) {
+func GetGuildEmoji(token string, guildId, emojiId uint64) (*objects.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -38,38 +35,26 @@ func GetGuildEmoji(guildId, emojiId uint64, token string) (*objects.Emoji, error
 	return &emoji, nil
 }
 
-type Image struct {
-	ContentType request.ContentType
-	ImageReader io.Reader
-}
-
-func (i *Image) Encode() (string, error) {
-	content, err := ioutil.ReadAll(i.ImageReader)
-	if err != nil {
-		return "", err
-	}
-
-	encoded := base64.StdEncoding.EncodeToString(content)
-
-	return fmt.Sprintf("data:%s;base64,%s", string(i.ContentType), encoded), nil
-}
-
 type CreateEmojiData struct {
 	Name  string
 	Image Image
 	Roles []uint64 // roles for which this emoji will be whitelisted
 }
 
-func CreateGuildEmoji(guildId uint64, token string, data CreateEmojiData) (*objects.Emoji, error) {
+func CreateGuildEmoji(token string, guildId uint64, data CreateEmojiData) (*objects.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: data.Image.ContentType,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
 	}
 
+	imageData, err := data.Image.Encode(); if err != nil {
+		return nil, err
+	}
+
 	body := map[string]interface{}{
 		"name": data.Name,
-		"image": data.Image.Encode(),
+		"image": imageData,
 		"roles": utils.Uint64StringSlice(data.Roles),
 	}
 
@@ -82,7 +67,7 @@ func CreateGuildEmoji(guildId uint64, token string, data CreateEmojiData) (*obje
 }
 
 // updating Image is not permitted
-func ModifyGuildEmoji(guildId, emojiId uint64, token string, data CreateEmojiData) (*objects.Emoji, error) {
+func ModifyGuildEmoji(token string, guildId, emojiId uint64, data CreateEmojiData) (*objects.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.Nil,
@@ -102,7 +87,7 @@ func ModifyGuildEmoji(guildId, emojiId uint64, token string, data CreateEmojiDat
 	return &emoji, nil
 }
 
-func DeleteGuildEmoji(guildId, emojiId uint64, token string) (error) {
+func DeleteGuildEmoji(token string, guildId, emojiId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,

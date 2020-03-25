@@ -1,6 +1,6 @@
 package objects
 
-import "github.com/Dot-Rar/gdl/utils"
+import "github.com/rxdn/gdl/utils"
 
 type Emoji struct {
 	Id            uint64                  `json:"id,string"`

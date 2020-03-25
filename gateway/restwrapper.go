@@ -1,35 +1,37 @@
 package gateway
 
 import (
-	"github.com/Dot-Rar/gdl/objects"
-	"github.com/Dot-Rar/gdl/rest"
+	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/rest"
 	"github.com/sirupsen/logrus"
+	"image"
 )
 
-func (s *Shard) GetChannel(channelId uint64) *objects.Channel {
-	cacheChannels := (*s.Cache).GetOptions().Channels
-	if cacheChannels {
+func (s *Shard) GetChannel(channelId uint64) (*objects.Channel, error) {
+	shouldCache := (*s.Cache).GetOptions().Channels
+	if shouldCache {
 		cached := (*s.Cache).GetChannel(channelId)
 		if cached != nil {
-			return cached
+			return cached, nil
 		}
 	}
 
-	channel, err := rest.GetChannel(channelId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing GetChannel: %s", err.Error())
-		return nil
+	channel, err := rest.GetChannel(s.Token, channelId)
+
+	if shouldCache && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(channelId)
+			lock.Lock()
+			(*s.Cache).StoreChannel(channel)
+			lock.Unlock()
+		}()
 	}
 
-	if cacheChannels {
-		(*s.Cache).StoreChannel(channel)
-	}
-
-	return channel
+	return channel, err
 }
 
 func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) *objects.Channel {
-	channel, err := rest.ModifyChannel(channelId, s.Token, data)
+	channel, err := rest.ModifyChannel(s.Token, channelId, data)
 	if err != nil {
 		logrus.Warnf("error while executing ModifyChannel: %s", err.Error())
 		return nil
@@ -42,79 +44,48 @@ func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) *ob
 	return channel
 }
 
-func (s *Shard) DeleteChannel(channelId uint64) *objects.Channel {
-	channel, err := rest.DeleteChannel(channelId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeleteChannel: %s", err.Error())
-		return nil
-	}
-
-	if (*s.Cache).GetOptions().Channels {
-		(*s.Cache).DeleteChannel(channelId)
-	}
-
-	return channel
+func (s *Shard) DeleteChannel(channelId uint64) (*objects.Channel, error) {
+	return rest.DeleteChannel(s.Token, channelId)
 }
 
-func (s *Shard) GetChannelMessages(channelId uint64, options rest.GetChannelMessagesData) []objects.Message {
-	messages, err := rest.GetChannelMessages(channelId, s.Token, options)
-	if err != nil {
-		logrus.Warnf("error while executing GetChannelMessages: %s", err.Error())
-		return nil
-	}
-
-	return messages
+func (s *Shard) GetChannelMessages(channelId uint64, options rest.GetChannelMessagesData) ([]*objects.Message, error) {
+	return rest.GetChannelMessages(s.Token, channelId, options)
 }
 
-func (s *Shard) GetChannelMessage(channelId, messageId uint64) *objects.Message {
-	message, err := rest.GetChannelMessage(channelId, messageId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing GetChannelMessage: %s", err.Error())
-		return nil
-	}
-
-	return message
+func (s *Shard) GetChannelMessage(channelId, messageId uint64) (*objects.Message, error) {
+	return rest.GetChannelMessage(s.Token, channelId, messageId)
 }
 
-func (s *Shard) CreateMessage(channelId uint64, content string) *objects.Message {
+func (s *Shard) CreateMessage(channelId uint64, content string) (*objects.Message, error) {
 	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
 		Content: content,
 	})
 }
 
-func (s *Shard) CreateMessageComplex(channelId uint64, data rest.CreateMessageData) *objects.Message {
-	message, err := rest.CreateMessage(channelId, s.Token, data)
-	if err != nil {
-		logrus.Warnf("error while executing CreateMessage: %s", err.Error())
-		return nil
-	}
-
-	return message
+func (s *Shard) CreateMessageComplex(channelId uint64, data rest.CreateMessageData) (*objects.Message, error) {
+	return rest.CreateMessage(s.Token, channelId, data)
 }
 
 func (s *Shard) CreateReaction(channelId, messageId uint64, emoji string) {
-	err := rest.CreateReaction(channelId, messageId, emoji, s.Token)
-	if err != nil {
+	if err := rest.CreateReaction(s.Token, channelId, messageId, emoji); err != nil {
 		logrus.Warnf("error while executing CreateReaction: %s", err.Error())
 	}
 }
 
 func (s *Shard) DeleteOwnReaction(channelId, messageId uint64, emoji string) {
-	err := rest.DeleteOwnReaction(channelId, messageId, emoji, s.Token)
-	if err != nil {
+	if err := rest.DeleteOwnReaction(s.Token, channelId, messageId, emoji); err != nil {
 		logrus.Warnf("error while executing DeleteOwnReaction: %s", err.Error())
 	}
 }
 
 func (s *Shard) DeleteUserReaction(channelId, messageId, userId uint64, emoji string) {
-	err := rest.DeleteUserReaction(channelId, messageId, userId, emoji, s.Token)
-	if err != nil {
+	if err := rest.DeleteUserReaction(s.Token, channelId, messageId, userId, emoji); err != nil {
 		logrus.Warnf("error while executing DeleteUserReaction: %s", err.Error())
 	}
 }
 
 func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options rest.GetReactionsData) []objects.User {
-	users, err := rest.GetReactions(channelId, messageId, emoji, s.Token, options)
+	users, err := rest.GetReactions(s.Token, channelId, messageId, emoji, options)
 	if err != nil {
 		logrus.Warnf("error while executing GetReactions: %s", err.Error())
 		return nil
@@ -123,185 +94,485 @@ func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options 
 	return users
 }
 
-func (s *Shard) DeleteAllReactions(channelId, messageId uint64) {
-	err := rest.DeleteAllReactions(channelId, messageId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeleteAllReactions: %s", err.Error())
-	}
+func (s *Shard) DeleteAllReactions(channelId, messageId uint64) error {
+	return rest.DeleteAllReactions(s.Token, channelId, messageId)
 }
 
-func (s *Shard) DeleteAllReactionsEmoji(channelId, messageId uint64, emoji string) {
-	err := rest.DeleteAllReactionsEmoji(channelId, messageId, emoji, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeleteAllReactionsEmoji: %s", err.Error())
-	}
+func (s *Shard) DeleteAllReactionsEmoji(channelId, messageId uint64, emoji string) error {
+	return rest.DeleteAllReactionsEmoji(s.Token, channelId, messageId, emoji)
 }
 
-func (s *Shard) EditMessage(channelId, messageId uint64, data rest.ModifyChannelData) *objects.Message {
-	message, err := rest.EditMessage(channelId, messageId, s.Token, data)
-	if err != nil {
-		logrus.Warnf("error while executing EditMessage: %s", err.Error())
-		return nil
-	}
-
-	return message
+func (s *Shard) EditMessage(channelId, messageId uint64, data rest.ModifyChannelData) (*objects.Message, error) {
+	return rest.EditMessage(s.Token, channelId, messageId, data)
 }
 
-func (s *Shard) DeleteMessage(channelId, messageId uint64) {
-	err := rest.DeleteMessage(channelId, messageId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeleteMessage: %s", err.Error())
-	}
+func (s *Shard) DeleteMessage(channelId, messageId uint64) error {
+	return rest.DeleteMessage(s.Token, channelId, messageId)
 }
 
-func (s *Shard) BulkDeleteMessages(channelId uint64, messages []uint64) {
-	err := rest.BulkDeleteMessages(channelId, messages, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing BulkDeleteMessages: %s", err.Error())
-	}
+func (s *Shard) BulkDeleteMessages(channelId uint64, messages []uint64) error {
+	return rest.BulkDeleteMessages(s.Token, channelId, messages)
 }
 
-func (s *Shard) EditChannelPermissions(channelId uint64, updated objects.Overwrite) {
-	err := rest.EditChannelPermissions(channelId, s.Token, updated)
-	if err != nil {
-		logrus.Warnf("error while executing EditChannelPermissions: %s", err.Error())
-	}
+func (s *Shard) EditChannelPermissions(channelId uint64, updated objects.PermissionOverwrite) error {
+	return rest.EditChannelPermissions(s.Token, channelId, updated)
 }
 
-func (s *Shard) GetChannelInvites(channelId uint64) []objects.InviteMetadata {
-	invites, err := rest.GetChannelInvites(channelId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing GetChannelInvites: %s", err.Error())
-		return nil
-	}
-
-	return invites
+func (s *Shard) GetChannelInvites(channelId uint64) ([]objects.InviteMetadata, error) {
+	return rest.GetChannelInvites(s.Token, channelId)
 }
 
-func (s *Shard) CreateChannelInvite(channelId uint64, data objects.InviteMetadata) *objects.Invite {
-	invite, err := rest.CreateChannelInvite(channelId, s.Token, data)
-	if err != nil {
-		logrus.Warnf("error while executing CreateChannelInvite: %s", err.Error())
-		return nil
-	}
-
-	return invite
+func (s *Shard) CreateChannelInvite(channelId uint64, data objects.InviteMetadata) (*objects.Invite, error) {
+	return rest.CreateChannelInvite(s.Token, channelId, data)
 }
 
-func (s *Shard) DeleteChannelPermissions(channelId, overwriteId uint64) {
-	err := rest.DeleteChannelPermissions(channelId, overwriteId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeleteChannelPermissions: %s", err.Error())
-	}
+func (s *Shard) DeleteChannelPermissions(channelId, overwriteId uint64) error {
+	return rest.DeleteChannelPermissions(s.Token, channelId, overwriteId)
 }
 
-func (s *Shard) TriggerTypingIndicator(channelId uint64) {
-	err := rest.TriggerTypingIndicator(channelId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing TriggerTypingIndicator: %s", err.Error())
-	}
+func (s *Shard) TriggerTypingIndicator(channelId uint64) error {
+	return rest.TriggerTypingIndicator(s.Token, channelId)
 }
 
-func (s *Shard) GetPinnedMessages(channelId uint64) []objects.Message {
-	messages, err := rest.GetPinnedMessages(channelId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing GetPinnedMessages: %s", err.Error())
-		return nil
-	}
-
-	return messages
+func (s *Shard) GetPinnedMessages(channelId uint64) ([]*objects.Message, error) {
+	return rest.GetPinnedMessages(s.Token, channelId)
 }
 
-func (s *Shard) AddPinnedChannelMessage(channelId, messageId uint64) {
-	err := rest.AddPinnedChannelMessage(channelId, messageId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing AddPinnedChannelMessage: %s", err.Error())
-	}
+func (s *Shard) AddPinnedChannelMessage(channelId, messageId uint64) error {
+	return rest.AddPinnedChannelMessage(s.Token, channelId, messageId)
 }
 
-func (s *Shard) DeletePinnedChannelMessage(channelId, messageId uint64) {
-	err := rest.DeletePinnedChannelMessage(channelId, messageId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing DeletePinnedChannelMessage: %s", err.Error())
-	}
+func (s *Shard) DeletePinnedChannelMessage(channelId, messageId uint64) error {
+	return rest.DeletePinnedChannelMessage(s.Token, channelId, messageId)
 }
 
-func (s *Shard) ListGuildEmojis(guildId uint64) []*objects.Emoji {
+func (s *Shard) ListGuildEmojis(guildId uint64) ([]*objects.Emoji, error) {
 	shouldCacheEmoji := (*s.Cache).GetOptions().Emojis
 	shouldCacheGuild := (*s.Cache).GetOptions().Guilds
 
 	if shouldCacheEmoji && shouldCacheGuild {
 		guild := (*s.Cache).GetGuild(guildId)
 		if guild != nil {
-			return guild.Emojis
+			return guild.Emojis, nil
 		}
 	}
 
-	emojis, err := rest.ListGuildEmojis(guildId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing ListGuildEmojis: %s", err.Error())
-		return nil
+	emojis, err := rest.ListGuildEmojis(s.Token, guildId)
+
+	if shouldCacheEmoji && err == nil {
+		go func() {
+			for _, emoji := range emojis {
+				(*s.Cache).StoreEmoji(emoji)
+			}
+
+			if shouldCacheGuild {
+				lock := (*s.Cache).GetLock(guildId)
+				lock.Lock()
+
+				guild := (*s.Cache).GetGuild(guildId)
+				if guild != nil {
+					guild.Emojis = emojis
+					(*s.Cache).StoreGuild(guild)
+				}
+
+				lock.Unlock()
+			}
+		}()
 	}
 
-	if shouldCacheEmoji {
-		for _, emoji := range emojis {
-			(*s.Cache).StoreEmoji(emoji)
-		}
-
-		if shouldCacheGuild {
-			(*s.Cache).GetLock(guildId).Lock()
-
-			guild := (*s.Cache).GetGuild(guildId)
-			guild.Emojis = emojis
-			(*s.Cache).StoreGuild(guild)
-
-			(*s.Cache).GetLock(guildId).Unlock()
-		}
-	}
-
-	return emojis
+	return emojis, err
 }
 
-func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) *objects.Emoji {
+func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) (*objects.Emoji, error) {
 	shouldCache := (*s.Cache).GetOptions().Emojis
 	if shouldCache {
 		emoji := (*s.Cache).GetEmoji(emojiId)
 		if emoji != nil {
-			return emoji
+			return emoji, nil
 		}
 	}
 
-	emoji, err := rest.GetGuildEmoji(guildId, emojiId, s.Token)
-	if err != nil {
-		logrus.Warnf("error while executing GetGuildEmoji: %s", err.Error())
-		return nil
-	}
+	emoji, err := rest.GetGuildEmoji(s.Token, guildId, emojiId)
 
-	if shouldCache {
+	if shouldCache && err == nil {
+		lock := (*s.Cache).GetLock(emojiId)
+		lock.Lock()
 		(*s.Cache).StoreEmoji(emoji)
+		lock.Unlock()
 	}
 
-	return emoji
+	return emoji, err
 }
 
-func (s *Shard) CreateGuildEmoji(guildId uint64, data rest.CreateEmojiData) *objects.Emoji {
-	emoji, err := rest.CreateGuildEmoji(guildId, s.Token, data)
-	if err != nil {
-		logrus.Warnf("error while executing CreateGuildEmoji: %s", err.Error())
-		return nil
-	}
-
-	return emoji
+func (s *Shard) CreateGuildEmoji(guildId uint64, data rest.CreateEmojiData) (*objects.Emoji, error) {
+	return rest.CreateGuildEmoji(s.Token, guildId, data)
 }
 
 // updating Image is not permitted
-func (s *Shard) ModifyGuildEmoji(guildId, emojiId uint64, data rest.CreateEmojiData) *objects.Emoji {
-	emoji, err := rest.ModifyGuildEmoji(guildId, emojiId, s.Token, data)
-	if err != nil {
-		logrus.Warnf("error while executing ModifyGuildEmoji: %s", err.Error())
-		return nil
-	}
-
-	return emoji
+func (s *Shard) ModifyGuildEmoji(guildId, emojiId uint64, data rest.CreateEmojiData) (*objects.Emoji, error) {
+	return rest.ModifyGuildEmoji(s.Token, guildId, emojiId, data)
 }
 
+func (s *Shard) CreateGuild(data rest.CreateGuildData) (*objects.Guild, error) {
+	return rest.CreateGuild(s.Token, data)
+}
+
+func (s *Shard) ModifyGuild(guildId uint64, data rest.ModifyGuildData) (*objects.Guild, error) {
+	return rest.ModifyGuild(s.Token, guildId, data)
+}
+
+func (s *Shard) DeleteGuild(guildId uint64) error {
+	return rest.DeleteGuild(s.Token, guildId)
+}
+
+func (s *Shard) GetGuildChannels(guildId uint64) ([]*objects.Channel, error) {
+	shouldCache := (*s.Cache).GetOptions().Guilds && (*s.Cache).GetOptions().Channels
+
+	if shouldCache {
+		guild := (*s.Cache).GetGuild(guildId)
+		if guild != nil {
+			return guild.Channels, nil
+		}
+	}
+
+	channels, err := rest.GetGuildChannels(s.Token, guildId)
+
+	if shouldCache && err == nil {
+		lock := (*s.Cache).GetLock(guildId)
+		lock.Lock()
+
+		guild := (*s.Cache).GetGuild(guildId)
+		guild.Channels = channels
+		(*s.Cache).StoreGuild(guild)
+
+		lock.Unlock()
+	}
+
+	return channels, err
+}
+
+func (s *Shard) CreateGuildChannel(guildId uint64, data rest.CreateChannelData) (*objects.Channel, error) {
+	return rest.CreateGuildChannel(s.Token, guildId, data)
+}
+
+func (s *Shard) ModifyGuildChannelPositions(guildId uint64, positions []rest.Position) error {
+	return rest.ModifyGuildChannelPositions(s.Token, guildId, positions)
+}
+
+func (s *Shard) GetGuildMember(guildId, userId uint64) (*objects.Member, error) {
+	cacheGuilds := (*s.Cache).GetOptions().Guilds
+	cacheUsers := (*s.Cache).GetOptions().Users
+
+	if cacheGuilds && cacheUsers {
+		guild := (*s.Cache).GetGuild(guildId)
+		if guild != nil {
+			for _, member := range guild.Members {
+				if member != nil {
+					if member.User != nil {
+						if member.User.Id == userId {
+							return member, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	member, err := rest.GetGuildMember(s.Token, guildId, userId)
+
+	if cacheGuilds && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(guildId)
+			lock.Lock()
+
+			guild := (*s.Cache).GetGuild(guildId)
+			if guild != nil {
+				guild.Members = append(guild.Members, member)
+			}
+			(*s.Cache).StoreGuild(guild)
+
+			lock.Unlock()
+		}()
+	}
+
+	if cacheUsers && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(userId)
+			lock.Lock()
+
+			(*s.Cache).StoreUser(member.User)
+
+			lock.Unlock()
+		}()
+	}
+
+	return member, err
+}
+
+func (s *Shard) ListGuildMembers(guildId uint64, data rest.ListGuildMembersData) ([]*objects.Member, error) {
+	members, err := rest.ListGuildMembers(s.Token, guildId, data)
+
+	cacheGuilds := (*s.Cache).GetOptions().Guilds
+	cacheUsers := (*s.Cache).GetOptions().Users
+
+	if cacheGuilds && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(guildId)
+			lock.Lock()
+
+			guild := (*s.Cache).GetGuild(guildId)
+			if guild != nil {
+				new := make([]*objects.Member, 0)
+
+				for _, retrieved := range members {
+					found := false
+
+					internal:
+					for _, existing := range guild.Members {
+						if retrieved.User.Id == existing.User.Id {
+							found = true
+							break internal
+						}
+					}
+
+					if !found {
+						new = append(new, retrieved)
+					}
+				}
+
+				guild.Members = append(guild.Members, new...)
+			}
+			(*s.Cache).StoreGuild(guild)
+
+			lock.Unlock()
+		}()
+	}
+
+	if cacheUsers && err == nil {
+		go func() {
+			for _, member := range members {
+				lock := (*s.Cache).GetLock(member.User.Id)
+				lock.Lock()
+
+				(*s.Cache).StoreUser(member.User)
+
+				lock.Unlock()
+			}
+		}()
+	}
+
+	return members, err
+}
+
+func (s *Shard) ModifyGuildMember(guildId, userId uint64, data rest.ModifyGuildMemberData) error {
+	return rest.ModifyGuildMember(s.Token, guildId, userId, data)
+}
+
+func (s *Shard) ModifyCurrentUserNick(guildId uint64, nick string) error {
+	return rest.ModifyCurrentUserNick(s.Token, guildId, nick)
+}
+
+func (s *Shard) AddGuildMemberRole(guildId, userId, roleId uint64) error {
+	return rest.AddGuildMemberRole(s.Token, guildId, userId, roleId)
+}
+
+func (s *Shard) RemoveGuildMemberRole(guildId, userId, roleId uint64) error {
+	return rest.RemoveGuildMemberRole(s.Token, guildId, userId, roleId)
+}
+
+func (s *Shard) RemoveGuildMember(guildId, userId uint64) error {
+	return rest.RemoveGuildMember(s.Token, guildId, userId)
+}
+
+func (s *Shard) GetGuildBans(guildId uint64) ([]*objects.Ban, error) {
+	return rest.GetGuildBans(s.Token, guildId)
+}
+
+func (s *Shard) GetGuildBan(guildId, userId uint64) (*objects.Ban, error) {
+	return rest.GetGuildBan(s.Token, guildId, userId)
+}
+
+func (s *Shard) CreateGuildBan(guildId, userId uint64, data rest.CreateGuildBanData) error {
+	return rest.CreateGuildBan(s.Token, guildId, userId, data)
+}
+
+func (s *Shard) RemoveGuildBan(guildId, userId uint64) error {
+	return rest.RemoveGuildBan(s.Token, guildId, userId)
+}
+
+func (s *Shard) GetGuildRoles(guildId uint64) ([]*objects.Role, error) {
+	return rest.GetGuildRoles(s.Token, guildId)
+}
+
+func (s *Shard) CreateGuildRole(guildId uint64, data rest.GuildRoleData) (*objects.Role, error) {
+	return rest.CreateGuildRole(s.Token, guildId, data)
+}
+
+func (s *Shard) ModifyGuildRolePositions(guildId uint64, positions []rest.Position) ([]*objects.Role, error) {
+	return rest.ModifyGuildRolePositions(s.Token, guildId, positions)
+}
+
+func (s *Shard) ModifyGuildRole(guildId, roleId uint64, data rest.GuildRoleData) (*objects.Role, error) {
+	return rest.ModifyGuildRole(s.Token, guildId, roleId, data)
+}
+
+func (s *Shard) DeleteGuildRole(guildId, roleId uint64) error {
+	return rest.DeleteGuildRole(s.Token, guildId, roleId)
+}
+
+func (s *Shard) GetGuildPruneCount(guildId uint64, days int) (int, error) {
+	return rest.GetGuildPruneCount(s.Token, guildId, days)
+}
+
+// computePruneCount = whether 'pruned' is returned, discouraged for large guilds
+func (s *Shard) BeginGuildPrune(guildId uint64, days int, computePruneCount bool) error {
+	return rest.BeginGuildPrune(s.Token, guildId, days, computePruneCount)
+}
+
+func (s *Shard) GetGuildVoiceRegions(guildId uint64) ([]*objects.VoiceRegion, error) {
+	return rest.GetGuildVoiceRegions(s.Token, guildId)
+}
+
+func (s *Shard) GetGuildInvites(guildId uint64) ([]*objects.InviteMetadata, error) {
+	return rest.GetGuildInvites(s.Token, guildId)
+}
+
+func (s *Shard) GetGuildIntegrations(guildId uint64) ([]*objects.Integration, error) {
+	return rest.GetGuildIntegrations(s.Token, guildId)
+}
+
+func (s *Shard) CreateGuildIntegration(guildId uint64, data rest.CreateIntegrationData) error {
+	return rest.CreateGuildIntegration(s.Token, guildId, data)
+}
+
+func (s *Shard) ModifyGuildIntegration(guildId, integrationId uint64, data rest.ModifyIntegrationData) error {
+	return rest.ModifyGuildIntegration(s.Token, guildId, integrationId, data)
+}
+
+func (s *Shard) DeleteGuildIntegration(guildId, integrationId uint64) error {
+	return rest.DeleteGuildIntegration(s.Token, guildId, integrationId)
+}
+
+func (s *Shard) SyncGuildIntegration(guildId, integrationId uint64) error {
+	return rest.SyncGuildIntegration(s.Token, guildId, integrationId)
+}
+
+func (s *Shard) GetGuildEmbed(guildId uint64) (*objects.GuildEmbed, error) {
+	return rest.GetGuildEmbed(s.Token, guildId)
+}
+
+func (s *Shard) ModifyGuildEmbed(guildId uint64, data objects.GuildEmbed) (*objects.GuildEmbed, error) {
+	return rest.ModifyGuildEmbed(s.Token, guildId, data)
+}
+
+// returns invite object with only "code" and "uses" fields
+func (s *Shard) GetGuildVanityUrl(guildId uint64) (*objects.Invite, error) {
+	return rest.GetGuildVanityURL(s.Token, guildId)
+}
+
+func (s *Shard) GetGuildWidgetImage(guildId uint64, style objects.WidgetStyle) (*image.Image, error) {
+	return rest.GetGuildWidgetImage(s.Token, guildId, style)
+}
+
+func (s *Shard) GetInvite(inviteCode string, withCounts bool) (*objects.Invite, error) {
+	return rest.GetInvite(s.Token, inviteCode, withCounts)
+}
+
+func (s *Shard) DeleteInvite(inviteCode string) (*objects.Invite, error) {
+	return rest.DeleteInvite(s.Token, inviteCode)
+}
+
+func (s *Shard) GetCurrentUser() (*objects.User, error) {
+	if cached := (*s.Cache).GetSelf(); cached != nil {
+		return cached, nil
+	}
+
+	self, err := rest.GetCurrentUser(s.Token)
+
+	if err == nil {
+		go func() {
+			(*s.Cache).StoreSelf(self)
+		}()
+	}
+
+	return self, err
+}
+
+func (s *Shard) GetUser(userId uint64) (*objects.User, error) {
+	shouldCache := (*s.Cache).GetOptions().Users
+
+	if shouldCache {
+		cached := (*s.Cache).GetUser(userId)
+		if cached != nil {
+			return cached, nil
+		}
+	}
+
+	user, err := rest.GetUser(s.Token, userId)
+
+	if shouldCache && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(userId)
+			lock.Lock()
+
+			(*s.Cache).StoreUser(user)
+
+			lock.Unlock()
+		}()
+	}
+
+	return user, err
+}
+
+func (s *Shard) ModifyCurrentUser(data rest.ModifyUserData) (*objects.User, error) {
+	return rest.ModifyCurrentUser(s.Token, data)
+}
+
+func (s *Shard) GetCurrentUserGuilds(data rest.CurrentUserGuildsData) ([]*objects.Guild, error) {
+	return rest.GetCurrentUserGuilds(s.Token, data)
+}
+
+func (s *Shard) LeaveGuild(guildId uint64) error {
+	return rest.LeaveGuild(s.Token, guildId)
+}
+
+func (s *Shard) CreateDM(recipientId uint64) (*objects.Channel, error) {
+	return rest.CreateDM(s.Token, recipientId)
+}
+
+func (s *Shard) GetUserConnections() ([]*objects.Connection, error) {
+	return rest.GetUserConnections(s.Token)
+}
+
+// GetGuildVoiceRegions should be preferred, as it returns VIP servers if available to the guild
+func (s *Shard) ListVoiceRegions() ([]*objects.VoiceRegion, error) {
+	return rest.ListVoiceRegions(s.Token)
+}
+
+func (s *Shard) CreateWebhook(channelId uint64, data rest.WebhookData) (*objects.Webhook, error) {
+	return rest.CreateWebhook(s.Token, channelId, data)
+}
+
+func (s *Shard) GetChannelWebhooks(channelId uint64) ([]*objects.Webhook, error) {
+	return rest.GetChannelWebhooks(s.Token, channelId)
+}
+
+func (s *Shard) GetGuildWebhooks(guildId uint64) ([]*objects.Webhook, error) {
+	return rest.GetGuildWebhooks(s.Token, guildId)
+}
+
+func (s *Shard) GetWebhook(webhookId uint64) (*objects.Webhook, error) {
+	return rest.GetWebhook(s.Token, webhookId)
+}
+
+func (s *Shard) ModifyWebhook(webhookId uint64, data rest.ModifyWebhookData) (*objects.Webhook, error) {
+	return rest.ModifyWebhook(s.Token, webhookId, data)
+}
+
+func (s *Shard) DeleteWebhook(webhookId uint64) error {
+	return rest.DeleteWebhook(s.Token, webhookId)
+}
+
+func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) {
+	rest.ExecuteWebhook(webhookId, webhookToken, wait, data)
+}

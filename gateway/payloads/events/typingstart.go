@@ -1,6 +1,6 @@
 package events
 
-import "github.com/Dot-Rar/gdl/objects"
+import "github.com/rxdn/gdl/objects"
 
 type TypingStart struct {
 	ChannelId uint64          `json:"channel_id,string"`
