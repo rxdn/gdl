@@ -401,7 +401,35 @@ func (s *Shard) RemoveGuildBan(guildId, userId uint64) error {
 }
 
 func (s *Shard) GetGuildRoles(guildId uint64) ([]*objects.Role, error) {
-	return rest.GetGuildRoles(s.Token, guildId)
+	shouldCache := (*s.Cache).GetOptions().Guilds
+
+	if shouldCache {
+		guild := (*s.Cache).GetGuild(guildId)
+		if guild != nil {
+			return guild.Roles, nil
+		}
+	}
+
+	roles, err := rest.GetGuildRoles(s.Token, guildId)
+
+	if shouldCache && err == nil {
+		go func() {
+			lock := (*s.Cache).GetLock(guildId)
+			lock.Lock()
+
+			guild := (*s.Cache).GetGuild(guildId)
+			if guild == nil {
+				guild = &objects.Guild{
+					Id: guildId,
+				}
+			}
+			guild.Roles = roles
+			(*s.Cache).StoreGuild(guild)
+			lock.Unlock()
+		}()
+	}
+
+	return roles, err
 }
 
 func (s *Shard) CreateGuildRole(guildId uint64, data rest.GuildRoleData) (*objects.Role, error) {

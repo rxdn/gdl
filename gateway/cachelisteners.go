@@ -34,6 +34,13 @@ func readyListener(s *Shard, e *events.Ready) {
 
 	s.SessionId = e.SessionId
 
+	// cache self
+	lock := (*s.Cache).GetLock(e.User.Id)
+	lock.Lock()
+	(*s.Cache).StoreSelf(e.User)
+	lock.Unlock()
+
+	// cache guilds
 	if (*s.Cache).GetOptions().Guilds {
 		for _, guild := range e.Guilds {
 			(*s.Cache).GetLock(guild.Id).Lock()
