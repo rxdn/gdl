@@ -1,7 +1,9 @@
 package events
 
-import "github.com/rxdn/gdl/objects"
+import (
+	"github.com/rxdn/gdl/objects/guild"
+)
 
 type GuildDelete struct {
-	*objects.Guild
+	*guild.Guild
 }

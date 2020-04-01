@@ -1,7 +1,9 @@
 package events
 
-import "github.com/rxdn/gdl/objects"
+import (
+	"github.com/rxdn/gdl/objects/channel"
+)
 
 type ChannelCreate struct {
-	*objects.Channel
+	*channel.Channel
 }

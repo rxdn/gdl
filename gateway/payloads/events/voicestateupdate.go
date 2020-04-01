@@ -1,7 +1,9 @@
 package events
 
-import "github.com/rxdn/gdl/objects"
+import (
+	"github.com/rxdn/gdl/objects/guild"
+)
 
 type VoiceStateUpdate struct {
-	*objects.VoiceState
+	*guild.VoiceState
 }

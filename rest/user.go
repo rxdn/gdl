@@ -2,33 +2,36 @@ package rest
 
 import (
 	"fmt"
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/integration"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/rest/routes"
 	"net/url"
 	"strconv"
 )
 
-func GetCurrentUser(token string) (*objects.User, error) {
+func GetCurrentUser(token string) (*user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    "/users/@me",
 	}
 
-	var user objects.User
+	var user user.User
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &user)
 	return &user, err
 }
 
-func GetUser(token string, userId uint64) (*objects.User, error) {
+func GetUser(token string, userId uint64) (*user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/%d", userId),
 	}
 
-	var user objects.User
+	var user user.User
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetUserRoute(userId).Ratelimiter, nil, &user)
 	return &user, err
 }
@@ -38,14 +41,14 @@ type ModifyUserData struct {
 	Avatar   Image  `json:"avatar,omitempty"`
 }
 
-func ModifyCurrentUser(token string, data ModifyUserData) (*objects.User, error) {
+func ModifyCurrentUser(token string, data ModifyUserData) (*user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    "/users/@me",
 	}
 
-	var user objects.User
+	var user user.User
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, data, &user)
 	return &user, err
 }
@@ -75,14 +78,14 @@ func (d *CurrentUserGuildsData) Query() string {
 	return query.Encode()
 }
 
-func GetCurrentUserGuilds(token string, data CurrentUserGuildsData) ([]*objects.Guild, error) {
+func GetCurrentUserGuilds(token string, data CurrentUserGuildsData) ([]*guild.Guild, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/guilds?%s", data.Query()),
 	}
 
-	var guilds []*objects.Guild
+	var guilds []*guild.Guild
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &guilds)
 	return guilds, err
 }
@@ -98,7 +101,7 @@ func LeaveGuild(token string, guildId uint64) error {
 	return err
 }
 
-func CreateDM(token string, recipientId uint64) (*objects.Channel, error) {
+func CreateDM(token string, recipientId uint64) (*channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType:       request.POST,
 		ContentType:       request.ApplicationJson,
@@ -109,19 +112,19 @@ func CreateDM(token string, recipientId uint64) (*objects.Channel, error) {
 		"recipient_id": strconv.FormatUint(recipientId, 10),
 	}
 
-	var channel objects.Channel
+	var channel channel.Channel
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, body, &channel)
 	return &channel, err
 }
 
-func GetUserConnections(token string) ([]*objects.Connection, error) {
+func GetUserConnections(token string) ([]*integration.Connection, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/connections"),
 	}
 
-	var connections []*objects.Connection
+	var connections []*integration.Connection
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &connections)
 	return connections, err
 }

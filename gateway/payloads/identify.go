@@ -1,57 +1,62 @@
 package payloads
 
-type(
+import (
+	"github.com/rxdn/gdl/objects/user"
+)
+
+type (
 	Identify struct {
-		Opcode int `json:"op"`
-		Data IdentifyData `json:"d"`
+		Opcode int          `json:"op"`
+		Data   IdentifyData `json:"d"`
 	}
 
 	IdentifyData struct {
-		Token string `json:"token"`
-		Properties Properties `json:"properties"`
-		Compress bool `json:"compress"`
-		LargeThreshold int `json:"large_threshold"`
-		Shard []int `json:"shard"`
-		Presence Presence `json:"presence"`
+		Token              string            `json:"token"`
+		Properties         Properties        `json:"properties"`
+		Compress           bool              `json:"compress"`
+		LargeThreshold     int               `json:"large_threshold"`
+		Shard              []int             `json:"shard"`
+		Presence           user.UpdateStatus `json:"presence"`
+		GuildSubscriptions bool              `json:"guild_subscriptions"`
+		Intents            int               `json:"intents,omitempty"`
 	}
 
 	Properties struct {
-		Os string `json:"$os"`
+		Os      string `json:"$os"`
 		Browser string `json:"$browser"`
-		Device string `json:"$device"`
+		Device  string `json:"$device"`
 	}
 
 	Presence struct {
-		Game Game `json:"game"`
+		Game   Game   `json:"game"`
 		Status string `json:"status"`
-		Since *int `json:"since"`
-		Afk bool `json:"afk"`
+		Since  *int   `json:"since"`
+		Afk    bool   `json:"afk"`
 	}
 
 	Game struct {
 		Name string `json:"name"`
-		Type int `json:"type"`
+		Type int    `json:"type"`
 	}
 )
 
-func NewIdentify(shardId int, shardTotal int, token string) Identify {
+func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateStatus, guildSubscriptions bool) Identify {
 	payload := Identify{
 		Opcode: 2,
 		Data: IdentifyData{
 			Token: token,
 			Properties: Properties{
-				Os: "linux",
+				Os:      "linux",
 				Browser: "GDL",
-				Device: "GDL",
+				Device:  "GDL",
 			},
-			Compress: false, // TODO: Use compression
-			LargeThreshold: 250,
-			Shard: []int{shardId, shardTotal},
+			Compress:           false,
+			LargeThreshold:     250,
+			Shard:              []int{shardId, shardTotal},
+			Presence:           status,
+			GuildSubscriptions: guildSubscriptions,
 		},
 	}
-
-
-	// TODO: Presence
 
 	return payload
 }

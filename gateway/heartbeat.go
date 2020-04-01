@@ -10,6 +10,9 @@ import (
 func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 	for {
 		select {
+		case <-s.KillHeartbeat:
+			ticker.Stop()
+			break
 		case <-ticker.C:
 			s.HeartbeatMutex.Lock()
 
@@ -27,9 +30,6 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 				s.Kill()
 				go s.EnsureConnect()
 			}
-		case <-s.KillHeartbeat:
-			ticker.Stop()
-			break
 		}
 	}
 }

@@ -1,9 +1,9 @@
 package events
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/guild"
 )
 
 type GuildUpdate struct {
-	*objects.Guild
+	*guild.Guild
 }

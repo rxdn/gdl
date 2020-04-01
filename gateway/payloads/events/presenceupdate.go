@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/user"
 	"time"
 )
 
@@ -15,7 +15,7 @@ const (
 )
 
 type PresenceUpdate struct {
-	*objects.Presence
+	*user.Presence
 	PremiumSince time.Time               `json:"premium_since"` // When the user started boosting the guild
 	Nick         string                  `json:"nick"`
 }

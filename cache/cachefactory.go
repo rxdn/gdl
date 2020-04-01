@@ -1,7 +1,10 @@
 package cache
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/user"
 	"sync"
 )
 
@@ -12,12 +15,12 @@ func MemoryCacheFactory(options CacheOptions) CacheFactory {
 		return &MemoryCache{
 			Options:     options,
 			locks:       make(map[uint64]*sync.RWMutex),
-			users:       make(map[uint64]*objects.User),
-			guilds:      make(map[uint64]*objects.Guild),
-			channels:    make(map[uint64]*objects.Channel),
-			roles:       make(map[uint64]*objects.Role),
-			emojis:      make(map[uint64]*objects.Emoji),
-			voiceStates: make(map[uint64]*objects.VoiceState),
+			users:       make(map[uint64]*user.User),
+			guilds:      make(map[uint64]*guild.Guild),
+			channels:    make(map[uint64]*channel.Channel),
+			roles:       make(map[uint64]*guild.Role),
+			emojis:      make(map[uint64]*emoji.Emoji),
+			voiceStates: make(map[uint64]*guild.VoiceState),
 		}
 	}
 }

@@ -1,7 +1,10 @@
 package cache
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/user"
 	"sync"
 )
 
@@ -9,29 +12,29 @@ type Cache interface {
 	GetOptions() CacheOptions
 	GetLock(uint64) *sync.RWMutex
 
-	StoreUser(user *objects.User)
-	GetUser(id uint64) *objects.User
+	StoreUser(user *user.User)
+	GetUser(id uint64) *user.User
 
-	StoreGuild(guild *objects.Guild)
-	GetGuild(id uint64) *objects.Guild
+	StoreGuild(guild *guild.Guild)
+	GetGuild(id uint64) *guild.Guild
 	DeleteGuild(id uint64)
 
-	StoreChannel(channel *objects.Channel)
-	GetChannel(id uint64) *objects.Channel
+	StoreChannel(channel *channel.Channel)
+	GetChannel(id uint64) *channel.Channel
 	DeleteChannel(id uint64)
 
-	StoreRole(role *objects.Role)
-	GetRole(id uint64) *objects.Role
+	StoreRole(role *guild.Role)
+	GetRole(id uint64) *guild.Role
 	DeleteRole(id uint64)
 
-	StoreEmoji(emoji *objects.Emoji)
-	GetEmoji(id uint64) *objects.Emoji
+	StoreEmoji(emoji *emoji.Emoji)
+	GetEmoji(id uint64) *emoji.Emoji
 	DeleteEmoji(id uint64)
 
-	StoreVoiceState(voiceState *objects.VoiceState)
-	GetVoiceState(user uint64) *objects.VoiceState
+	StoreVoiceState(voiceState *guild.VoiceState)
+	GetVoiceState(user uint64) *guild.VoiceState
 	DeleteVoiceState(user uint64)
 
-	StoreSelf(self *objects.User)
-	GetSelf() *objects.User
+	StoreSelf(self *user.User)
+	GetSelf() *user.User
 }

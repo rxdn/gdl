@@ -3,7 +3,9 @@ package rest
 import (
 	"bytes"
 	"fmt"
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/rest/routes"
 	"io"
@@ -18,63 +20,63 @@ type WebhookData struct {
 	Avatar   *Image `json:"avatar,omitempty"`
 }
 
-func CreateWebhook(token string, channelId uint64, data WebhookData) (*objects.Webhook, error) {
+func CreateWebhook(token string, channelId uint64, data WebhookData) (*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
 	}
 
-	var webhook objects.Webhook
+	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &webhook)
 	return &webhook, err
 }
 
-func GetChannelWebhooks(token string, channelId uint64) ([]*objects.Webhook, error) {
+func GetChannelWebhooks(token string, channelId uint64) ([]*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
 	}
 
-	var webhooks []*objects.Webhook
+	var webhooks []*guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &webhooks)
 	return webhooks, err
 }
 
-func GetGuildWebhooks(token string, guildId uint64) ([]*objects.Webhook, error) {
+func GetGuildWebhooks(token string, guildId uint64) ([]*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/webhooks", guildId),
 	}
 
-	var webhooks []*objects.Webhook
+	var webhooks []*guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &webhooks)
 	return webhooks, err
 }
 
-func GetWebhook(token string, webhookId uint64) (*objects.Webhook, error) {
+func GetWebhook(token string, webhookId uint64) (*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
 	}
 
-	var webhook objects.Webhook
+	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, nil, &webhook)
 	return &webhook, err
 }
 
 // does not return a User object
-func GetWebhookWithToken(webhookId uint64, webhookToken string) (*objects.Webhook, error) {
+func GetWebhookWithToken(webhookId uint64, webhookToken string) (*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
 	}
 
-	var webhook objects.Webhook
+	var webhook guild.Webhook
 	err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, nil, &webhook)
 	return &webhook, err
 }
@@ -85,14 +87,14 @@ type ModifyWebhookData struct {
 	ChannelId uint64 `json:"channel_id,string,omitempty"`
 }
 
-func ModifyWebhook(token string, webhookId uint64, data ModifyWebhookData) (*objects.Webhook, error) {
+func ModifyWebhook(token string, webhookId uint64, data ModifyWebhookData) (*guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
 	}
 
-	var webhook objects.Webhook
+	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, &webhook)
 	return &webhook, err
 }
@@ -136,9 +138,9 @@ type WebhookBody struct {
 	AvatarUrl       string                 `json:"avatar_url,omitempty"`
 	Tts             bool                   `json:"tts"`
 	File            *File                  `json:"file,omitempty"`
-	Embeds          []*objects.Embed       `json:"embeds,omitempty"`
+	Embeds          []*embed.Embed         `json:"embeds,omitempty"`
 	PayloadJson     string                 `json:"payload_json"`
-	AllowedMentions objects.AllowedMention `json:"allowed_mentions,omitempty"`
+	AllowedMentions message.AllowedMention `json:"allowed_mentions,omitempty"`
 }
 
 func (d WebhookBody) EncodeMultipartFormData() ([]byte, string, error) {
@@ -190,7 +192,7 @@ func (d WebhookBody) EncodeMultipartFormData() ([]byte, string, error) {
 }
 
 // if wait=true, a message object will be returned
-func ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data WebhookBody) (*objects.Message, error) {
+func ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data WebhookBody) (*message.Message, error) {
 	var endpoint request.Endpoint
 
 	if data.File == nil {
@@ -208,7 +210,7 @@ func ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data Webho
 
 	}
 	if wait {
-		var message objects.Message
+		var message message.Message
 		err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, &message)
 		return &message, err
 	} else {

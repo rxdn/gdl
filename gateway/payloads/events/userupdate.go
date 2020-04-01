@@ -1,7 +1,9 @@
 package events
 
-import "github.com/rxdn/gdl/objects"
+import (
+	"github.com/rxdn/gdl/objects/user"
+)
 
 type UserUpdate struct {
-	*objects.User
+	*user.User
 }

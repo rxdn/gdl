@@ -1,10 +1,10 @@
 package events
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/member"
 )
 
 type GuildMemberAdd struct {
-	*objects.Member
+	*member.Member
 	GuildId uint64 `json:"guild_id,string"`
 }

@@ -1,9 +1,9 @@
 package events
 
 import (
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/guild"
 )
 
 type GuildCreate struct {
-	*objects.Guild
+	*guild.Guild
 }

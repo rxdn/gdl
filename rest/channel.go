@@ -3,7 +3,11 @@ package rest
 import (
 	"bytes"
 	"fmt"
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/invite"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/rest/routes"
 	"github.com/rxdn/gdl/utils"
@@ -15,14 +19,14 @@ import (
 	"strings"
 )
 
-func GetChannel(token string, channelId uint64) (*objects.Channel, error) {
+func GetChannel(token string, channelId uint64) (*channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
 	}
 
-	var channel objects.Channel
+	var channel channel.Channel
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &channel); err != nil {
 		return nil, err
 	}
@@ -38,18 +42,18 @@ type ModifyChannelData struct {
 	RateLimitPerUser     int                            `json:"rate_limit_per_user,omitempty"`
 	Bitrate              int                            `json:"bitrate,omitempty"`
 	UserLimit            int                            `json:"user_limit,omitempty"`
-	PermissionOverwrites []*objects.PermissionOverwrite `json:"permission_overwrites,omitempty"`
+	PermissionOverwrites []*channel.PermissionOverwrite `json:"permission_overwrites,omitempty"`
 	ParentId             uint64                         `json:"parent_id,string,omitempty"`
 }
 
-func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (*objects.Channel, error) {
+func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (*channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
 	}
 
-	var channel objects.Channel
+	var channel channel.Channel
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &channel); err != nil {
 		return nil, err
 	}
@@ -57,14 +61,14 @@ func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (*obj
 	return &channel, nil
 }
 
-func DeleteChannel(token string, channelId uint64) (*objects.Channel, error) {
+func DeleteChannel(token string, channelId uint64) (*channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
 	}
 
-	var channel objects.Channel
+	var channel channel.Channel
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &channel); err != nil {
 		return nil, err
 	}
@@ -103,14 +107,14 @@ func (o *GetChannelMessagesData) Query() string {
 	return query.Encode()
 }
 
-func GetChannelMessages(token string, channelId uint64, data GetChannelMessagesData) ([]*objects.Message, error) {
+func GetChannelMessages(token string, channelId uint64, data GetChannelMessagesData) ([]*message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages?%s", channelId, data.Query()),
 	}
 
-	var messages []*objects.Message
+	var messages []*message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
 		return nil, err
 	}
@@ -118,14 +122,14 @@ func GetChannelMessages(token string, channelId uint64, data GetChannelMessagesD
 	return messages, nil
 }
 
-func GetChannelMessage(token string, channelId, messageId uint64) (*objects.Message, error) {
+func GetChannelMessage(token string, channelId, messageId uint64) (*message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
 	}
 
-	var message objects.Message
+	var message message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &message); err != nil {
 		return nil, err
 	}
@@ -144,9 +148,9 @@ type CreateMessageData struct {
 	Nonce           string                 `json:"nonce,omitempty"`
 	Tts             bool                   `json:"tts,omitempty"`
 	File            *File                  `json:"-"`
-	Embed           *objects.Embed         `json:"embed,omitempty"`
+	Embed           *embed.Embed           `json:"embed,omitempty"`
 	PayloadJson     string                 `json:"-"` // TODO: Helper method
-	AllowedMentions objects.AllowedMention `json:"allowed_mentions"`
+	AllowedMentions message.AllowedMention `json:"allowed_mentions"`
 }
 
 func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
@@ -197,7 +201,7 @@ func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
 	return []byte(string(body.Bytes()) + "\r\n--" + writer.Boundary() + "--"), writer.Boundary(), nil
 }
 
-func CreateMessage(token string, channelId uint64, data CreateMessageData) (*objects.Message, error) {
+func CreateMessage(token string, channelId uint64, data CreateMessageData) (*message.Message, error) {
 	var endpoint request.Endpoint
 	if data.File == nil {
 		endpoint = request.Endpoint{
@@ -213,7 +217,7 @@ func CreateMessage(token string, channelId uint64, data CreateMessageData) (*obj
 		}
 	}
 
-	var message objects.Message
+	var message message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &message); err != nil {
 		return nil, err
 	}
@@ -282,14 +286,14 @@ func (o *GetReactionsData) Query() string {
 	return query.Encode()
 }
 
-func GetReactions(token string, channelId, messageId uint64, emoji string, data GetReactionsData) ([]objects.User, error) {
+func GetReactions(token string, channelId, messageId uint64, emoji string, data GetReactionsData) ([]user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s?%s", channelId, messageId, url.QueryEscape(emoji), data.Query()),
 	}
 
-	var users []objects.User
+	var users []user.User
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &users); err != nil {
 		return nil, err
 	}
@@ -320,19 +324,19 @@ func DeleteAllReactionsEmoji(token string, channelId, messageId uint64, emoji st
 }
 
 type EditMessageData struct {
-	Content string         `json:"content,omitempty"`
-	Embed   *objects.Embed `json:"embed,omitempty"`
-	Flags   int            `json:"flags,omitempty"` // https://discordapp.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Content string       `json:"content,omitempty"`
+	Embed   *embed.Embed `json:"embed,omitempty"`
+	Flags   int          `json:"flags,omitempty"` // https://discordapp.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 }
 
-func EditMessage(token string, channelId, messageId uint64, data ModifyChannelData) (*objects.Message, error) {
+func EditMessage(token string, channelId, messageId uint64, data ModifyChannelData) (*message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
 	}
 
-	var message objects.Message
+	var message message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &message); err != nil {
 		return nil, err
 	}
@@ -366,7 +370,7 @@ func BulkDeleteMessages(token string, channelId uint64, messages []uint64) error
 	return err
 }
 
-func EditChannelPermissions(token string, channelId uint64, updated objects.PermissionOverwrite) error {
+func EditChannelPermissions(token string, channelId uint64, updated channel.PermissionOverwrite) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -379,14 +383,14 @@ func EditChannelPermissions(token string, channelId uint64, updated objects.Perm
 	return err
 }
 
-func GetChannelInvites(token string, channelId uint64) ([]objects.InviteMetadata, error) {
+func GetChannelInvites(token string, channelId uint64) ([]invite.InviteMetadata, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
 	}
 
-	var invites []objects.InviteMetadata
+	var invites []invite.InviteMetadata
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &invites); err != nil {
 		return nil, err
 	}
@@ -394,14 +398,14 @@ func GetChannelInvites(token string, channelId uint64) ([]objects.InviteMetadata
 	return invites, nil
 }
 
-func CreateChannelInvite(token string, channelId uint64, data objects.InviteMetadata) (*objects.Invite, error) {
+func CreateChannelInvite(token string, channelId uint64, data invite.InviteMetadata) (*invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
 	}
 
-	var invite objects.Invite
+	var invite invite.Invite
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &invite); err != nil {
 		return nil, err
 	}
@@ -431,14 +435,14 @@ func TriggerTypingIndicator(token string, channelId uint64) error {
 	return err
 }
 
-func GetPinnedMessages(token string, channelId uint64) ([]*objects.Message, error) {
+func GetPinnedMessages(token string, channelId uint64) ([]*message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins", channelId),
 	}
 
-	var messages []*objects.Message
+	var messages []*message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
 		return nil, err
 	}

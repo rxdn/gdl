@@ -2,7 +2,10 @@ package gateway
 
 import (
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/guild/emoji"
+	"github.com/rxdn/gdl/objects/member"
 	"github.com/sirupsen/logrus"
 )
 
@@ -90,16 +93,16 @@ func guildCreateListener(s *Shard, e *events.GuildCreate) {
 	if (*s.Cache).GetOptions().Guilds {
 		modified := *e.Guild
 		if !(*s.Cache).GetOptions().Users {
-			modified.Members = make([]*objects.Member, 0)
+			modified.Members = make([]*member.Member, 0)
 		}
 		if !(*s.Cache).GetOptions().Channels {
-			modified.Channels = make([]*objects.Channel, 0)
+			modified.Channels = make([]*channel.Channel, 0)
 		}
 		if !(*s.Cache).GetOptions().Roles {
-			modified.Roles = make([]*objects.Role, 0)
+			modified.Roles = make([]*guild.Role, 0)
 		}
 		if !(*s.Cache).GetOptions().Emojis {
-			modified.Emojis = make([]*objects.Emoji, 0)
+			modified.Emojis = make([]*emoji.Emoji, 0)
 		}
 
 		(*s.Cache).GetLock(e.Guild.Id).Lock()
@@ -144,16 +147,16 @@ func guildUpdateListener(s *Shard, e *events.GuildUpdate) {
 	if (*s.Cache).GetOptions().Guilds {
 		modified := *e.Guild
 		if !(*s.Cache).GetOptions().Users {
-			modified.Members = make([]*objects.Member, 0)
+			modified.Members = make([]*member.Member, 0)
 		}
 		if !(*s.Cache).GetOptions().Channels {
-			modified.Channels = make([]*objects.Channel, 0)
+			modified.Channels = make([]*channel.Channel, 0)
 		}
 		if !(*s.Cache).GetOptions().Roles {
-			modified.Roles = make([]*objects.Role, 0)
+			modified.Roles = make([]*guild.Role, 0)
 		}
 		if !(*s.Cache).GetOptions().Emojis {
-			modified.Emojis = make([]*objects.Emoji, 0)
+			modified.Emojis = make([]*emoji.Emoji, 0)
 		}
 
 		(*s.Cache).GetLock(e.Guild.Id).Lock()
