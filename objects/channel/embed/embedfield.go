@@ -1,7 +1,7 @@
 package embed
 
 type EmbedField struct {
-	Name   string
-	Value  string
-	Inline bool
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Inline bool   `json:"inline"`
 }

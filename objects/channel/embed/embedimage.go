@@ -1,8 +1,8 @@
 package embed
 
 type EmbedImage struct {
-	Url      string
-	ProxyUrl string
-	Height   int
-	Width    int
+	Url      string `json:"url"`
+	ProxyUrl string `json:"proxy_url"`
+	Height   int    `json:"height"`
+	Width    int    `json:"width"`
 }

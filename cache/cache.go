@@ -17,6 +17,7 @@ type Cache interface {
 
 	StoreGuild(guild *guild.Guild)
 	GetGuild(id uint64) *guild.Guild
+	GetGuilds() []*guild.Guild
 	DeleteGuild(id uint64)
 
 	StoreChannel(channel *channel.Channel)

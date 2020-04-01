@@ -1,6 +1,6 @@
 package embed
 
 type EmbedProvider struct {
-	Name string
-	Url  string
+	Name string `json:"name"`
+	Url  string `json:"name"`
 }

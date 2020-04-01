@@ -1,7 +1,7 @@
 package embed
 
 type EmbedVideo struct {
-	Url      string
-	Height   int
-	Width    int
+	Url    string `json:"url"`
+	Height int    `json:"height"`
+	Width  int    `json:"width"`
 }

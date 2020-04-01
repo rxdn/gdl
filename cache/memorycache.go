@@ -58,6 +58,14 @@ func (c *MemoryCache) GetGuild(id uint64) *guild.Guild {
 	return guild
 }
 
+func (c *MemoryCache) GetGuilds() []*guild.Guild {
+	guilds := make([]*guild.Guild, 0)
+	for _, guild := range c.guilds {
+		guilds = append(guilds, guild)
+	}
+	return guilds
+}
+
 func (c *MemoryCache) DeleteGuild(id uint64) {
 	delete(c.guilds, id)
 }
