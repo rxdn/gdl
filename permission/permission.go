@@ -69,7 +69,7 @@ func HasPermissionRaw(permissions int, permission Permission) bool {
 	return permissions&int(permission) == int(permission)
 }
 
-func BuildPermissions(permissions []Permission) int {
+func BuildPermissions(permissions ...Permission) int {
 	i := 0
 
 	for _, permission := range permissions {

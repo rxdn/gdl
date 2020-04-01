@@ -20,7 +20,7 @@ import (
 type CreateGuildData struct {
 	Name                        string                                `json:"name"`
 	Region                      string                                `json:"region"` // voice region ID TODO: Helper function
-	Icon                        *Image                                `json:"icon"`
+	Icon                        string                                `json:"icon"`
 	VerificationLevel           guild.VerificationLevel               `json:"verification_level"`
 	DefaultMessageNotifications guild.DefaultMessageNotificationLevel `json:"default_message_notifications"`
 	ExplicitContentFilter       guild.ExplicitContentFilterLevel      `json:"explicit_content_filter"`
@@ -46,9 +46,9 @@ func CreateGuild(token string, data CreateGuildData) (*guild.Guild, error) {
 
 func GetGuild(token string, guildId uint64) (*guild.Guild, error) {
 	endpoint := request.Endpoint{
-		RequestType:       request.GET,
-		ContentType:       request.Nil,
-		Endpoint:          fmt.Sprintf("/guilds/%d", guildId),
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/guilds/%d", guildId),
 	}
 
 	var guild guild.Guild
@@ -58,9 +58,9 @@ func GetGuild(token string, guildId uint64) (*guild.Guild, error) {
 
 func GetGuildPreview(token string, guildId uint64) (*guild.GuildPreview, error) {
 	endpoint := request.Endpoint{
-		RequestType:       request.GET,
-		ContentType:       request.Nil,
-		Endpoint:          fmt.Sprintf("/guilds/%d/preview", guildId),
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/guilds/%d/preview", guildId),
 	}
 
 	var preview guild.GuildPreview
@@ -76,10 +76,10 @@ type ModifyGuildData struct {
 	ExplicitContentFilter       guild.ExplicitContentFilterLevel      `json:"explicit_content_filter"`
 	AfkChannelId                uint64                                `json:"afk_channel_id,string"`
 	AfkTimeout                  int                                   `json:"afk_timeout"`
-	Icon                        *Image                                `json:"icon"`
+	Icon                        string                                `json:"icon"`
 	OwnerId                     uint64                                `json:"owner_id"`
-	Splash                      *Image                                `json:"splash"`
-	Banner                      *Image                                `json:"banner"`
+	Splash                      string                                `json:"splash"`
+	Banner                      string                                `json:"banner"`
 	SystemChannelId             uint64                                `json:"system_channel_id"`
 	RulesChannelId              uint64                                `json:"rules_channel_id"`
 	PublicUpdatesChannelId      uint64                                `json:"public_updates_channel_id"`

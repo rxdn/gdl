@@ -14,3 +14,12 @@ type Member struct {
 	Deaf     bool                    `json:"deaf"`
 	Mute     bool                    `json:"mute"`
 }
+
+func (m *Member) HasRole(roleId uint64) bool {
+	for _, memberRole := range m.Roles {
+		if memberRole == roleId {
+			return true
+		}
+	}
+	return false
+}

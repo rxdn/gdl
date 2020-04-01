@@ -6,6 +6,8 @@ import (
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/utils"
+	"regexp"
+	"strconv"
 )
 
 type Message struct {
@@ -30,4 +32,29 @@ type Message struct {
 	Type            int
 	Activity        MessageActivity
 	Application     MessageApplication
+}
+
+var channelMentionRegex = regexp.MustCompile(`<#(\d+)>`)
+var userMentionRegex = regexp.MustCompile(`<@(\d+)>`)
+
+// no guarantee that these are actual channels
+func (m *Message) ChannelMentions() []uint64 {
+	mentions := make([]uint64, 0)
+	for _, id := range channelMentionRegex.FindStringSubmatch(m.Content) {
+		if parsed, err := strconv.ParseUint(id, 10, 64); err == nil {
+			mentions = append(mentions, parsed)
+		}
+	}
+	return mentions
+}
+
+// no guarantee that these are actual users
+func (m *Message) UserMentions() []uint64 {
+	mentions := make([]uint64, 0)
+	for _, id := range userMentionRegex.FindStringSubmatch(m.Content) {
+		if parsed, err := strconv.ParseUint(id, 10, 64); err == nil {
+			mentions = append(mentions, parsed)
+		}
+	}
+	return mentions
 }

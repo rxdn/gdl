@@ -17,7 +17,7 @@ import (
 
 type WebhookData struct {
 	Username string `json:"username,omitempty"`
-	Avatar   *Image `json:"avatar,omitempty"`
+	Avatar   string `json:"avatar,omitempty"`
 }
 
 func CreateWebhook(token string, channelId uint64, data WebhookData) (*guild.Webhook, error) {
@@ -83,7 +83,7 @@ func GetWebhookWithToken(webhookId uint64, webhookToken string) (*guild.Webhook,
 
 type ModifyWebhookData struct {
 	Name      string `json:"name,omitempty"`
-	Avatar    *Image `json:"avatar,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
 	ChannelId uint64 `json:"channel_id,string,omitempty"`
 }
 

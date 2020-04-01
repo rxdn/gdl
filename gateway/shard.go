@@ -300,3 +300,11 @@ func (s *Shard) Kill() error {
 
 	return err
 }
+
+func (s *Shard) SelfId() uint64 {
+	self := (*s.Cache).GetSelf()
+	if self != nil {
+		return self.Id
+	}
+	return 0
+}

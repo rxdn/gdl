@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -10,7 +11,6 @@ import (
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest"
-	"github.com/sirupsen/logrus"
 	"image"
 )
 
@@ -37,18 +37,17 @@ func (s *Shard) GetChannel(channelId uint64) (*channel.Channel, error) {
 	return channel, err
 }
 
-func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) *channel.Channel {
+func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) (*channel.Channel, error) {
 	channel, err := rest.ModifyChannel(s.Token, channelId, data)
-	if err != nil {
-		logrus.Warnf("error while executing ModifyChannel: %s", err.Error())
-		return nil
-	}
 
-	if (*s.Cache).GetOptions().Channels {
+	if (*s.Cache).GetOptions().Channels && err != nil {
+		lock := (*s.Cache).GetLock(channelId)
+		lock.Lock()
 		(*s.Cache).StoreChannel(channel)
+		lock.Unlock()
 	}
 
-	return channel
+	return channel, err
 }
 
 func (s *Shard) DeleteChannel(channelId uint64) (*channel.Channel, error) {
@@ -69,36 +68,30 @@ func (s *Shard) CreateMessage(channelId uint64, content string) (*message.Messag
 	})
 }
 
+func (s *Shard) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (*message.Message, error) {
+	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
+		Embed: embed,
+	})
+}
+
 func (s *Shard) CreateMessageComplex(channelId uint64, data rest.CreateMessageData) (*message.Message, error) {
 	return rest.CreateMessage(s.Token, channelId, data)
 }
 
-func (s *Shard) CreateReaction(channelId, messageId uint64, emoji string) {
-	if err := rest.CreateReaction(s.Token, channelId, messageId, emoji); err != nil {
-		logrus.Warnf("error while executing CreateReaction: %s", err.Error())
-	}
+func (s *Shard) CreateReaction(channelId, messageId uint64, emoji string) error {
+	return rest.CreateReaction(s.Token, channelId, messageId, emoji)
 }
 
-func (s *Shard) DeleteOwnReaction(channelId, messageId uint64, emoji string) {
-	if err := rest.DeleteOwnReaction(s.Token, channelId, messageId, emoji); err != nil {
-		logrus.Warnf("error while executing DeleteOwnReaction: %s", err.Error())
-	}
+func (s *Shard) DeleteOwnReaction(channelId, messageId uint64, emoji string) error {
+	return rest.DeleteOwnReaction(s.Token, channelId, messageId, emoji)
 }
 
-func (s *Shard) DeleteUserReaction(channelId, messageId, userId uint64, emoji string) {
-	if err := rest.DeleteUserReaction(s.Token, channelId, messageId, userId, emoji); err != nil {
-		logrus.Warnf("error while executing DeleteUserReaction: %s", err.Error())
-	}
+func (s *Shard) DeleteUserReaction(channelId, messageId, userId uint64, emoji string) error {
+	return rest.DeleteUserReaction(s.Token, channelId, messageId, userId, emoji)
 }
 
-func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options rest.GetReactionsData) []user.User {
-	users, err := rest.GetReactions(s.Token, channelId, messageId, emoji, options)
-	if err != nil {
-		logrus.Warnf("error while executing GetReactions: %s", err.Error())
-		return nil
-	}
-
-	return users
+func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options rest.GetReactionsData) ([]user.User, error) {
+	return rest.GetReactions(s.Token, channelId, messageId, emoji, options)
 }
 
 func (s *Shard) DeleteAllReactions(channelId, messageId uint64) error {
