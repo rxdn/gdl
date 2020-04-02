@@ -1,6 +1,8 @@
 package payloads
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type (
 	Hello struct {

@@ -1,9 +1,6 @@
 package user
 
-import (
-	"fmt"
-	"github.com/rxdn/gdl/utils"
-)
+import "fmt"
 
 type User struct {
 	Id            uint64 `json:"id,string"`
@@ -19,12 +16,10 @@ type User struct {
 	PremiumType   int    `json:"premium_type"`
 }
 
-func (u *User) KeyName() string {
-	return fmt.Sprintf("cache:user:%s", u.Id)
+func (u *User) AvatarUrl(size int) string {
+	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%d/%s.webp?size=%d", u.Id, u.Avatar, size)
 }
 
-func (u *User) Serialize() map[string]map[string]interface{} {
-	fields := make(map[string]map[string]interface{})
-	utils.CopyNonNil(fields, u.KeyName(), u)
-	return fields
+func (u *User) Mention() string {
+	return fmt.Sprintf("<@%d>", u.Id)
 }

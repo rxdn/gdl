@@ -124,14 +124,14 @@ func GetGuildChannels(token string, guildId uint64) ([]*channel.Channel, error) 
 type CreateChannelData struct {
 	Name                 string                         `json:"name"`
 	Type                 channel.ChannelType            `json:"type"`
-	Topic                string                         `json:"topic"`
-	Bitrate              int                            `json:"bitrate"`
-	UserLimit            int                            `json:"user_limit"`
+	Topic                string                         `json:"topic,omitempty"`
+	Bitrate              int                            `json:"bitrate,omitempty"`
+	UserLimit            int                            `json:"user_limit,omitempty"`
 	RateLimitPerUser     int                            `json:"rate_limit_per_user"`
-	Position             int                            `json:"position"`
+	Position             int                            `json:"position,omitempty"`
 	PermissionOverwrites []*channel.PermissionOverwrite `json:"permission_overwrites"`
-	ParentId             uint64                         `json:"parent_id,string"`
-	Nsfw                 bool                           `json:"nsfw"`
+	ParentId             uint64                         `json:"parent_id,string,omitempty"`
+	Nsfw                 bool                           `json:"nsfw,omitempty"`
 }
 
 func CreateGuildChannel(token string, guildId uint64, data CreateChannelData) (*channel.Channel, error) {

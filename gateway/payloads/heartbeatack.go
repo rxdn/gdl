@@ -1,6 +1,8 @@
 package payloads
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type HeartbeatAck struct {
 	Opcode int `json:"op"`

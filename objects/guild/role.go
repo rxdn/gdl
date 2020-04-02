@@ -2,7 +2,6 @@ package guild
 
 import (
 	"fmt"
-	"github.com/rxdn/gdl/utils"
 )
 
 type Role struct {
@@ -16,12 +15,6 @@ type Role struct {
 	Mentionable bool   `json:"mentionable"`
 }
 
-func (r *Role) KeyName() string {
-	return fmt.Sprintf("cache:role:%s", r.Id)
-}
-
-func (r *Role) Serialize() map[string]map[string]interface{} {
-	fields := make(map[string]map[string]interface{})
-	utils.CopyNonNil(fields, r.KeyName(), r)
-	return fields
+func (r *Role) Mention() string {
+	return fmt.Sprintf("<@&%d>", r.Id)
 }

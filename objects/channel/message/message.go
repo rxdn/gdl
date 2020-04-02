@@ -8,6 +8,7 @@ import (
 	"github.com/rxdn/gdl/utils"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type Message struct {
@@ -17,8 +18,8 @@ type Message struct {
 	Author          *user.User
 	Member          *member.Member
 	Content         string
-	Timestamp       string
-	EditedTimestamp string
+	Timestamp       time.Time
+	EditedTimestamp *time.Time
 	Tts             bool
 	MentionEveryone bool
 	Mentions        []*MessageMentionedUser

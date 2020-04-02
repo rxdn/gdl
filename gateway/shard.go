@@ -308,3 +308,20 @@ func (s *Shard) SelfId() uint64 {
 	}
 	return 0
 }
+
+func (s *Shard) SelfAvatar(size int) string {
+	self := (*s.Cache).GetSelf()
+	if self != nil {
+		return self.AvatarUrl(size)
+	}
+	return ""
+}
+
+func (s *Shard) SelfUsername() string {
+	self := (*s.Cache).GetSelf()
+	if self != nil {
+		return self.Username
+	}
+	return ""
+}
+

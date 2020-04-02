@@ -66,3 +66,13 @@ func (sm *ShardManager) RegisterListeners(listeners ...interface{}) {
 		sm.EventBus.RegisterListener(listener)
 	}
 }
+
+func (sm *ShardManager) ShardForGuild(guildId uint64) *Shard {
+	for _, shard := range sm.Shards {
+		if (*shard.Cache).GetGuild(guildId) != nil {
+			return shard
+		}
+	}
+
+	return nil
+}

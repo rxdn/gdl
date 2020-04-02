@@ -87,6 +87,6 @@ func (e *Embed) AddField(title, content string, inline bool) *Embed {
 }
 
 func (e *Embed) AddBlankField(inline bool) *Embed {
-	e.AddField("", "", inline‎‎)
+	e.AddField("", "", inline)
 	return e
 }
