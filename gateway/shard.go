@@ -36,6 +36,7 @@ type Shard struct {
 	SequenceLock   sync.RWMutex
 	SequenceNumber *int
 
+	LastHeartbeat     int64 // Millis
 	HeartbeatInterval int
 	HasDoneHeartbeat  bool
 
@@ -84,7 +85,8 @@ func (s *Shard) Connect() error {
 	s.StateLock.Unlock()
 
 	// initialise zlib reader
-	zlibReader, err := czlib.NewReader(bytes.NewReader(nil)); if err != nil {
+	zlibReader, err := czlib.NewReader(bytes.NewReader(nil))
+	if err != nil {
 		return err
 	}
 
@@ -300,28 +302,3 @@ func (s *Shard) Kill() error {
 
 	return err
 }
-
-func (s *Shard) SelfId() uint64 {
-	self := (*s.Cache).GetSelf()
-	if self != nil {
-		return self.Id
-	}
-	return 0
-}
-
-func (s *Shard) SelfAvatar(size int) string {
-	self := (*s.Cache).GetSelf()
-	if self != nil {
-		return self.AvatarUrl(size)
-	}
-	return ""
-}
-
-func (s *Shard) SelfUsername() string {
-	self := (*s.Cache).GetSelf()
-	if self != nil {
-		return self.Username
-	}
-	return ""
-}
-

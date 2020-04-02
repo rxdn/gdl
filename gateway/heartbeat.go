@@ -40,6 +40,7 @@ func (s *Shard) Heartbeat() error {
 	s.SequenceLock.RUnlock()
 
 	s.HasDoneHeartbeat = true
+	s.LastHeartbeat = utils.GetCurrentTimeMillis()
 
 	return s.Write(payload)
 }
