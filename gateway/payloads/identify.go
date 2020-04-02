@@ -50,7 +50,6 @@ func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateSt
 				Browser: "GDL",
 				Device:  "GDL",
 			},
-			Compress:           false,
 			LargeThreshold:     250,
 			Shard:              []int{shardId, shardTotal},
 			Presence:           status,
