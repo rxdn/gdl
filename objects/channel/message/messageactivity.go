@@ -1,6 +1,6 @@
 package message
 
 type MessageActivity struct {
-	Type    int
-	PartyId uint64 `json:",string"`
+	Type    MessageActivityType `json:"type"`
+	PartyId uint64              `json:"party_id,string"`
 }
