@@ -22,7 +22,7 @@ func (e *Embed) SetUrl(url string) *Embed {
 }
 
 func (e *Embed) SetTimestamp(timestamp time.Time) *Embed {
-	e.Timestamp = timestamp
+	e.Timestamp = &timestamp
 	return e
 }
 

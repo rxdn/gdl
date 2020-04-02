@@ -72,6 +72,8 @@ func (s *Shard) EnsureConnect() {
 }
 
 func (s *Shard) Connect() error {
+	logrus.Infof("shard %d: Starting", s.ShardId)
+
 	// Connect to Discord
 	s.StateLock.RLock()
 	state := s.State
@@ -96,12 +98,15 @@ func (s *Shard) Connect() error {
 	conn, _, err := websocket.Dial(s.Context, "wss://gateway.discord.gg/?v=6&encoding=json&compress=zlib-stream", &websocket.DialOptions{
 		CompressionMode: websocket.CompressionContextTakeover,
 	})
+
 	if err != nil {
 		s.StateLock.Lock()
 		s.State = DEAD
 		s.StateLock.Unlock()
 		return err
 	}
+
+	conn.SetReadLimit(4294967296)
 
 	s.WebSocket = conn
 
