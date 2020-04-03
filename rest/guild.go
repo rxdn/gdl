@@ -363,7 +363,7 @@ func ModifyGuildRolePositions(token string, guildId uint64, positions []Position
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles", guildId),
 	}
 
-	var roles []*guild.Role
+	var roles []guild.Role
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, positions, &roles)
 	return roles, err
 }
