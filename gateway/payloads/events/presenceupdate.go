@@ -15,7 +15,7 @@ const (
 )
 
 type PresenceUpdate struct {
-	*user.Presence
-	PremiumSince time.Time               `json:"premium_since"` // When the user started boosting the guild
-	Nick         string                  `json:"nick"`
+	user.Presence
+	PremiumSince time.Time `json:"premium_since"` // When the user started boosting the guild
+	Nick         string    `json:"nick"`
 }

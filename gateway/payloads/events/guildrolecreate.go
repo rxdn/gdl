@@ -5,6 +5,6 @@ import (
 )
 
 type GuildRoleCreate struct {
-	GuildId uint64      `json:"guild_id,string"`
-	Role    *guild.Role ` json:"role"`
+	GuildId uint64     `json:"guild_id,string"`
+	Role    guild.Role ` json:"role"`
 }

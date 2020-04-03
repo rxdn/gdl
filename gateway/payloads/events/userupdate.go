@@ -5,5 +5,5 @@ import (
 )
 
 type UserUpdate struct {
-	*user.User
+	user.User
 }

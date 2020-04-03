@@ -3,12 +3,12 @@ package user
 import "github.com/rxdn/gdl/utils"
 
 type Presence struct {
-	User         *User
+	User         User
 	Roles        utils.Uint64StringSlice `json:",string"`
 	Game         Activity
 	GuildId      uint64 `json:",string"`
 	Status       string
-	Activities   []*Activity
+	Activities   []Activity
 	ClientStatus ClientStatus
 }
 

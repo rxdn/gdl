@@ -8,19 +8,19 @@ import (
 	"github.com/rxdn/gdl/utils"
 )
 
-func ListGuildEmojis(token string, guildId uint64) ([]*emoji.Emoji, error) {
+func ListGuildEmojis(token string, guildId uint64) ([]emoji.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
 	}
 
-	var emojis []*emoji.Emoji
+	var emojis []emoji.Emoji
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetEmojiRoute(guildId).Ratelimiter, nil, &emojis)
 	return emojis, err
 }
 
-func GetGuildEmoji(token string, guildId, emojiId uint64) (*emoji.Emoji, error) {
+func GetGuildEmoji(token string, guildId, emojiId uint64) (emoji.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -29,10 +29,10 @@ func GetGuildEmoji(token string, guildId, emojiId uint64) (*emoji.Emoji, error) 
 
 	var emoji emoji.Emoji
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetEmojiRoute(guildId).Ratelimiter, nil, &emoji); err != nil {
-		return nil, err
+		return emoji, err
 	}
 
-	return &emoji, nil
+	return emoji, nil
 }
 
 type CreateEmojiData struct {
@@ -41,15 +41,16 @@ type CreateEmojiData struct {
 	Roles []uint64 // roles for which this emoji will be whitelisted
 }
 
-func CreateGuildEmoji(token string, guildId uint64, data CreateEmojiData) (*emoji.Emoji, error) {
+func CreateGuildEmoji(token string, guildId uint64, data CreateEmojiData) (emoji.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: data.Image.ContentType,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
 	}
 
+	var emoji emoji.Emoji
 	imageData, err := data.Image.Encode(); if err != nil {
-		return nil, err
+		return emoji, err
 	}
 
 	body := map[string]interface{}{
@@ -58,16 +59,15 @@ func CreateGuildEmoji(token string, guildId uint64, data CreateEmojiData) (*emoj
 		"roles": utils.Uint64StringSlice(data.Roles),
 	}
 
-	var emoji emoji.Emoji
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetEmojiRoute(guildId).Ratelimiter, body, &emoji); err != nil {
-		return nil, err
+		return emoji, err
 	}
 
-	return &emoji, nil
+	return emoji, nil
 }
 
 // updating Image is not permitted
-func ModifyGuildEmoji(token string, guildId, emojiId uint64, data CreateEmojiData) (*emoji.Emoji, error) {
+func ModifyGuildEmoji(token string, guildId, emojiId uint64, data CreateEmojiData) (emoji.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.Nil,
@@ -81,10 +81,10 @@ func ModifyGuildEmoji(token string, guildId, emojiId uint64, data CreateEmojiDat
 
 	var emoji emoji.Emoji
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetEmojiRoute(guildId).Ratelimiter, body, &emoji); err != nil {
-		return nil, err
+		return emoji, err
 	}
 
-	return &emoji, nil
+	return emoji, nil
 }
 
 func DeleteGuildEmoji(token string, guildId, emojiId uint64) error {

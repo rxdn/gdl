@@ -6,6 +6,7 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/json-iterator/go v1.1.9
 	github.com/juju/ratelimit v1.0.1
+	github.com/jwangsadinata/go-multimap v0.0.0-20190620162914-c29f3d7f33b6 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pasztorpisti/qs v0.0.0-20171216220353-8d6c33ee906c

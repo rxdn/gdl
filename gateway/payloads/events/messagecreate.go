@@ -5,5 +5,5 @@ import (
 )
 
 type MessageCreate struct {
-	*message.Message
+	message.Message
 }

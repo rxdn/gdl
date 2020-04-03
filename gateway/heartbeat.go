@@ -26,7 +26,7 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 			s.HeartbeatMutex.Unlock()
 
 			if err := s.Heartbeat(); err != nil {
-				logrus.Warnf("shard %d didn't heartbeat failed, restarting: %s", s.ShardId, err.Error())
+				logrus.Warnf("shard %d heartbeat failed, restarting: %s", s.ShardId, err.Error())
 				s.Kill()
 				go s.EnsureConnect()
 			}

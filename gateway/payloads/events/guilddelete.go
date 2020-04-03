@@ -5,5 +5,5 @@ import (
 )
 
 type GuildDelete struct {
-	*guild.Guild
+	guild.Guild
 }

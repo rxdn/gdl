@@ -65,7 +65,7 @@ func (sm *ShardManager) RegisterListeners(listeners ...interface{}) {
 
 func (sm *ShardManager) ShardForGuild(guildId uint64) *Shard {
 	for _, shard := range sm.Shards {
-		if (*shard.Cache).GetGuild(guildId) != nil {
+		if shard.Cache.GetGuild(guildId) != nil {
 			return shard
 		}
 	}

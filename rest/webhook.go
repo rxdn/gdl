@@ -20,7 +20,7 @@ type WebhookData struct {
 	Avatar   string `json:"avatar,omitempty"`
 }
 
-func CreateWebhook(token string, channelId uint64, data WebhookData) (*guild.Webhook, error) {
+func CreateWebhook(token string, channelId uint64, data WebhookData) (guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -29,34 +29,34 @@ func CreateWebhook(token string, channelId uint64, data WebhookData) (*guild.Web
 
 	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &webhook)
-	return &webhook, err
+	return webhook, err
 }
 
-func GetChannelWebhooks(token string, channelId uint64) ([]*guild.Webhook, error) {
+func GetChannelWebhooks(token string, channelId uint64) ([]guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
 	}
 
-	var webhooks []*guild.Webhook
+	var webhooks []guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &webhooks)
 	return webhooks, err
 }
 
-func GetGuildWebhooks(token string, guildId uint64) ([]*guild.Webhook, error) {
+func GetGuildWebhooks(token string, guildId uint64) ([]guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/webhooks", guildId),
 	}
 
-	var webhooks []*guild.Webhook
+	var webhooks []guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &webhooks)
 	return webhooks, err
 }
 
-func GetWebhook(token string, webhookId uint64) (*guild.Webhook, error) {
+func GetWebhook(token string, webhookId uint64) (guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -65,11 +65,11 @@ func GetWebhook(token string, webhookId uint64) (*guild.Webhook, error) {
 
 	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, nil, &webhook)
-	return &webhook, err
+	return webhook, err
 }
 
 // does not return a User object
-func GetWebhookWithToken(webhookId uint64, webhookToken string) (*guild.Webhook, error) {
+func GetWebhookWithToken(webhookId uint64, webhookToken string) (guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -78,7 +78,7 @@ func GetWebhookWithToken(webhookId uint64, webhookToken string) (*guild.Webhook,
 
 	var webhook guild.Webhook
 	err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, nil, &webhook)
-	return &webhook, err
+	return webhook, err
 }
 
 type ModifyWebhookData struct {
@@ -87,7 +87,7 @@ type ModifyWebhookData struct {
 	ChannelId uint64 `json:"channel_id,string,omitempty"`
 }
 
-func ModifyWebhook(token string, webhookId uint64, data ModifyWebhookData) (*guild.Webhook, error) {
+func ModifyWebhook(token string, webhookId uint64, data ModifyWebhookData) (guild.Webhook, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -96,7 +96,7 @@ func ModifyWebhook(token string, webhookId uint64, data ModifyWebhookData) (*gui
 
 	var webhook guild.Webhook
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, &webhook)
-	return &webhook, err
+	return webhook, err
 }
 
 func ModifyWebhookWithToken(webhookId uint64, webhookToken string, data WebhookData) error {
@@ -210,9 +210,9 @@ func ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data Webho
 
 	}
 	if wait {
-		var message message.Message
-		err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, &message)
-		return &message, err
+		var message *message.Message
+		err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, message)
+		return message, err
 	} else {
 		err, _ := endpoint.Request("", &routes.RouteManager.GetWebhookRoute(webhookId).Ratelimiter, data, nil)
 		return nil, err

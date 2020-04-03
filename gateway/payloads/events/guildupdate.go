@@ -5,5 +5,5 @@ import (
 )
 
 type GuildUpdate struct {
-	*guild.Guild
+	guild.Guild
 }

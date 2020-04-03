@@ -5,5 +5,5 @@ import (
 )
 
 type GuildCreate struct {
-	*guild.Guild
+	guild.Guild
 }

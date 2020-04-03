@@ -11,5 +11,5 @@ type MessageReactionAdd struct {
 	MessageId uint64         `json:"message_id,string"`
 	GuildId   uint64         `json:"guild_id,string"`
 	Member    *member.Member `json:"member,string"`
-	Emoji     *emoji.Emoji   `json:"emoji,string"` // Partial emoji object; https://discordapp.com/developers/docs/resources/emoji#emoji-object-gateway-reaction-standard-emoji-example
+	Emoji     emoji.Emoji    `json:"emoji,string"` // Partial emoji object; https://discordapp.com/developers/docs/resources/emoji#emoji-object-gateway-reaction-standard-emoji-example
 }

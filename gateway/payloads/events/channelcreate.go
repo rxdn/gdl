@@ -5,5 +5,5 @@ import (
 )
 
 type ChannelCreate struct {
-	*channel.Channel
+	channel.Channel
 }

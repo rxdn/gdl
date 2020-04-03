@@ -5,6 +5,6 @@ import (
 )
 
 type GuildMemberAdd struct {
-	*member.Member
+	member.Member
 	GuildId uint64 `json:"guild_id,string"`
 }

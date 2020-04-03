@@ -5,5 +5,5 @@ import (
 )
 
 type ChannelDelete struct {
-	*channel.Channel
+	channel.Channel
 }

@@ -1,7 +1,7 @@
 package gateway
 
 func (s *Shard) SelfId() uint64 {
-	self := (*s.Cache).GetSelf()
+	self := s.Cache.GetSelf()
 	if self != nil {
 		return self.Id
 	}
@@ -9,7 +9,7 @@ func (s *Shard) SelfId() uint64 {
 }
 
 func (s *Shard) SelfAvatar(size int) string {
-	self := (*s.Cache).GetSelf()
+	self := s.Cache.GetSelf()
 	if self != nil {
 		return self.AvatarUrl(size)
 	}
@@ -17,7 +17,7 @@ func (s *Shard) SelfAvatar(size int) string {
 }
 
 func (s *Shard) SelfUsername() string {
-	self := (*s.Cache).GetSelf()
+	self := s.Cache.GetSelf()
 	if self != nil {
 		return self.Username
 	}

@@ -6,5 +6,5 @@ import (
 
 type Ban struct {
 	Reason string     `json:"reason,omitempty"`
-	User   *user.User `json:"user"`
+	User   user.User `json:"user"`
 }

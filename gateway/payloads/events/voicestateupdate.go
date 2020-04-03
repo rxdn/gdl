@@ -5,5 +5,5 @@ import (
 )
 
 type VoiceStateUpdate struct {
-	*guild.VoiceState
+	guild.VoiceState
 }

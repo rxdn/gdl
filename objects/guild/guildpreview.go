@@ -8,7 +8,7 @@ type GuildPreview struct {
 	Icon                     string         `json:"icon"`
 	Splash                   string         `json:"splash"`
 	DiscoverySplash          string         `json:"discovery_splash"`
-	Emojis                   []*emoji.Emoji `json:"emojis"`
+	Emojis                   []emoji.Emoji  `json:"emojis"`
 	Features                 []GuildFeature `json:"features"`
 	ApproximateMemberCount   int            `json:"approximate_member_count"`
 	ApproximatePresenceCount int            `json:"approximate_presence_count"`

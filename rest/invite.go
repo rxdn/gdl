@@ -7,7 +7,7 @@ import (
 	"github.com/rxdn/gdl/rest/routes"
 )
 
-func GetInvite(token string, inviteCode string, withCounts bool) (*invite.Invite, error) {
+func GetInvite(token string, inviteCode string, withCounts bool) (invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -16,10 +16,10 @@ func GetInvite(token string, inviteCode string, withCounts bool) (*invite.Invite
 
 	var invite invite.Invite
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetInviteRoute(inviteCode).Ratelimiter, nil, &invite)
-	return &invite, err
+	return invite, err
 }
 
-func DeleteInvite(token string, inviteCode string) (*invite.Invite, error) {
+func DeleteInvite(token string, inviteCode string) (invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -28,5 +28,5 @@ func DeleteInvite(token string, inviteCode string) (*invite.Invite, error) {
 
 	var invite invite.Invite
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetInviteRoute(inviteCode).Ratelimiter, nil, &invite)
-	return &invite, err
+	return invite, err
 }

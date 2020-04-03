@@ -5,5 +5,5 @@ import (
 )
 
 type ChannelUpdate struct {
-	*channel.Channel
+	channel.Channel
 }

@@ -8,7 +8,7 @@ import (
 
 type GuildMembersChunk struct {
 	GuildId   uint64                  `json:"guild_id,string"`
-	Members   []*member.Member        `json:"member"`
+	Members   []member.Member         `json:"member"`
 	NotFound  utils.Uint64StringSlice `json:"not_found,string"`
-	Presences []*user.Presence        `json:"presences"`
+	Presences []user.Presence         `json:"presences"`
 }

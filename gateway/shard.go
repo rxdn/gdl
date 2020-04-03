@@ -46,7 +46,7 @@ type Shard struct {
 
 	SessionId string
 
-	Cache *cache.Cache
+	Cache cache.Cache
 }
 
 func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
@@ -59,7 +59,7 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		State:                        DEAD,
 		Context:                      context.Background(),
 		LastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
-		Cache:                        &cache,
+		Cache:                        cache,
 	}
 }
 
@@ -178,7 +178,8 @@ func (s *Shard) Read() error {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
-			return
+			s.Kill()
+			go s.EnsureConnect()
 		}
 	}()
 

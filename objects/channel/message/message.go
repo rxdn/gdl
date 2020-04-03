@@ -13,16 +13,16 @@ type Message struct {
 	Id               uint64                  `json:"id,string"`
 	ChannelId        uint64                  `json:"channel_id,string"`
 	GuildId          uint64                  `json:"guild_id,string"`
-	Author           *user.User              `json:"author"`
-	Member           *member.Member          `json:"member"`
+	Author           user.User               `json:"author"`
+	Member           member.Member           `json:"member"`
 	Content          string                  `json:"content"`
 	Timestamp        time.Time               `json:"timestamp"`
 	EditedTimestamp  *time.Time              `json:"edited_timestamp"`
 	Tts              bool                    `json:"tts"`
 	MentionEveryone  bool                    `json:"mention_everyone"`
-	Mentions         []*MessageMentionedUser `json:"mentions"` // The user objects in the mentions array will only have the partial member field present in MESSAGE_CREATE and MESSAGE_UPDATE events from text-based guild channels
+	Mentions         []MessageMentionedUser  `json:"mentions"` // The user objects in the mentions array will only have the partial member field present in MESSAGE_CREATE and MESSAGE_UPDATE events from text-based guild channels
 	MentionRoles     utils.Uint64StringSlice `json:"mention_roles,string"`
-	MentionChannels  []*ChannelMention       `json:"mention_channels"`
+	MentionChannels  []ChannelMention        `json:"mention_channels"`
 	Attachments      []channel.Attachment    `json:"attachments"`
 	Embeds           []embed.Embed           `json:"embed"`
 	Reactions        []Reaction              `json:"reactions"`

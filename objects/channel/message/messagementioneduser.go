@@ -7,6 +7,6 @@ import (
 
 // Mentions is an array of users with partial member
 type MessageMentionedUser struct {
-	*user.User
+	user.User
 	Member member.Member
 }

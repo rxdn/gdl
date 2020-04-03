@@ -23,7 +23,7 @@ type Integration struct {
 	EnableEmoticons   bool                       `json:"enable_emoticons"`
 	ExpireBehaviour   IntegrationExpireBehaviour `json:"expire_behavior"`
 	ExpireGracePeriod int                        `json:"expire_grace_period"`
-	User              *user.User                 `json:"user"`
-	Account           *guild.Account             `json:"account"`
+	User              user.User                 `json:"user"`
+	Account           guild.Account             `json:"account"`
 	SyncedAt          time.Time                  `json:"synced_at"`
 }
