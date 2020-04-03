@@ -3,7 +3,12 @@ package permission
 import "github.com/rxdn/gdl/gateway"
 
 func CanSelfInteractWith(shard *gateway.Shard, guildId, targetId uint64) bool {
-	return CanInteractWith(shard, (*shard.Cache).GetSelf().Id, guildId, targetId)
+	self := shard.Cache.GetSelf()
+	if self == nil {
+		return false
+	}
+
+	return CanInteractWith(shard, self.Id, guildId, targetId)
 }
 
 func CanInteractWith(shard *gateway.Shard, guildId, userId, targetId uint64) bool {

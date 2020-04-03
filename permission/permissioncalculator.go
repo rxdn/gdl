@@ -3,7 +3,7 @@ package permission
 import (
 	"errors"
 	"github.com/rxdn/gdl/gateway"
-	channel2 "github.com/rxdn/gdl/objects/channel"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
 )
 
@@ -121,13 +121,13 @@ func GetEffectivePermissions(shard *gateway.Shard, guildId, userId uint64) (int,
 }
 
 func GetChannelMemberPermissions(shard *gateway.Shard, userId, channelId uint64, initialPermissions int) (int, error) {
-	channel, err := shard.GetChannel(channelId)
+	ch, err := shard.GetChannel(channelId)
 	if err != nil {
 		return 0, err
 	}
 
-	for _, overwrite := range channel.PermissionOverwrites {
-		if overwrite.Type == channel2.PermissionTypeMember && overwrite.Id == userId {
+	for _, overwrite := range ch.PermissionOverwrites {
+		if overwrite.Type == channel.PermissionTypeMember && overwrite.Id == userId {
 			initialPermissions &= overwrite.Deny
 			initialPermissions |= overwrite.Allow
 		}
@@ -147,7 +147,7 @@ func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, chann
 		return 0, err
 	}
 
-	channel, err := shard.GetChannel(channelId)
+	ch, err := shard.GetChannel(channelId)
 	if err != nil {
 		return 0, err
 	}
@@ -155,8 +155,8 @@ func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, chann
 	for _, memberRole := range member.Roles {
 		for _, role := range roles {
 			if memberRole == role.Id {
-				for _, overwrite := range channel.PermissionOverwrites {
-					if overwrite.Type == channel2.PermissionTypeRole && overwrite.Id == role.Id {
+				for _, overwrite := range ch.PermissionOverwrites {
+					if overwrite.Type == channel.PermissionTypeRole && overwrite.Id == role.Id {
 						initialPermissions &= overwrite.Deny
 						initialPermissions |= overwrite.Allow
 						break
@@ -178,7 +178,7 @@ func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, 
 	var publicRole *guild.Role
 	for _, role := range roles {
 		if role.Id == guildId {
-			publicRole = role
+			publicRole = &role
 			break
 		}
 	}
@@ -187,13 +187,13 @@ func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, 
 		return 0, errors.New("couldn't find public role")
 	}
 
-	channel, err := shard.GetChannel(channelId)
+	ch, err := shard.GetChannel(channelId)
 	if err != nil {
 		return 0, err
 	}
 
-	for _, overwrite := range channel.PermissionOverwrites {
-		if overwrite.Type == channel2.PermissionTypeRole && overwrite.Id == publicRole.Id {
+	for _, overwrite := range ch.PermissionOverwrites {
+		if overwrite.Type == channel.PermissionTypeRole && overwrite.Id == publicRole.Id {
 			initialPermissions &= overwrite.Deny
 			initialPermissions |= overwrite.Allow
 			break
@@ -234,7 +234,7 @@ func GetBasePermissions(shard *gateway.Shard, guildId uint64) (int, error) {
 	var publicRole *guild.Role
 	for _, role := range roles {
 		if role.Id == guildId {
-			publicRole = role
+			publicRole = &role
 			break
 		}
 	}
