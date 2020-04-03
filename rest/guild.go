@@ -273,14 +273,14 @@ func RemoveGuildMember(token string, guildId, userId uint64) error {
 	return err
 }
 
-func GetGuildBans(token string, guildId uint64) ([]*guild.Ban, error) {
+func GetGuildBans(token string, guildId uint64) ([]guild.Ban, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans", guildId),
 	}
 
-	var bans []*guild.Ban
+	var bans []guild.Ban
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &bans)
 	return bans, err
 }
@@ -356,7 +356,7 @@ func CreateGuildRole(token string, guildId uint64, data GuildRoleData) (guild.Ro
 	return role, err
 }
 
-func ModifyGuildRolePositions(token string, guildId uint64, positions []Position) ([]*guild.Role, error) {
+func ModifyGuildRolePositions(token string, guildId uint64, positions []Position) ([]guild.Role, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -419,38 +419,38 @@ func BeginGuildPrune(token string, guildId uint64, days int, computePruneCount b
 	return err
 }
 
-func GetGuildVoiceRegions(token string, guildId uint64) ([]*guild.VoiceRegion, error) {
+func GetGuildVoiceRegions(token string, guildId uint64) ([]guild.VoiceRegion, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/regions", guildId),
 	}
 
-	var regions []*guild.VoiceRegion
+	var regions []guild.VoiceRegion
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &regions)
 	return regions, err
 }
 
-func GetGuildInvites(token string, guildId uint64) ([]*invite.InviteMetadata, error) {
+func GetGuildInvites(token string, guildId uint64) ([]invite.InviteMetadata, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/regions", guildId),
 	}
 
-	var invites []*invite.InviteMetadata
+	var invites []invite.InviteMetadata
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &invites)
 	return invites, err
 }
 
-func GetGuildIntegrations(token string, guildId uint64) ([]*integration.Integration, error) {
+func GetGuildIntegrations(token string, guildId uint64) ([]integration.Integration, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations", guildId),
 	}
 
-	var integrations []*integration.Integration
+	var integrations []integration.Integration
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetGuildRoute(guildId).Ratelimiter, nil, &integrations)
 	return integrations, err
 }

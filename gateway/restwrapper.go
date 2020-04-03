@@ -126,7 +126,7 @@ func (s *Shard) TriggerTypingIndicator(channelId uint64) error {
 	return rest.TriggerTypingIndicator(s.Token, channelId)
 }
 
-func (s *Shard) GetPinnedMessages(channelId uint64) ([]*message.Message, error) {
+func (s *Shard) GetPinnedMessages(channelId uint64) ([]message.Message, error) {
 	return rest.GetPinnedMessages(s.Token, channelId)
 }
 
@@ -311,7 +311,7 @@ func (s *Shard) RemoveGuildMember(guildId, userId uint64) error {
 	return rest.RemoveGuildMember(s.Token, guildId, userId)
 }
 
-func (s *Shard) GetGuildBans(guildId uint64) ([]*guild.Ban, error) {
+func (s *Shard) GetGuildBans(guildId uint64) ([]guild.Ban, error) {
 	return rest.GetGuildBans(s.Token, guildId)
 }
 
@@ -353,7 +353,7 @@ func (s *Shard) CreateGuildRole(guildId uint64, data rest.GuildRoleData) (guild.
 	return rest.CreateGuildRole(s.Token, guildId, data)
 }
 
-func (s *Shard) ModifyGuildRolePositions(guildId uint64, positions []rest.Position) ([]*guild.Role, error) {
+func (s *Shard) ModifyGuildRolePositions(guildId uint64, positions []rest.Position) ([]guild.Role, error) {
 	return rest.ModifyGuildRolePositions(s.Token, guildId, positions)
 }
 
@@ -374,15 +374,15 @@ func (s *Shard) BeginGuildPrune(guildId uint64, days int, computePruneCount bool
 	return rest.BeginGuildPrune(s.Token, guildId, days, computePruneCount)
 }
 
-func (s *Shard) GetGuildVoiceRegions(guildId uint64) ([]*guild.VoiceRegion, error) {
+func (s *Shard) GetGuildVoiceRegions(guildId uint64) ([]guild.VoiceRegion, error) {
 	return rest.GetGuildVoiceRegions(s.Token, guildId)
 }
 
-func (s *Shard) GetGuildInvites(guildId uint64) ([]*invite.InviteMetadata, error) {
+func (s *Shard) GetGuildInvites(guildId uint64) ([]invite.InviteMetadata, error) {
 	return rest.GetGuildInvites(s.Token, guildId)
 }
 
-func (s *Shard) GetGuildIntegrations(guildId uint64) ([]*integration.Integration, error) {
+func (s *Shard) GetGuildIntegrations(guildId uint64) ([]integration.Integration, error) {
 	return rest.GetGuildIntegrations(s.Token, guildId)
 }
 
@@ -481,7 +481,7 @@ func (s *Shard) GetUserConnections() ([]integration.Connection, error) {
 }
 
 // GetGuildVoiceRegions should be preferred, as it returns VIP servers if available to the guild
-func (s *Shard) ListVoiceRegions() ([]*guild.VoiceRegion, error) {
+func (s *Shard) ListVoiceRegions() ([]guild.VoiceRegion, error) {
 	return rest.ListVoiceRegions(s.Token)
 }
 
