@@ -220,7 +220,7 @@ func (s *Shard) Read() error {
 	case 0: // Event
 		{
 			event := events.EventType(payload.EventName)
-			s.ExecuteEvent(event, payload.Data)
+			go s.ExecuteEvent(event, payload.Data)
 		}
 	case 7: // Reconnect
 		{
