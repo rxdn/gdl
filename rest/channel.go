@@ -35,15 +35,15 @@ func GetChannel(token string, channelId uint64) (channel.Channel, error) {
 }
 
 type ModifyChannelData struct {
-	Name                 string                         `json:"name,omitempty"`
-	Position             int                            `json:"position,omitempty"`
-	Topic                string                         `json:"topic,omitempty"`
-	Nsfw                 bool                           `json:"nsfw,omitempty"`
-	RateLimitPerUser     int                            `json:"rate_limit_per_user,omitempty"`
-	Bitrate              int                            `json:"bitrate,omitempty"`
-	UserLimit            int                            `json:"user_limit,omitempty"`
-	PermissionOverwrites []*channel.PermissionOverwrite `json:"permission_overwrites,omitempty"`
-	ParentId             uint64                         `json:"parent_id,string,omitempty"`
+	Name                 string                        `json:"name,omitempty"`
+	Position             int                           `json:"position,omitempty"`
+	Topic                string                        `json:"topic,omitempty"`
+	Nsfw                 bool                          `json:"nsfw,omitempty"`
+	RateLimitPerUser     int                           `json:"rate_limit_per_user,omitempty"`
+	Bitrate              int                           `json:"bitrate,omitempty"`
+	UserLimit            int                           `json:"user_limit,omitempty"`
+	PermissionOverwrites []channel.PermissionOverwrite `json:"permission_overwrites,omitempty"`
+	ParentId             uint64                        `json:"parent_id,string,omitempty"`
 }
 
 func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
@@ -81,7 +81,7 @@ type GetChannelMessagesData struct {
 	Around uint64 // get messages around this message ID
 	Before uint64 // get messages before this message ID
 	After  uint64 // get messages after this message ID
-	Limit  int     // 1 - 100
+	Limit  int    // 1 - 100
 }
 
 func (o *GetChannelMessagesData) Query() string {
@@ -262,20 +262,20 @@ func DeleteUserReaction(token string, channelId, messageId, userId uint64, emoji
 }
 
 type GetReactionsData struct {
-	Before *uint64 // get users before this user ID
-	After  *uint64 // get users after this user ID
+	Before uint64 // get users before this user ID
+	After  uint64 // get users after this user ID
 	Limit  int     // 1 - 100
 }
 
 func (o *GetReactionsData) Query() string {
 	query := url.Values{}
 
-	if o.Before != nil {
-		query.Set("before", strconv.FormatUint(*o.Before, 10))
+	if o.Before != 0 {
+		query.Set("before", strconv.FormatUint(o.Before, 10))
 	}
 
-	if o.After != nil {
-		query.Set("after", strconv.FormatUint(*o.After, 10))
+	if o.After != 0 {
+		query.Set("after", strconv.FormatUint(o.After, 10))
 	}
 
 	if o.Limit > 100 || o.Limit < 1 {
@@ -435,14 +435,14 @@ func TriggerTypingIndicator(token string, channelId uint64) error {
 	return err
 }
 
-func GetPinnedMessages(token string, channelId uint64) ([]*message.Message, error) {
+func GetPinnedMessages(token string, channelId uint64) ([]message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins", channelId),
 	}
 
-	var messages []*message.Message
+	var messages []message.Message
 	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
 		return nil, err
 	}
