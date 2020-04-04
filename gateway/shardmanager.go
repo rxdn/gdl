@@ -5,6 +5,9 @@ import (
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/user"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -13,11 +16,8 @@ type ShardManager struct {
 
 	GatewayBucket *ratelimit.Bucket
 
-	TotalShards  int
-	MinimumShard int // Inclusive
-	MaximumShard int // Inclusive
-
-	Shards map[int]*Shard
+	ShardOptions ShardOptions
+	Shards       map[int]*Shard
 
 	EventBus *events.EventBus
 
@@ -31,17 +31,13 @@ func NewShardManager(token string, shardOptions ShardOptions, cacheFactory cache
 	manager := ShardManager{
 		Token:         token,
 		GatewayBucket: ratelimit.NewBucket(time.Second*6, 1),
-
-		TotalShards:  shardOptions.Total,
-		MinimumShard: shardOptions.Lowest,
-		MaximumShard: shardOptions.Highest,
-
-		EventBus:     events.NewEventBus(),
-		CacheFactory: cacheFactory,
+		ShardOptions:  shardOptions,
+		EventBus:      events.NewEventBus(),
+		CacheFactory:  cacheFactory,
 	}
 
 	manager.Shards = make(map[int]*Shard)
-	for i := shardOptions.Lowest; i <= shardOptions.Highest; i++ {
+	for i := shardOptions.Lowest; i < shardOptions.Highest; i++ {
 		shard := NewShard(&manager, token, i)
 		manager.Shards[i] = &shard
 	}
@@ -71,4 +67,10 @@ func (sm *ShardManager) ShardForGuild(guildId uint64) *Shard {
 	}
 
 	return nil
+}
+
+func (sm *ShardManager) WaitForInterrupt() {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-ch
 }

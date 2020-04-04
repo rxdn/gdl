@@ -142,8 +142,15 @@ func (s *Shard) Connect() error {
 			// Read
 			if err := s.Read(); err != nil {
 				logrus.Warnf("shard %d: Error whilst reading payload: %s", s.ShardId, err.Error())
-				s.Kill()
-				s.EnsureConnect()
+
+				s.StateLock.Lock()
+				state := s.State
+				s.StateLock.Unlock()
+
+				if state == CONNECTED {
+					s.Kill()
+					s.EnsureConnect()
+				}
 			}
 		}
 	}()
@@ -175,15 +182,20 @@ func (s *Shard) Resume() {
 }
 
 func (s *Shard) Read() error {
-	defer func() {
+	/*defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
 			s.Kill()
 			go s.EnsureConnect()
 		}
-	}()
+	}()*/
 
 	s.ReadLock.Lock()
+
+	if s.WebSocket == nil {
+		return errors.New("websocket is nil")
+	}
+
 	_, reader, err := s.WebSocket.Reader(s.Context)
 	if err != nil {
 		s.ReadLock.Unlock()
@@ -290,6 +302,8 @@ func (s *Shard) Kill() error {
 	go func() {
 		s.KillHeartbeat <- struct{}{}
 	}()
+
+	s.ZLibReader.Close()
 
 	s.StateLock.Lock()
 	s.State = DISCONNECTING
