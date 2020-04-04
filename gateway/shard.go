@@ -159,7 +159,7 @@ func (s *Shard) Connect() error {
 }
 
 func (s *Shard) Identify(status user.UpdateStatus, guildSubscriptions bool) {
-	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.TotalShards, s.Token, status, guildSubscriptions)
+	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.Total, s.Token, status, guildSubscriptions)
 	s.ShardManager.GatewayBucket.Wait(1)
 
 	if err := s.Write(identify); err != nil {
