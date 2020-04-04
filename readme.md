@@ -1,6 +1,7 @@
 # About  
 GDL (Go Discord Library) provides a wrapper around the Discord API with additional helper functions to make life easier  
   
+[![Discord Invite](https://discordapp.com/api/v6//guilds/691411922477908008/widget.png?style=banner2)](https://discord.gg/adVPPGp)
 # Getting Started  
 ## Installation  
 Note: GDL uses Go modules. Run `go mod init` to initialise your go.mod file.  
