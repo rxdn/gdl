@@ -1,7 +1,5 @@
 package user
 
-import "github.com/rxdn/gdl/objects/guild/emoji"
-
 type Activity struct {
 	Name          string       `json:"name"`
 	Type          ActivityType `json:"type"`
@@ -10,10 +8,10 @@ type Activity struct {
 	ApplicationId uint64       `json:"application_id,string"`
 	Details       string       `json:"details"`
 	State         string       `json:"state"`
-	Emoji         emoji.Emoji  `json:"emoji"`
-	Party         Party        `json:"party"`
-	Assets        Asset        `json:"assets"`
-	Secret        Secret       `json:"secret"`
-	Instance      bool         `json:"instance"`
-	Flags         int          `json:"flags"` // TODO: Wrap this
+	// TODO: Figure out how to handle emoji w/o import cycle
+	Party    Party  `json:"party"`
+	Assets   Asset  `json:"assets"`
+	Secret   Secret `json:"secret"`
+	Instance bool   `json:"instance"`
+	Flags    int    `json:"flags"` // TODO: Wrap this
 }
