@@ -230,7 +230,7 @@ func CreateReaction(token string, channelId, messageId uint64, emoji string) err
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s", channelId, messageId, url.QueryEscape(emoji)),
+		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/@me", channelId, messageId, url.QueryEscape(emoji)),
 	}
 
 	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
