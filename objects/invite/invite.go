@@ -25,7 +25,7 @@ type Invite struct {
 }
 
 type InviteMetadata struct {
-	*Invite
+	Invite
 	Uses      int       `json:"uses"`
 	MaxUses   int       `json:"max_uses"`
 	MaxAge    int       `json:"max_age"`

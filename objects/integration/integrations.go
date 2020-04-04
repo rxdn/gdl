@@ -6,15 +6,8 @@ import (
 	"time"
 )
 
-type IntegrationExpireBehaviour int
-
-const (
-	RemoveRole IntegrationExpireBehaviour = 0
-	Kick       IntegrationExpireBehaviour = 1
-)
-
 type Integration struct {
-	Id                uint64                     ` json:"id,string"`
+	Id                uint64                     `json:"id,string"`
 	Name              string                     `json:"name"`
 	Type              string                     `json:"type"` // twitch, youtube, etc.
 	Enabled           bool                       `json:"enabled"`
@@ -23,7 +16,7 @@ type Integration struct {
 	EnableEmoticons   bool                       `json:"enable_emoticons"`
 	ExpireBehaviour   IntegrationExpireBehaviour `json:"expire_behavior"`
 	ExpireGracePeriod int                        `json:"expire_grace_period"`
-	User              user.User                 `json:"user"`
-	Account           guild.Account             `json:"account"`
+	User              user.User                  `json:"user"`
+	Account           guild.Account              `json:"account"`
 	SyncedAt          time.Time                  `json:"synced_at"`
 }

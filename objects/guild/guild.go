@@ -8,38 +8,6 @@ import (
 	"time"
 )
 
-type ExplicitContentFilterLevel int
-
-const (
-	DISABLED              ExplicitContentFilterLevel = 0
-	MEMBERS_WITHOUT_ROLES ExplicitContentFilterLevel = 1
-	ALL_MEMBERS           ExplicitContentFilterLevel = 2
-)
-
-type DefaultMessageNotificationLevel int
-
-const (
-	DefaultMessageNotificationLevelAllMessages  DefaultMessageNotificationLevel = 0
-	DefaultMessageNotificationLevelOnlyMengions DefaultMessageNotificationLevel = 1
-)
-
-type GuildFeature string
-
-const (
-	GuildFeatureInviteSplash   GuildFeature = "INVITE_SPLASH"
-	GuildFeatureVipRegions     GuildFeature = "VIP_REGIONS" // guild has access to set 384kbps bitrate in voice (previously VIP voice servers)
-	GuildFeatureVanityUrl      GuildFeature = "VANITY_URL"
-	GuildFeatureVerified       GuildFeature = "VERIFIED"
-	GuildFeaturePartnered      GuildFeature = "PARTNERED"
-	GuildFeaturePublic         GuildFeature = "PUBLIC"
-	GuildFeatureCommerce       GuildFeature = "COMMERCE"
-	GuildFeatureNews           GuildFeature = "NEWS"
-	GuildFeatureDiscoverable   GuildFeature = "DISCOVERABLE"
-	GuildFeatureFeaturable     GuildFeature = "FEATURABLE"
-	GuildFeatureBanner         GuildFeature = "BANNER"
-	GuildFeaturePublicDisabled GuildFeature = "PUBLIC_DISABLED"
-)
-
 type Guild struct {
 	Id                          uint64            `json:"id,string"`
 	Name                        string            `json:"name"`
