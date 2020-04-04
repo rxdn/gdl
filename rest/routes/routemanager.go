@@ -17,6 +17,7 @@ type RestRouteManager struct {
 
 func NewRestRouteManager() RestRouteManager {
 	rrm := RestRouteManager{
+		RWMutex:  &sync.RWMutex{},
 		channels: make(map[uint64]*ChannelRoute, 0),
 		emojis:   make(map[uint64]*EmojiRoute, 0),
 		guilds:   make(map[uint64]*GuildRoute, 0),
