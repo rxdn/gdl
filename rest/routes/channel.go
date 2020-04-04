@@ -7,10 +7,10 @@ type ChannelRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewChannelRoute(id uint64) *ChannelRoute {
+func NewChannelRoute(id uint64, rrm *RestRouteManager) *ChannelRoute {
 	return &ChannelRoute{
 		Id:          id,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

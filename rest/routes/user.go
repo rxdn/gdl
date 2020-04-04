@@ -7,10 +7,10 @@ type UserRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewUserRoute(id uint64) *UserRoute {
+func NewUserRoute(id uint64, rrm *RestRouteManager) *UserRoute {
 	return &UserRoute{
 		Id:          id,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

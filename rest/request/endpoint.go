@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pasztorpisti/qs"
 	"github.com/rxdn/gdl/rest/routes"
+	"github.com/rxdn/gdl/utils"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -59,12 +60,14 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 			}
 			encoded = []byte(str)
 		} else if e.ContentType == MultipartFormData {
-			data, ok := body.(MultipartData); if !ok {
+			data, ok := body.(MultipartData)
+			if !ok {
 				return errors.New("Content-Type MultipartFormData specified but EncodeMultipartFormData was missing"), nil
 			}
 
 			var boundary string
-			encoded, boundary, err = data.EncodeMultipartFormData(); if err != nil {
+			encoded, boundary, err = data.EncodeMultipartFormData()
+			if err != nil {
 				return err, nil
 			}
 
@@ -125,6 +128,17 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 
 func applyNewRatelimits(header http.Header, ratelimiter *routes.Ratelimiter) {
 	ratelimiter.Lock()
+
+	// check global limit
+	if global, err := strconv.ParseBool(header.Get("X-RateLimit-Global")); err == nil && global {
+		if retryAfter, err := strconv.ParseInt(header.Get("Retry-After"), 10, 64); err == nil {
+			ratelimiter.RouteManager.Lock()
+			ratelimiter.RouteManager.GlobalRetryAfter = utils.GetCurrentTimeMillis() + retryAfter
+			ratelimiter.RouteManager.Unlock()
+			ratelimiter.Unlock()
+			return
+		}
+	}
 
 	if limit, err := strconv.Atoi(header.Get("X-Ratelimit-Limit")); err == nil {
 		ratelimiter.Limit = limit

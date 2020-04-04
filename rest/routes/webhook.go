@@ -7,10 +7,10 @@ type WebhookRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewWebhookRoute(id uint64) *WebhookRoute {
+func NewWebhookRoute(id uint64, rrm *RestRouteManager) *WebhookRoute {
 	return &WebhookRoute{
 		Id:          id,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

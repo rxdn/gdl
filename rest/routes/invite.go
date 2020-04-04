@@ -7,10 +7,10 @@ type InviteRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewInviteRoute(inviteCode string) *InviteRoute {
+func NewInviteRoute(inviteCode string, rrm *RestRouteManager) *InviteRoute {
 	return &InviteRoute{
 		Id:          inviteCode,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

@@ -7,10 +7,10 @@ type GuildRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewGuildRoute(id uint64) *GuildRoute {
+func NewGuildRoute(id uint64, rrm *RestRouteManager) *GuildRoute {
 	return &GuildRoute{
 		Id:          id,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

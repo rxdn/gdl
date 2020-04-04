@@ -7,10 +7,10 @@ type EmojiRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewEmojiRoute(guildId uint64) *EmojiRoute {
+func NewEmojiRoute(guildId uint64, rrm *RestRouteManager) *EmojiRoute {
 	return &EmojiRoute{
 		GuildId:     guildId,
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/rxdn/gdl/utils"
 	"sync"
 	"time"
 )
@@ -8,24 +9,37 @@ import (
 type Ratelimiter struct {
 	sync.RWMutex
 
-	Limit     int
-	Remaining int
-	Reset     int64 // Now + ResetAfter
-	Bucket    string
-	taskQueue []chan struct{}
+	RouteManager *RestRouteManager
+	Limit        int
+	Remaining    int
+	Reset        int64 // Now + ResetAfter
+	Bucket       string
+	taskQueue    []chan struct{}
 }
 
-func NewRatelimiter() Ratelimiter {
+func NewRatelimiter(manager *RestRouteManager) Ratelimiter {
 	return Ratelimiter{
-		Limit:     5, // Default to some arbitrary value so that the first request will go through
-		Remaining: 5, // Default to some arbitrary value so that the first request will go through
-		taskQueue: make([]chan struct{}, 0),
+		RouteManager: manager,
+		Limit:        5, // Default to some arbitrary value so that the first request will go through
+		Remaining:    5, // Default to some arbitrary value so that the first request will go through
+		taskQueue:    make([]chan struct{}, 0),
 	}
 }
 
 // Seconds
 func (r *Ratelimiter) GetWaitTime() int64 {
-	return r.Reset - time.Now().Unix()
+	specificWaitTime := r.Reset - time.Now().Unix()
+
+	r.RouteManager.RLock()
+	globalWaitTime := r.RouteManager.GlobalRetryAfter - utils.GetCurrentTimeMillis()
+	r.RouteManager.RUnlock()
+
+	r.RouteManager.RLock()
+	if globalWaitTime > 0 && globalWaitTime > specificWaitTime {
+		return globalWaitTime
+	}
+
+	return specificWaitTime
 }
 
 func (r *Ratelimiter) Queue(task chan struct{}) {
