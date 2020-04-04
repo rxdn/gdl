@@ -4,9 +4,9 @@ type VoiceRoute struct {
 	Ratelimiter Ratelimiter
 }
 
-func NewVoiceRoute() *VoiceRoute {
+func NewVoiceRoute(rrm *RestRouteManager) *VoiceRoute {
 	return &VoiceRoute{
-		Ratelimiter: NewRatelimiter(),
+		Ratelimiter: NewRatelimiter(rrm),
 	}
 }
 

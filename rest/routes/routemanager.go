@@ -22,10 +22,10 @@ func NewRestRouteManager() RestRouteManager {
 		guilds:   make(map[uint64]*GuildRoute, 0),
 		invites:  make(map[string]*InviteRoute, 0),
 		users:    make(map[uint64]*UserRoute, 0),
-		voice:    NewVoiceRoute(),
 		webhooks: make(map[uint64]*WebhookRoute, 0),
 	}
 
+	rrm.voice = NewVoiceRoute(&rrm)
 	rrm.self = NewUserRoute(0, &rrm)
 
 	return rrm
