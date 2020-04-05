@@ -9,7 +9,6 @@ import (
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/gateway/payloads"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tatsuworks/czlib"
@@ -50,7 +49,7 @@ type Shard struct {
 }
 
 func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
-	cache := shardManager.CacheFactory()
+	cache := shardManager.ShardOptions.CacheFactory()
 
 	return Shard{
 		ShardManager:                 shardManager,
@@ -118,7 +117,7 @@ func (s *Shard) Connect() error {
 	}
 
 	if s.SessionId == "" || s.SequenceNumber == nil {
-		s.Identify(s.ShardManager.Presence, s.ShardManager.GuildSubscriptions)
+		s.Identify()
 	} else {
 		s.Resume()
 	}
@@ -158,13 +157,13 @@ func (s *Shard) Connect() error {
 	return nil
 }
 
-func (s *Shard) Identify(status user.UpdateStatus, guildSubscriptions bool) {
-	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.Total, s.Token, status, guildSubscriptions)
+func (s *Shard) Identify() {
+	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.ShardCount.Total, s.Token, s.ShardManager.ShardOptions.Presence, s.ShardManager.ShardOptions.GuildSubscriptions)
 	s.ShardManager.GatewayBucket.Wait(1)
 
 	if err := s.Write(identify); err != nil {
 		logrus.Warnf("shard %d: Error whilst sending Identify: %s", s.ShardId, err.Error())
-		s.Identify(status, guildSubscriptions)
+		s.Identify()
 	}
 }
 
@@ -177,7 +176,7 @@ func (s *Shard) Resume() {
 
 	if err := s.Write(resume); err != nil {
 		logrus.Warnf("shard %d: Error whilst sending Resume: %s", s.ShardId, err.Error())
-		s.Identify(s.ShardManager.Presence, s.ShardManager.GuildSubscriptions)
+		s.Identify()
 	}
 }
 

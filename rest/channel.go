@@ -8,8 +8,8 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/invite"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
-	"github.com/rxdn/gdl/rest/routes"
 	"github.com/rxdn/gdl/utils"
 	"io"
 	"mime/multipart"
@@ -19,15 +19,17 @@ import (
 	"strings"
 )
 
-func GetChannel(token string, channelId uint64) (channel.Channel, error) {
+func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &channel); err != nil {
+	if err, _ := endpoint.Request(token, nil, &channel); err != nil {
 		return channel, err
 	}
 
@@ -46,30 +48,34 @@ type ModifyChannelData struct {
 	ParentId             uint64                        `json:"parent_id,string,omitempty"`
 }
 
-func ModifyChannel(token string, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
+func ModifyChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &channel); err != nil {
+	if err, _ := endpoint.Request(token, data, &channel); err != nil {
 		return channel, err
 	}
 
 	return channel, nil
 }
 
-func DeleteChannel(token string, channelId uint64) (channel.Channel, error) {
+func DeleteChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &channel); err != nil {
+	if err, _ := endpoint.Request(token, nil, &channel); err != nil {
 		return channel, err
 	}
 
@@ -107,30 +113,34 @@ func (o *GetChannelMessagesData) Query() string {
 	return query.Encode()
 }
 
-func GetChannelMessages(token string, channelId uint64, data GetChannelMessagesData) ([]message.Message, error) {
+func GetChannelMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data GetChannelMessagesData) ([]message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages?%s", channelId, data.Query()),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var messages []message.Message
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
+	if err, _ := endpoint.Request(token, nil, &messages); err != nil {
 		return nil, err
 	}
 
 	return messages, nil
 }
 
-func GetChannelMessage(token string, channelId, messageId uint64) (message.Message, error) {
+func GetChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) (message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &message); err != nil {
+	if err, _ := endpoint.Request(token, nil, &message); err != nil {
 		return message, err
 	}
 
@@ -201,13 +211,15 @@ func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
 	return []byte(string(body.Bytes()) + "\r\n--" + writer.Boundary() + "--"), writer.Boundary(), nil
 }
 
-func CreateMessage(token string, channelId uint64, data CreateMessageData) (message.Message, error) {
+func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateMessageData) (message.Message, error) {
 	var endpoint request.Endpoint
 	if data.File == nil {
 		endpoint = request.Endpoint{
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
 			Endpoint:    fmt.Sprintf("/channels/%d/messages", channelId),
+			BaseRoute:   ratelimit.NewChannelRoute(channelId),
+			RateLimiter: rateLimiter,
 		}
 	} else {
 		endpoint = request.Endpoint{
@@ -218,7 +230,7 @@ func CreateMessage(token string, channelId uint64, data CreateMessageData) (mess
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &message); err != nil {
+	if err, _ := endpoint.Request(token, data, &message); err != nil {
 		return message, err
 	}
 
@@ -226,45 +238,51 @@ func CreateMessage(token string, channelId uint64, data CreateMessageData) (mess
 }
 
 // emoji is the raw unicode emoji
-func CreateReaction(token string, channelId, messageId uint64, emoji string) error {
+func CreateReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/@me", channelId, messageId, url.QueryEscape(emoji)),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
 // emoji is the raw unicode emoji
-func DeleteOwnReaction(token string, channelId, messageId uint64, emoji string) error {
+func DeleteOwnReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/@me", channelId, messageId, url.QueryEscape(emoji)),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
 // emoji is the raw unicode emoji
-func DeleteUserReaction(token string, channelId, messageId, userId uint64, emoji string) error {
+func DeleteUserReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId, userId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/%d", channelId, messageId, url.QueryEscape(emoji), userId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
 type GetReactionsData struct {
 	Before uint64 // get users before this user ID
 	After  uint64 // get users after this user ID
-	Limit  int     // 1 - 100
+	Limit  int    // 1 - 100
 }
 
 func (o *GetReactionsData) Query() string {
@@ -286,40 +304,46 @@ func (o *GetReactionsData) Query() string {
 	return query.Encode()
 }
 
-func GetReactions(token string, channelId, messageId uint64, emoji string, data GetReactionsData) ([]user.User, error) {
+func GetReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string, data GetReactionsData) ([]user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s?%s", channelId, messageId, url.QueryEscape(emoji), data.Query()),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var users []user.User
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &users); err != nil {
+	if err, _ := endpoint.Request(token, nil, &users); err != nil {
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func DeleteAllReactions(token string, channelId, messageId uint64) error {
+func DeleteAllReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func DeleteAllReactionsEmoji(token string, channelId, messageId uint64, emoji string) error {
+func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s", channelId, messageId, url.QueryEscape(emoji)),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
@@ -329,145 +353,167 @@ type EditMessageData struct {
 	Flags   int          `json:"flags,omitempty"` // https://discordapp.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 }
 
-func EditMessage(token string, channelId, messageId uint64, data ModifyChannelData) (message.Message, error) {
+func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data ModifyChannelData) (message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &message); err != nil {
+	if err, _ := endpoint.Request(token, data, &message); err != nil {
 		return message, err
 	}
 
 	return message, nil
 }
 
-func DeleteMessage(token string, channelId, messageId uint64) error {
+func DeleteMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func BulkDeleteMessages(token string, channelId uint64, messages []uint64) error {
+func BulkDeleteMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, messages []uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/bulk-delete", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	body := map[string]interface{}{
 		"messages": utils.Uint64StringSlice(messages),
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, body, nil)
+	err, _ := endpoint.Request(token, body, nil)
 	return err
 }
 
-func EditChannelPermissions(token string, channelId uint64, updated channel.PermissionOverwrite) error {
+func EditChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, updated channel.PermissionOverwrite) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/permissions/%d", channelId, updated.Id),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	updated.Id = 0
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, updated, nil)
+	err, _ := endpoint.Request(token, updated, nil)
 	return err
 }
 
-func GetChannelInvites(token string, channelId uint64) ([]invite.InviteMetadata, error) {
+func GetChannelInvites(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]invite.InviteMetadata, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var invites []invite.InviteMetadata
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &invites); err != nil {
+	if err, _ := endpoint.Request(token, nil, &invites); err != nil {
 		return nil, err
 	}
 
 	return invites, nil
 }
 
-func CreateChannelInvite(token string, channelId uint64, data invite.InviteMetadata) (invite.Invite, error) {
+func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data invite.InviteMetadata) (invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var invite invite.Invite
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, data, &invite); err != nil {
+	if err, _ := endpoint.Request(token, data, &invite); err != nil {
 		return invite, err
 	}
 
 	return invite, nil
 }
 
-func DeleteChannelPermissions(token string, channelId, overwriteId uint64) error {
+func DeleteChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, overwriteId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/permissions/%d", channelId, overwriteId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func TriggerTypingIndicator(token string, channelId uint64) error {
+func TriggerTypingIndicator(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/typing", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func GetPinnedMessages(token string, channelId uint64) ([]message.Message, error) {
+func GetPinnedMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins", channelId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var messages []message.Message
-	if err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, &messages); err != nil {
+	if err, _ := endpoint.Request(token, nil, &messages); err != nil {
 		return nil, err
 	}
 
 	return messages, nil
 }
 
-func AddPinnedChannelMessage(token string, channelId, messageId uint64) error {
+func AddPinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins/%d", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func DeletePinnedChannelMessage(token string, channelId, messageId uint64) error {
+func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins/%d", channelId, messageId),
+		BaseRoute:   ratelimit.NewChannelRoute(channelId),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetChannelRoute(channelId).Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }

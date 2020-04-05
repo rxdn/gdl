@@ -2,9 +2,8 @@ package gateway
 
 import (
 	"github.com/juju/ratelimit"
-	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	"github.com/rxdn/gdl/objects/user"
+	restlimiter "github.com/rxdn/gdl/rest/ratelimit"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,30 +13,26 @@ import (
 type ShardManager struct {
 	Token string
 
-	GatewayBucket *ratelimit.Bucket
+	GatewayBucket      *ratelimit.Bucket
+	ConcurrencyLimiter *restlimiter.Ratelimiter
 
 	ShardOptions ShardOptions
 	Shards       map[int]*Shard
 
 	EventBus *events.EventBus
-
-	CacheFactory cache.CacheFactory
-
-	Presence           user.UpdateStatus
-	GuildSubscriptions bool
 }
 
-func NewShardManager(token string, shardOptions ShardOptions, cacheFactory cache.CacheFactory) ShardManager {
+func NewShardManager(token string, shardOptions ShardOptions) ShardManager {
 	manager := ShardManager{
-		Token:         token,
-		GatewayBucket: ratelimit.NewBucket(time.Second*6, 1),
-		ShardOptions:  shardOptions,
-		EventBus:      events.NewEventBus(),
-		CacheFactory:  cacheFactory,
+		Token:              token,
+		GatewayBucket:      ratelimit.NewBucket(time.Second*6, 1),
+		ConcurrencyLimiter: restlimiter.NewConcurrencyLimiter(shardOptions.RateLimitStore),
+		ShardOptions:       shardOptions,
+		EventBus:           events.NewEventBus(),
 	}
 
 	manager.Shards = make(map[int]*Shard)
-	for i := shardOptions.Lowest; i < shardOptions.Highest; i++ {
+	for i := shardOptions.ShardCount.Lowest; i < shardOptions.ShardCount.Highest; i++ {
 		shard := NewShard(&manager, token, i)
 		manager.Shards[i] = &shard
 	}

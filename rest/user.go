@@ -6,33 +6,37 @@ import (
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/integration"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
-	"github.com/rxdn/gdl/rest/routes"
 	"net/url"
 	"strconv"
 )
 
-func GetCurrentUser(token string) (user.User, error) {
+func GetCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    "/users/@me",
+		BaseRoute:   ratelimit.NewUserRoute(0),
+		RateLimiter: rateLimiter,
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &user)
+	err, _ := endpoint.Request(token, nil, &user)
 	return user, err
 }
 
-func GetUser(token string, userId uint64) (user.User, error) {
+func GetUser(token string, rateLimiter *ratelimit.Ratelimiter, userId uint64) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/%d", userId),
+		BaseRoute:   ratelimit.NewUserRoute(userId),
+		RateLimiter: rateLimiter,
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetUserRoute(userId).Ratelimiter, nil, &user)
+	err, _ := endpoint.Request(token, nil, &user)
 	return user, err
 }
 
@@ -41,15 +45,17 @@ type ModifyUserData struct {
 	Avatar   Image  `json:"avatar,omitempty"`
 }
 
-func ModifyCurrentUser(token string, data ModifyUserData) (user.User, error) {
+func ModifyCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter, data ModifyUserData) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    "/users/@me",
+		BaseRoute:   ratelimit.NewUserRoute(0),
+		RateLimiter: rateLimiter,
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, data, &user)
+	err, _ := endpoint.Request(token, data, &user)
 	return user, err
 }
 
@@ -78,34 +84,40 @@ func (d *CurrentUserGuildsData) Query() string {
 	return query.Encode()
 }
 
-func GetCurrentUserGuilds(token string, data CurrentUserGuildsData) ([]guild.Guild, error) {
+func GetCurrentUserGuilds(token string, rateLimiter *ratelimit.Ratelimiter, data CurrentUserGuildsData) ([]guild.Guild, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/guilds?%s", data.Query()),
+		BaseRoute:   ratelimit.NewUserRoute(0),
+		RateLimiter: rateLimiter,
 	}
 
 	var guilds []guild.Guild
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &guilds)
+	err, _ := endpoint.Request(token, nil, &guilds)
 	return guilds, err
 }
 
-func LeaveGuild(token string, guildId uint64) error {
+func LeaveGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/guilds/%d", guildId),
+		BaseRoute:   ratelimit.NewUserRoute(0),
+		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, nil)
+	err, _ := endpoint.Request(token, nil, nil)
 	return err
 }
 
-func CreateDM(token string, recipientId uint64) (channel.Channel, error) {
+func CreateDM(token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
-		RequestType:       request.POST,
-		ContentType:       request.ApplicationJson,
-		Endpoint:          fmt.Sprintf("/users/@me/channels"),
+		RequestType: request.POST,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/users/@me/channels"),
+		BaseRoute:   ratelimit.NewUserRoute(0), // TODO: Investigate whether this takes the recipient ID
+		RateLimiter: rateLimiter,
 	}
 
 	body := map[string]interface{}{
@@ -113,18 +125,20 @@ func CreateDM(token string, recipientId uint64) (channel.Channel, error) {
 	}
 
 	var channel channel.Channel
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, body, &channel)
+	err, _ := endpoint.Request(token, body, &channel)
 	return channel, err
 }
 
-func GetUserConnections(token string) ([]integration.Connection, error) {
+func GetUserConnections(token string, rateLimiter *ratelimit.Ratelimiter) ([]integration.Connection, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/connections"),
+		BaseRoute:   ratelimit.NewUserRoute(0),
+		RateLimiter: rateLimiter,
 	}
 
 	var connections []integration.Connection
-	err, _ := endpoint.Request(token, &routes.RouteManager.GetSelfRoute().Ratelimiter, nil, &connections)
+	err, _ := endpoint.Request(token, nil, &connections)
 	return connections, err
 }

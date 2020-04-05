@@ -6,8 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pasztorpisti/qs"
-	"github.com/rxdn/gdl/rest/routes"
-	"github.com/rxdn/gdl/utils"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -20,6 +19,8 @@ type Endpoint struct {
 	RequestType       RequestType
 	ContentType       ContentType
 	Endpoint          string
+	BaseRoute         ratelimit.Route
+	RateLimiter       *ratelimit.Ratelimiter
 	AdditionalHeaders map[string]string
 }
 
@@ -28,15 +29,18 @@ type ResponseWithContent struct {
 	Content []byte
 }
 
-func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body interface{}, response interface{}) (error, *ResponseWithContent) {
+func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
 	// Ratelimit
-	if ratelimiter != nil {
-		ch := make(chan struct{})
-		go ratelimiter.Queue(ch)
-		<-ch
+	if e.RateLimiter != nil {
+		ch := make(chan error)
+		go e.RateLimiter.ExecuteCall(e.BaseRoute.Endpoint(), ch)
+		if err := <-ch; err != nil {
+			return err, nil
+		}
 	}
 
 	url := BASE_URL + e.Endpoint
+
 	// Create req
 	var req *http.Request
 	var err error
@@ -87,6 +91,8 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 		req.Header.Set("Authorization", fmt.Sprintf("Bot %s", token))
 	}
 
+	req.Header.Set("X-RateLimit-Precision", "millisecond")
+
 	for key, value := range e.AdditionalHeaders {
 		req.Header.Set(key, value)
 	}
@@ -100,8 +106,8 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 	}
 	defer res.Body.Close()
 
-	if ratelimiter != nil {
-		applyNewRatelimits(res.Header, ratelimiter)
+	if e.RateLimiter != nil {
+		e.applyNewRatelimits(res.Header)
 	}
 
 	content, err := ioutil.ReadAll(res.Body)
@@ -126,10 +132,9 @@ func (e *Endpoint) Request(token string, ratelimiter *routes.Ratelimiter, body i
 	}
 }
 
-func applyNewRatelimits(header http.Header, ratelimiter *routes.Ratelimiter) {
-	ratelimiter.Lock()
-
-	// check global limit
+func (e *Endpoint) applyNewRatelimits(header http.Header) {
+	// TODO: Global limit
+	/*// check global limit
 	if global, err := strconv.ParseBool(header.Get("X-RateLimit-Global")); err == nil && global {
 		if retryAfter, err := strconv.ParseInt(header.Get("Retry-After"), 10, 64); err == nil {
 			ratelimiter.RouteManager.Lock()
@@ -138,24 +143,11 @@ func applyNewRatelimits(header http.Header, ratelimiter *routes.Ratelimiter) {
 			ratelimiter.Unlock()
 			return
 		}
-	}
-
-	if limit, err := strconv.Atoi(header.Get("X-Ratelimit-Limit")); err == nil {
-		ratelimiter.Limit = limit
-	}
+	}*/
 
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
-		ratelimiter.Remaining = remaining
+		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
+			e.RateLimiter.Store.UpdateRateLimit(e.BaseRoute.Endpoint(), remaining, time.Duration(resetAfterSeconds * 1000) * time.Millisecond)
+		}
 	}
-
-	if resetAfter, err := strconv.Atoi(header.Get("X-Ratelimit-Reset-After")); err == nil {
-		ratelimiter.Reset = time.Now().Unix() + int64(resetAfter)
-	}
-
-	bucket := header.Get("X-Ratelimit-Bucket")
-	if bucket != "" {
-		ratelimiter.Bucket = bucket
-	}
-
-	ratelimiter.Unlock()
 }
