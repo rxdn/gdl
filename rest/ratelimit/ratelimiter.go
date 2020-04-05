@@ -19,7 +19,7 @@ func NewConcurrencyLimiter(store RateLimitStore) *Ratelimiter {
 }
 
 func (l *Ratelimiter) ExecuteCall(endpoint string, ch chan error) {
-	ttl, err := l.Store.getTTL(endpoint)
+	ttl, err := l.Store.getTTLAndDecrease(endpoint)
 	if err != nil { // if an error occurred, we should cancel the request
 		ch <- err
 		return

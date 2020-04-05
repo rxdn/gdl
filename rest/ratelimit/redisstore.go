@@ -19,7 +19,7 @@ func NewRedisStore(client *redis.Client, keyPrefix string) *RedisStore {
 	}
 }
 
-func (s *RedisStore) getTTL(endpoint string) (time.Duration, error) {
+func (s *RedisStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
 	key := fmt.Sprintf("%s:%s", s.keyPrefix, endpoint)
 
 	remainingStr, err := s.Get(key).Result()
@@ -35,6 +35,8 @@ func (s *RedisStore) getTTL(endpoint string) (time.Duration, error) {
 	if err != nil { // some unknown error occurred
 		return 0, err
 	}
+
+	s.Decr(key) // attempt to decrease, doesn't matter too much if it errors
 
 	if remaining > 0 {
 		return 0, nil

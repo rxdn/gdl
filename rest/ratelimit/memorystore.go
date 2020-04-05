@@ -18,7 +18,7 @@ func NewMemoryStore() *MemoryStore {
 	}
 }
 
-func (s *MemoryStore) getTTL(endpoint string) (time.Duration, error) {
+func (s *MemoryStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -26,11 +26,14 @@ func (s *MemoryStore) getTTL(endpoint string) (time.Duration, error) {
 
 	if found {
 		remaining := item.Data.(int)
+		ttl := item.ExpireAt.Sub(time.Now())
+
+		s.Cache.SetWithTTL(endpoint, remaining - 1, ttl)
 
 		if remaining > 0 {
 			return 0, nil
 		} else {
-			return item.ExpireAt.Sub(time.Now()), nil
+			return ttl, nil
 		}
 	} else { // no bucket is found, obviously not ratelimited yet
 		return 0, nil
@@ -38,5 +41,7 @@ func (s *MemoryStore) getTTL(endpoint string) (time.Duration, error) {
 }
 
 func (s *MemoryStore) UpdateRateLimit(endpoint string, remaining int, resetAfter time.Duration) {
+	s.Lock()
 	s.Cache.SetWithTTL(endpoint, remaining, resetAfter)
+	s.Unlock()
 }
