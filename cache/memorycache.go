@@ -347,10 +347,10 @@ func (c *MemoryCache) StoreRole(role guild.Role, guildId uint64) {
 			}
 
 			c.guilds[guildId] = g
-		}
 
-		// store pointer to role
-		c.roles[role.Id] = &c.guilds[guildId].Roles[index]
+			// store pointer to role
+			c.roles[role.Id] = &c.guilds[guildId].Roles[index]
+		}
 
 		c.guildsLock.Unlock()
 		c.rolesLock.Unlock()
@@ -423,10 +423,10 @@ func (c *MemoryCache) StoreEmoji(emoji emoji.Emoji, guildId uint64) {
 			}
 
 			c.guilds[guildId] = g
-		}
 
-		// store pointer to role
-		c.emojis[emoji.Id] = &c.guilds[guildId].Emojis[index]
+			// store pointer to role
+			c.emojis[emoji.Id] = &c.guilds[guildId].Emojis[index]
+		}
 
 		c.guildsLock.Unlock()
 		c.emojisLock.Unlock()
