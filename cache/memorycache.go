@@ -270,10 +270,10 @@ func (c *MemoryCache) StoreChannel(ch channel.Channel) {
 				}
 
 				c.guilds[ch.GuildId] = g
-			}
 
-			// store pointer to channel
-			c.channels[ch.Id] = &c.guilds[ch.GuildId].Channels[index]
+				// store pointer to channel
+				c.channels[ch.Id] = &c.guilds[ch.GuildId].Channels[index]
+			}
 		} else { // store alone
 			c.channels[ch.Id] = &ch
 		}
