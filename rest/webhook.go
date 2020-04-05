@@ -16,7 +16,7 @@ import (
 )
 
 type WebhookData struct {
-	Username string `json:"username,omitempty"`
+	Username string `json:"name,omitempty"`
 	Avatar   string `json:"avatar,omitempty"`
 }
 
