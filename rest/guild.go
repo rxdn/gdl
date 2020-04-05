@@ -37,7 +37,7 @@ func CreateGuild(token string, data CreateGuildData) (guild.Guild, error) {
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    "/guilds",
-		BaseRoute:   ratelimit.NewGuildRoute(0),
+		Bucket:      ratelimit.NewGuildBucket(0),
 		RateLimiter: nil,
 	}
 
@@ -51,7 +51,7 @@ func GetGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -65,7 +65,7 @@ func GetGuildPreview(token string, rateLimiter *ratelimit.Ratelimiter, guildId u
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/preview", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -97,7 +97,7 @@ func ModifyGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint6
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -111,7 +111,7 @@ func DeleteGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint6
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -124,7 +124,7 @@ func GetGuildChannels(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/channels", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -151,7 +151,7 @@ func CreateGuildChannel(token string, rateLimiter *ratelimit.Ratelimiter, guildI
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/channels", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -170,7 +170,7 @@ func ModifyGuildChannelPositions(token string, rateLimiter *ratelimit.Ratelimite
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/channels", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -183,7 +183,7 @@ func GetGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildMemberGetOrDeleteBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -217,7 +217,7 @@ func ListGuildMembers(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members?%s", guildId, data.Query()),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildListMembersBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -239,7 +239,7 @@ func ModifyGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildMemberModifyBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -252,7 +252,7 @@ func ModifyCurrentUserNick(token string, rateLimiter *ratelimit.Ratelimiter, gui
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/@me/nick", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewModifyCurrentNickBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -269,7 +269,7 @@ func AddGuildMemberRole(token string, rateLimiter *ratelimit.Ratelimiter, guildI
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/%d/roles/%d", guildId, userId, roleId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildMemberModifyBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -282,7 +282,7 @@ func RemoveGuildMemberRole(token string, rateLimiter *ratelimit.Ratelimiter, gui
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/%d/roles/%d", guildId, userId, roleId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildMemberModifyBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -295,7 +295,7 @@ func RemoveGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/members/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildMemberGetOrDeleteBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -308,7 +308,7 @@ func GetGuildBans(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -322,7 +322,7 @@ func GetGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, user
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -341,7 +341,7 @@ func CreateGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -354,7 +354,7 @@ func RemoveGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans/%d", guildId, userId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -367,7 +367,7 @@ func GetGuildRoles(token string, rateLimiter *ratelimit.Ratelimiter, guildId uin
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -389,7 +389,7 @@ func CreateGuildRole(token string, rateLimiter *ratelimit.Ratelimiter, guildId u
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewRoleCreateBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -403,7 +403,7 @@ func ModifyGuildRolePositions(token string, rateLimiter *ratelimit.Ratelimiter, 
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -417,7 +417,7 @@ func ModifyGuildRole(token string, rateLimiter *ratelimit.Ratelimiter, guildId, 
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles/%d", guildId, roleId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -431,7 +431,7 @@ func DeleteGuildRole(token string, rateLimiter *ratelimit.Ratelimiter, guildId, 
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/roles/%d", guildId, roleId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -448,7 +448,7 @@ func GetGuildPruneCount(token string, rateLimiter *ratelimit.Ratelimiter, guildI
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/prune?days=%d", guildId, days),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -463,7 +463,7 @@ func BeginGuildPrune(token string, rateLimiter *ratelimit.Ratelimiter, guildId u
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/prune?days=%d&compute_prune_count=%t", guildId, days, computePruneCount),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -476,7 +476,7 @@ func GetGuildVoiceRegions(token string, rateLimiter *ratelimit.Ratelimiter, guil
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/regions", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -489,8 +489,8 @@ func GetGuildInvites(token string, rateLimiter *ratelimit.Ratelimiter, guildId u
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/guilds/%d/regions", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Endpoint:    fmt.Sprintf("/guilds/%d/invites", guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -504,7 +504,7 @@ func GetGuildIntegrations(token string, rateLimiter *ratelimit.Ratelimiter, guil
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -523,7 +523,7 @@ func CreateGuildIntegration(token string, rateLimiter *ratelimit.Ratelimiter, gu
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -542,7 +542,7 @@ func ModifyGuildIntegration(token string, rateLimiter *ratelimit.Ratelimiter, gu
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations/%d", guildId, integrationId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -555,7 +555,7 @@ func DeleteGuildIntegration(token string, rateLimiter *ratelimit.Ratelimiter, gu
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations/%d", guildId, integrationId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -568,7 +568,7 @@ func SyncGuildIntegration(token string, rateLimiter *ratelimit.Ratelimiter, guil
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/integrations/%d/sync", guildId, integrationId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -581,7 +581,7 @@ func GetGuildEmbed(token string, rateLimiter *ratelimit.Ratelimiter, guildId uin
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/embed", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -595,7 +595,7 @@ func ModifyGuildEmbed(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.PATCH,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/embed", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -610,7 +610,7 @@ func GetGuildVanityURL(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/vanity-url", guildId),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -624,7 +624,7 @@ func GetGuildWidgetImage(token string, rateLimiter *ratelimit.Ratelimiter, guild
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/widget.png?style=%s", guildId, string(style)),
-		BaseRoute: ratelimit.NewGuildRoute(guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 

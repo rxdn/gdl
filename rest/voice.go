@@ -11,6 +11,7 @@ func ListVoiceRegions(token string) ([]guild.VoiceRegion, error) {
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/voice/regions"),
+		Bucket:      "vr",
 	}
 
 	var voiceRegions []guild.VoiceRegion

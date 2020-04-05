@@ -13,7 +13,7 @@ func ListGuildEmojis(token string, rateLimiter *ratelimit.Ratelimiter, guildId u
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
-		BaseRoute:   ratelimit.NewEmojiRoute(guildId),
+		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -27,7 +27,7 @@ func GetGuildEmoji(token string, rateLimiter *ratelimit.Ratelimiter, guildId, em
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis/%d", guildId, emojiId),
-		BaseRoute:   ratelimit.NewEmojiRoute(guildId),
+		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -50,7 +50,7 @@ func CreateGuildEmoji(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.POST,
 		ContentType: data.Image.ContentType,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
-		BaseRoute:   ratelimit.NewEmojiRoute(guildId),
+		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -79,7 +79,7 @@ func ModifyGuildEmoji(token string, rateLimiter *ratelimit.Ratelimiter, guildId,
 		RequestType: request.PATCH,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis/%d", guildId, emojiId),
-		BaseRoute:   ratelimit.NewEmojiRoute(guildId),
+		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -101,7 +101,7 @@ func DeleteGuildEmoji(token string, rateLimiter *ratelimit.Ratelimiter, guildId,
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis/%d", guildId, emojiId),
-		BaseRoute:   ratelimit.NewEmojiRoute(guildId),
+		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,
 	}
 

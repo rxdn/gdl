@@ -3,6 +3,6 @@ package ratelimit
 import "time"
 
 type RateLimitStore interface {
-	getTTLAndDecrease(endpoint string) (time.Duration, error)
-	UpdateRateLimit(endpoint string, remaining int, resetAfter time.Duration)
+	getTTLAndDecrease(bucket string) (time.Duration, error)
+	UpdateRateLimit(bucket string, remaining int, resetAfter time.Duration)
 }

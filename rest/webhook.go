@@ -6,8 +6,8 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
-	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/rxdn/gdl/rest/request"
 	"io"
 	"mime/multipart"
 	"net/textproto"
@@ -25,6 +25,8 @@ func CreateWebhook(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
+		Bucket:      ratelimit.NewChannelBucket(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhook guild.Webhook
@@ -37,6 +39,8 @@ func GetChannelWebhooks(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
+		Bucket:      ratelimit.NewChannelBucket(channelId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhooks []guild.Webhook
@@ -49,6 +53,8 @@ func GetGuildWebhooks(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/webhooks", guildId),
+		Bucket:      ratelimit.NewGuildBucket(guildId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhooks []guild.Webhook
@@ -61,6 +67,8 @@ func GetWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId uint
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhook guild.Webhook
@@ -74,6 +82,8 @@ func GetWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimiter
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhook guild.Webhook
@@ -92,6 +102,8 @@ func ModifyWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId u
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	var webhook guild.Webhook
@@ -104,6 +116,8 @@ func ModifyWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimi
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	err, _ := endpoint.Request("", data, nil)
@@ -115,6 +129,8 @@ func DeleteWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId u
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	err, _ := endpoint.Request(token, nil, nil)
@@ -126,6 +142,8 @@ func DeleteWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimi
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
+		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		RateLimiter: rateLimiter,
 	}
 
 	err, _ := endpoint.Request("", nil, nil)
@@ -200,12 +218,16 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
 			Endpoint:    fmt.Sprintf("/webhooks/%d/%s?wait=%t", webhookId, webhookToken, wait),
+			Bucket:      ratelimit.NewWebhookExecuteBucket(webhookId),
+			RateLimiter: rateLimiter,
 		}
 	} else {
 		endpoint = request.Endpoint{
 			RequestType: request.POST,
 			ContentType: request.MultipartFormData,
 			Endpoint:    fmt.Sprintf("/webhooks/%d/%s?wait=%t", webhookId, webhookToken, wait),
+			Bucket:      ratelimit.NewWebhookExecuteBucket(webhookId),
+			RateLimiter: rateLimiter,
 		}
 
 	}

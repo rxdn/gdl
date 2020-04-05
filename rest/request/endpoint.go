@@ -19,7 +19,7 @@ type Endpoint struct {
 	RequestType       RequestType
 	ContentType       ContentType
 	Endpoint          string
-	BaseRoute         ratelimit.Route
+	Bucket            string
 	RateLimiter       *ratelimit.Ratelimiter
 	AdditionalHeaders map[string]string
 }
@@ -33,7 +33,7 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	// Ratelimit
 	if e.RateLimiter != nil {
 		ch := make(chan error)
-		go e.RateLimiter.ExecuteCall(e.BaseRoute.Endpoint(), ch)
+		go e.RateLimiter.ExecuteCall(e.Bucket, ch)
 		if err := <-ch; err != nil {
 			return err, nil
 		}
@@ -145,9 +145,11 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 		}
 	}*/
 
+	fmt.Println(header.Get("X-Ratelimit-Bucket"))
+
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
 		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
-			e.RateLimiter.Store.UpdateRateLimit(e.BaseRoute.Endpoint(), remaining, time.Duration(resetAfterSeconds * 1000) * time.Millisecond)
+			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond)
 		}
 	}
 }
