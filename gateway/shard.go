@@ -181,13 +181,13 @@ func (s *Shard) Resume() {
 }
 
 func (s *Shard) Read() error {
-	/*defer func() {
+	defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
 			s.Kill()
 			go s.EnsureConnect()
 		}
-	}()*/
+	}()
 
 	s.ReadLock.Lock()
 
