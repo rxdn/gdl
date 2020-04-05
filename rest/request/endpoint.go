@@ -145,8 +145,6 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 		}
 	}*/
 
-	fmt.Println(header.Get("X-Ratelimit-Bucket"))
-
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
 		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
 			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond)

@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"nhooyr.io/websocket"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -296,28 +297,39 @@ func (s *Shard) WriteRaw(data []byte) error {
 }
 
 func (s *Shard) Kill() error {
+	debug.PrintStack()
 	logrus.Infof("killing shard %d", s.ShardId)
 
 	go func() {
 		s.KillHeartbeat <- struct{}{}
 	}()
 
+	logrus.Debug("Closing zlib")
 	s.ZLibReader.Close()
+	logrus.Debug("Closed zlib")
 
+	logrus.Debug("Changing state to disconnected")
 	s.StateLock.Lock()
+	logrus.Debug("Got lock")
 	s.State = DISCONNECTING
 	s.StateLock.Unlock()
 
+	logrus.Debug("Closing websocket...")
 	var err error
 	if s.WebSocket != nil {
 		err = s.WebSocket.Close(4000, "unknown")
 	}
+	logrus.Debug("Closed websocket")
 
 	s.WebSocket = nil
 
+	logrus.Debug("Changing state to dead")
 	s.StateLock.Lock()
+	logrus.Debug("Got lock")
 	s.State = DEAD
 	s.StateLock.Unlock()
+
+	logrus.Infof("killed shard %d", s.ShardId)
 
 	return err
 }
