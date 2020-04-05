@@ -128,7 +128,7 @@ func GetChannelMemberPermissions(shard *gateway.Shard, userId, channelId uint64,
 
 	for _, overwrite := range ch.PermissionOverwrites {
 		if overwrite.Type == channel.PermissionTypeMember && overwrite.Id == userId {
-			initialPermissions &= overwrite.Deny
+			initialPermissions &= twosComplement(overwrite.Deny)
 			initialPermissions |= overwrite.Allow
 		}
 	}
@@ -152,19 +152,24 @@ func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, chann
 		return 0, err
 	}
 
+	allow, deny := 0, 0
+
 	for _, memberRole := range member.Roles {
 		for _, role := range roles {
 			if memberRole == role.Id {
 				for _, overwrite := range ch.PermissionOverwrites {
 					if overwrite.Type == channel.PermissionTypeRole && overwrite.Id == role.Id {
-						initialPermissions &= overwrite.Deny
-						initialPermissions |= overwrite.Allow
+						allow |= overwrite.Allow
+						deny |= overwrite.Deny
 						break
 					}
 				}
 			}
 		}
 	}
+
+	initialPermissions &= twosComplement(deny)
+	initialPermissions |= allow
 
 	return initialPermissions, nil
 }
@@ -194,7 +199,7 @@ func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, 
 
 	for _, overwrite := range ch.PermissionOverwrites {
 		if overwrite.Type == channel.PermissionTypeRole && overwrite.Id == publicRole.Id {
-			initialPermissions &= overwrite.Deny
+			initialPermissions &= twosComplement(overwrite.Deny)
 			initialPermissions |= overwrite.Allow
 			break
 		}
