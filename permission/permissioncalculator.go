@@ -5,6 +5,7 @@ import (
 	"github.com/rxdn/gdl/gateway"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
+	"github.com/sirupsen/logrus"
 )
 
 func HasPermissionsChannel(shard *gateway.Shard, guildId, userId, channelId uint64, permissions ...Permission) bool {
@@ -48,6 +49,10 @@ func GetAllPermissionsChannel(shard *gateway.Shard, guildId, userId, channelId u
 
 	sum, err := GetEffectivePermissionsChannel(shard, guildId, userId, channelId)
 	if err != nil {
+		if shard.ShardManager.ShardOptions.Debug {
+			logrus.Infof("shard %d: error retrieving permissions: %s", shard.ShardId, err.Error())
+		}
+
 		return permissions
 	}
 
@@ -65,6 +70,10 @@ func GetAllPermissions(shard *gateway.Shard, guildId, userId uint64) []Permissio
 
 	sum, err := GetEffectivePermissions(shard, guildId, userId)
 	if err != nil {
+		if shard.ShardManager.ShardOptions.Debug {
+			logrus.Infof("shard %d: error retrieving permissions: %s", shard.ShardId, err.Error())
+		}
+
 		return permissions
 	}
 
