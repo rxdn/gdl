@@ -35,7 +35,9 @@ var Hook func(string)
 func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
 
-	Hook(url)
+	if Hook != nil {
+		Hook(url)
+	}
 
 	// Ratelimit
 	if e.RateLimiter != nil {

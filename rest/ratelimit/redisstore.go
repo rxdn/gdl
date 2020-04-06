@@ -49,3 +49,27 @@ func (s *RedisStore) UpdateRateLimit(endpoint string, remaining int, resetAfter 
 	key := fmt.Sprintf("%s:%s", s.keyPrefix, endpoint)
 	s.Set(key, remaining, resetAfter)
 }
+
+func (s *RedisStore) identifyWait() error {
+	key := fmt.Sprintf("%s:identify", s.keyPrefix)
+	set := false
+
+	for !set {
+		var err error
+		set, err = s.SetNX(key, 1, IdentifyWait).Result()
+		if err != nil {
+			return err
+		}
+
+		if !set {
+			cooldown, err := s.PTTL(key).Result()
+			if err != nil && err != redis.Nil { // if err == redis.Nil, cooldown must've expired since running SET
+				return err
+			}
+
+			<- time.After(cooldown)
+		}
+	}
+
+	return nil
+}

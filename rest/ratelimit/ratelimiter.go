@@ -12,7 +12,7 @@ type Ratelimiter struct {
 	Store RateLimitStore
 }
 
-func NewConcurrencyLimiter(store RateLimitStore) *Ratelimiter {
+func NewRateLimiter(store RateLimitStore) *Ratelimiter {
 	return &Ratelimiter{
 		Store: store,
 	}
@@ -31,4 +31,8 @@ func (l *Ratelimiter) ExecuteCall(bucket string, ch chan error) {
 	} else {
 		ch <- nil
 	}
+}
+
+func (l *Ratelimiter) IdentifyWait() error {
+	return l.Store.identifyWait()
 }

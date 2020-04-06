@@ -161,10 +161,18 @@ func (s *Shard) Connect() error {
 }
 
 func (s *Shard) identify() {
-	s.ShardManager.ShardOptions.Hooks.IdentifyHook(s)
+	// call hook
+	if s.ShardManager.ShardOptions.Hooks.IdentifyHook != nil {
+		s.ShardManager.ShardOptions.Hooks.IdentifyHook(s)
+	}
 
+	// build payload
 	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.ShardCount.Total, s.Token, s.ShardManager.ShardOptions.Presence, s.ShardManager.ShardOptions.GuildSubscriptions)
-	s.ShardManager.GatewayBucket.Wait(1)
+
+	// wait for ratelimit
+	if err := s.ShardManager.RateLimiter.IdentifyWait(); err != nil {
+		logrus.Warnf("shard %d: Error whilst waiting on identify ratelimit: %s", s.ShardId, err.Error())
+	}
 
 	if err := s.write(identify); err != nil {
 		logrus.Warnf("shard %d: Error whilst sending Identify: %s", s.ShardId, err.Error())
@@ -225,7 +233,9 @@ func (s *Shard) read() error {
 		{
 			logrus.Infof("shard %d: received reconnect payload from discord", s.ShardId)
 
-			s.ShardManager.ShardOptions.Hooks.ReconnectHook(s)
+			if s.ShardManager.ShardOptions.Hooks.ReconnectHook != nil {
+				s.ShardManager.ShardOptions.Hooks.ReconnectHook(s)
+			}
 
 			s.Kill()
 			go s.EnsureConnect()

@@ -1,21 +1,18 @@
 package gateway
 
 import (
-	"github.com/juju/ratelimit"
 	"github.com/rxdn/gdl/gateway/payloads/events"
-	restlimiter "github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 type ShardManager struct {
 	Token string
 
-	GatewayBucket      *ratelimit.Bucket
-	ConcurrencyLimiter *restlimiter.Ratelimiter
+	RateLimiter *ratelimit.Ratelimiter
 
 	ShardOptions ShardOptions
 	Shards       map[int]*Shard
@@ -25,11 +22,10 @@ type ShardManager struct {
 
 func NewShardManager(token string, shardOptions ShardOptions) ShardManager {
 	manager := ShardManager{
-		Token:              token,
-		GatewayBucket:      ratelimit.NewBucket(time.Second*6, 1),
-		ConcurrencyLimiter: restlimiter.NewConcurrencyLimiter(shardOptions.RateLimitStore),
-		ShardOptions:       shardOptions,
-		EventBus:           events.NewEventBus(),
+		Token:        token,
+		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore),
+		ShardOptions: shardOptions,
+		EventBus:     events.NewEventBus(),
 	}
 
 	manager.Shards = make(map[int]*Shard)

@@ -23,7 +23,7 @@ func (s *Shard) GetChannel(channelId uint64) (channel.Channel, error) {
 		}
 	}
 
-	channel, err := rest.GetChannel(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	channel, err := rest.GetChannel(s.Token, s.ShardManager.RateLimiter, channelId)
 
 	if shouldCache && err == nil {
 		go s.Cache.StoreChannel(channel)
@@ -33,7 +33,7 @@ func (s *Shard) GetChannel(channelId uint64) (channel.Channel, error) {
 }
 
 func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) (channel.Channel, error) {
-	channel, err := rest.ModifyChannel(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, data)
+	channel, err := rest.ModifyChannel(s.Token, s.ShardManager.RateLimiter, channelId, data)
 
 	if s.Cache.GetOptions().Channels && err != nil {
 		go s.Cache.StoreChannel(channel)
@@ -43,15 +43,15 @@ func (s *Shard) ModifyChannel(channelId uint64, data rest.ModifyChannelData) (ch
 }
 
 func (s *Shard) DeleteChannel(channelId uint64) (channel.Channel, error) {
-	return rest.DeleteChannel(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	return rest.DeleteChannel(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
 func (s *Shard) GetChannelMessages(channelId uint64, options rest.GetChannelMessagesData) ([]message.Message, error) {
-	return rest.GetChannelMessages(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, options)
+	return rest.GetChannelMessages(s.Token, s.ShardManager.RateLimiter, channelId, options)
 }
 
 func (s *Shard) GetChannelMessage(channelId, messageId uint64) (message.Message, error) {
-	return rest.GetChannelMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId)
+	return rest.GetChannelMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
 func (s *Shard) CreateMessage(channelId uint64, content string) (message.Message, error) {
@@ -67,75 +67,75 @@ func (s *Shard) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (messag
 }
 
 func (s *Shard) CreateMessageComplex(channelId uint64, data rest.CreateMessageData) (message.Message, error) {
-	return rest.CreateMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, data)
+	return rest.CreateMessage(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 
 func (s *Shard) CreateReaction(channelId, messageId uint64, emoji string) error {
-	return rest.CreateReaction(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, emoji)
+	return rest.CreateReaction(s.Token, s.ShardManager.RateLimiter, channelId, messageId, emoji)
 }
 
 func (s *Shard) DeleteOwnReaction(channelId, messageId uint64, emoji string) error {
-	return rest.DeleteOwnReaction(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, emoji)
+	return rest.DeleteOwnReaction(s.Token, s.ShardManager.RateLimiter, channelId, messageId, emoji)
 }
 
 func (s *Shard) DeleteUserReaction(channelId, messageId, userId uint64, emoji string) error {
-	return rest.DeleteUserReaction(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, userId, emoji)
+	return rest.DeleteUserReaction(s.Token, s.ShardManager.RateLimiter, channelId, messageId, userId, emoji)
 }
 
 func (s *Shard) GetReactions(channelId, messageId uint64, emoji string, options rest.GetReactionsData) ([]user.User, error) {
-	return rest.GetReactions(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, emoji, options)
+	return rest.GetReactions(s.Token, s.ShardManager.RateLimiter, channelId, messageId, emoji, options)
 }
 
 func (s *Shard) DeleteAllReactions(channelId, messageId uint64) error {
-	return rest.DeleteAllReactions(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId)
+	return rest.DeleteAllReactions(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
 func (s *Shard) DeleteAllReactionsEmoji(channelId, messageId uint64, emoji string) error {
-	return rest.DeleteAllReactionsEmoji(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, emoji)
+	return rest.DeleteAllReactionsEmoji(s.Token, s.ShardManager.RateLimiter, channelId, messageId, emoji)
 }
 
 func (s *Shard) EditMessage(channelId, messageId uint64, data rest.ModifyChannelData) (message.Message, error) {
-	return rest.EditMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId, data)
+	return rest.EditMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId, data)
 }
 
 func (s *Shard) DeleteMessage(channelId, messageId uint64) error {
-	return rest.DeleteMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId)
+	return rest.DeleteMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
 func (s *Shard) BulkDeleteMessages(channelId uint64, messages []uint64) error {
-	return rest.BulkDeleteMessages(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messages)
+	return rest.BulkDeleteMessages(s.Token, s.ShardManager.RateLimiter, channelId, messages)
 }
 
 func (s *Shard) EditChannelPermissions(channelId uint64, updated channel.PermissionOverwrite) error {
-	return rest.EditChannelPermissions(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, updated)
+	return rest.EditChannelPermissions(s.Token, s.ShardManager.RateLimiter, channelId, updated)
 }
 
 func (s *Shard) GetChannelInvites(channelId uint64) ([]invite.InviteMetadata, error) {
-	return rest.GetChannelInvites(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	return rest.GetChannelInvites(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
 func (s *Shard) CreateChannelInvite(channelId uint64, data invite.InviteMetadata) (invite.Invite, error) {
-	return rest.CreateChannelInvite(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, data)
+	return rest.CreateChannelInvite(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 
 func (s *Shard) DeleteChannelPermissions(channelId, overwriteId uint64) error {
-	return rest.DeleteChannelPermissions(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, overwriteId)
+	return rest.DeleteChannelPermissions(s.Token, s.ShardManager.RateLimiter, channelId, overwriteId)
 }
 
 func (s *Shard) TriggerTypingIndicator(channelId uint64) error {
-	return rest.TriggerTypingIndicator(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	return rest.TriggerTypingIndicator(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
 func (s *Shard) GetPinnedMessages(channelId uint64) ([]message.Message, error) {
-	return rest.GetPinnedMessages(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	return rest.GetPinnedMessages(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
 func (s *Shard) AddPinnedChannelMessage(channelId, messageId uint64) error {
-	return rest.AddPinnedChannelMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId)
+	return rest.AddPinnedChannelMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
 func (s *Shard) DeletePinnedChannelMessage(channelId, messageId uint64) error {
-	return rest.DeletePinnedChannelMessage(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, messageId)
+	return rest.DeletePinnedChannelMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
 func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
@@ -149,7 +149,7 @@ func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 		}
 	}
 
-	emojis, err := rest.ListGuildEmojis(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	emojis, err := rest.ListGuildEmojis(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCacheEmoji && err == nil {
 		go func() {
@@ -171,7 +171,7 @@ func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) (emoji.Emoji, erro
 		}
 	}
 
-	emoji, err := rest.GetGuildEmoji(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, emojiId)
+	emoji, err := rest.GetGuildEmoji(s.Token, s.ShardManager.RateLimiter, guildId, emojiId)
 
 	if shouldCache && err == nil {
 		go s.Cache.StoreEmoji(emoji, guildId)
@@ -181,12 +181,12 @@ func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) (emoji.Emoji, erro
 }
 
 func (s *Shard) CreateGuildEmoji(guildId uint64, data rest.CreateEmojiData) (emoji.Emoji, error) {
-	return rest.CreateGuildEmoji(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.CreateGuildEmoji(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 // updating Image is not permitted
 func (s *Shard) ModifyGuildEmoji(guildId, emojiId uint64, data rest.CreateEmojiData) (emoji.Emoji, error) {
-	return rest.ModifyGuildEmoji(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, emojiId, data)
+	return rest.ModifyGuildEmoji(s.Token, s.ShardManager.RateLimiter, guildId, emojiId, data)
 }
 
 func (s *Shard) CreateGuild(data rest.CreateGuildData) (guild.Guild, error) {
@@ -203,7 +203,7 @@ func (s *Shard) GetGuild(guildId uint64) (guild.Guild, error) {
 		}
 	}
 
-	guild, err := rest.GetGuild(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	guild, err := rest.GetGuild(s.Token, s.ShardManager.RateLimiter, guildId)
 	if err == nil {
 		go s.Cache.StoreGuild(guild)
 	}
@@ -212,15 +212,15 @@ func (s *Shard) GetGuild(guildId uint64) (guild.Guild, error) {
 }
 
 func (s *Shard) GetGuildPreview(guildId uint64) (guild.GuildPreview, error) {
-	return rest.GetGuildPreview(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildPreview(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) ModifyGuild(guildId uint64, data rest.ModifyGuildData) (guild.Guild, error) {
-	return rest.ModifyGuild(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.ModifyGuild(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 func (s *Shard) DeleteGuild(guildId uint64) error {
-	return rest.DeleteGuild(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.DeleteGuild(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
@@ -233,7 +233,7 @@ func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
 		}
 	}
 
-	channels, err := rest.GetGuildChannels(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	channels, err := rest.GetGuildChannels(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
 		go func() {
@@ -247,11 +247,11 @@ func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
 }
 
 func (s *Shard) CreateGuildChannel(guildId uint64, data rest.CreateChannelData) (channel.Channel, error) {
-	return rest.CreateGuildChannel(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.CreateGuildChannel(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 func (s *Shard) ModifyGuildChannelPositions(guildId uint64, positions []rest.Position) error {
-	return rest.ModifyGuildChannelPositions(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, positions)
+	return rest.ModifyGuildChannelPositions(s.Token, s.ShardManager.RateLimiter, guildId, positions)
 }
 
 func (s *Shard) GetGuildMember(guildId, userId uint64) (member.Member, error) {
@@ -269,7 +269,7 @@ func (s *Shard) GetGuildMember(guildId, userId uint64) (member.Member, error) {
 		}
 	}
 
-	member, err := rest.GetGuildMember(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId)
+	member, err := rest.GetGuildMember(s.Token, s.ShardManager.RateLimiter, guildId, userId)
 
 	if cacheGuilds && err == nil {
 		go s.Cache.StoreMember(member, guildId)
@@ -279,7 +279,7 @@ func (s *Shard) GetGuildMember(guildId, userId uint64) (member.Member, error) {
 }
 
 func (s *Shard) ListGuildMembers(guildId uint64, data rest.ListGuildMembersData) ([]member.Member, error) {
-	members, err := rest.ListGuildMembers(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	members, err := rest.ListGuildMembers(s.Token, s.ShardManager.RateLimiter, guildId, data)
 	if err == nil {
 		go func() {
 			for _, member := range members {
@@ -292,39 +292,39 @@ func (s *Shard) ListGuildMembers(guildId uint64, data rest.ListGuildMembersData)
 }
 
 func (s *Shard) ModifyGuildMember(guildId, userId uint64, data rest.ModifyGuildMemberData) error {
-	return rest.ModifyGuildMember(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId, data)
+	return rest.ModifyGuildMember(s.Token, s.ShardManager.RateLimiter, guildId, userId, data)
 }
 
 func (s *Shard) ModifyCurrentUserNick(guildId uint64, nick string) error {
-	return rest.ModifyCurrentUserNick(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, nick)
+	return rest.ModifyCurrentUserNick(s.Token, s.ShardManager.RateLimiter, guildId, nick)
 }
 
 func (s *Shard) AddGuildMemberRole(guildId, userId, roleId uint64) error {
-	return rest.AddGuildMemberRole(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId, roleId)
+	return rest.AddGuildMemberRole(s.Token, s.ShardManager.RateLimiter, guildId, userId, roleId)
 }
 
 func (s *Shard) RemoveGuildMemberRole(guildId, userId, roleId uint64) error {
-	return rest.RemoveGuildMemberRole(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId, roleId)
+	return rest.RemoveGuildMemberRole(s.Token, s.ShardManager.RateLimiter, guildId, userId, roleId)
 }
 
 func (s *Shard) RemoveGuildMember(guildId, userId uint64) error {
-	return rest.RemoveGuildMember(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId)
+	return rest.RemoveGuildMember(s.Token, s.ShardManager.RateLimiter, guildId, userId)
 }
 
 func (s *Shard) GetGuildBans(guildId uint64) ([]guild.Ban, error) {
-	return rest.GetGuildBans(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildBans(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetGuildBan(guildId, userId uint64) (guild.Ban, error) {
-	return rest.GetGuildBan(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId)
+	return rest.GetGuildBan(s.Token, s.ShardManager.RateLimiter, guildId, userId)
 }
 
 func (s *Shard) CreateGuildBan(guildId, userId uint64, data rest.CreateGuildBanData) error {
-	return rest.CreateGuildBan(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId, data)
+	return rest.CreateGuildBan(s.Token, s.ShardManager.RateLimiter, guildId, userId, data)
 }
 
 func (s *Shard) RemoveGuildBan(guildId, userId uint64) error {
-	return rest.RemoveGuildBan(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, userId)
+	return rest.RemoveGuildBan(s.Token, s.ShardManager.RateLimiter, guildId, userId)
 }
 
 func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
@@ -336,7 +336,7 @@ func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 		}
 	}
 
-	roles, err := rest.GetGuildRoles(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	roles, err := rest.GetGuildRoles(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
 		go func() {
@@ -350,81 +350,81 @@ func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 }
 
 func (s *Shard) CreateGuildRole(guildId uint64, data rest.GuildRoleData) (guild.Role, error) {
-	return rest.CreateGuildRole(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.CreateGuildRole(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 func (s *Shard) ModifyGuildRolePositions(guildId uint64, positions []rest.Position) ([]guild.Role, error) {
-	return rest.ModifyGuildRolePositions(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, positions)
+	return rest.ModifyGuildRolePositions(s.Token, s.ShardManager.RateLimiter, guildId, positions)
 }
 
 func (s *Shard) ModifyGuildRole(guildId, roleId uint64, data rest.GuildRoleData) (guild.Role, error) {
-	return rest.ModifyGuildRole(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, roleId, data)
+	return rest.ModifyGuildRole(s.Token, s.ShardManager.RateLimiter, guildId, roleId, data)
 }
 
 func (s *Shard) DeleteGuildRole(guildId, roleId uint64) error {
-	return rest.DeleteGuildRole(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, roleId)
+	return rest.DeleteGuildRole(s.Token, s.ShardManager.RateLimiter, guildId, roleId)
 }
 
 func (s *Shard) GetGuildPruneCount(guildId uint64, days int) (int, error) {
-	return rest.GetGuildPruneCount(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, days)
+	return rest.GetGuildPruneCount(s.Token, s.ShardManager.RateLimiter, guildId, days)
 }
 
 // computePruneCount = whether 'pruned' is returned, discouraged for large guilds
 func (s *Shard) BeginGuildPrune(guildId uint64, days int, computePruneCount bool) error {
-	return rest.BeginGuildPrune(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, days, computePruneCount)
+	return rest.BeginGuildPrune(s.Token, s.ShardManager.RateLimiter, guildId, days, computePruneCount)
 }
 
 func (s *Shard) GetGuildVoiceRegions(guildId uint64) ([]guild.VoiceRegion, error) {
-	return rest.GetGuildVoiceRegions(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildVoiceRegions(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetGuildInvites(guildId uint64) ([]invite.InviteMetadata, error) {
-	return rest.GetGuildInvites(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildInvites(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetGuildIntegrations(guildId uint64) ([]integration.Integration, error) {
-	return rest.GetGuildIntegrations(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildIntegrations(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) CreateGuildIntegration(guildId uint64, data rest.CreateIntegrationData) error {
-	return rest.CreateGuildIntegration(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.CreateGuildIntegration(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 func (s *Shard) ModifyGuildIntegration(guildId, integrationId uint64, data rest.ModifyIntegrationData) error {
-	return rest.ModifyGuildIntegration(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, integrationId, data)
+	return rest.ModifyGuildIntegration(s.Token, s.ShardManager.RateLimiter, guildId, integrationId, data)
 }
 
 func (s *Shard) DeleteGuildIntegration(guildId, integrationId uint64) error {
-	return rest.DeleteGuildIntegration(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, integrationId)
+	return rest.DeleteGuildIntegration(s.Token, s.ShardManager.RateLimiter, guildId, integrationId)
 }
 
 func (s *Shard) SyncGuildIntegration(guildId, integrationId uint64) error {
-	return rest.SyncGuildIntegration(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, integrationId)
+	return rest.SyncGuildIntegration(s.Token, s.ShardManager.RateLimiter, guildId, integrationId)
 }
 
 func (s *Shard) GetGuildEmbed(guildId uint64) (guild.GuildEmbed, error) {
-	return rest.GetGuildEmbed(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildEmbed(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) ModifyGuildEmbed(guildId uint64, data guild.GuildEmbed) (guild.GuildEmbed, error) {
-	return rest.ModifyGuildEmbed(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, data)
+	return rest.ModifyGuildEmbed(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 // returns invite object with only "code" and "uses" fields
 func (s *Shard) GetGuildVanityUrl(guildId uint64) (invite.Invite, error) {
-	return rest.GetGuildVanityURL(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildVanityURL(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetGuildWidgetImage(guildId uint64, style guild.WidgetStyle) (image.Image, error) {
-	return rest.GetGuildWidgetImage(s.Token, s.ShardManager.ConcurrencyLimiter, guildId, style)
+	return rest.GetGuildWidgetImage(s.Token, s.ShardManager.RateLimiter, guildId, style)
 }
 
 func (s *Shard) GetInvite(inviteCode string, withCounts bool) (invite.Invite, error) {
-	return rest.GetInvite(s.Token, s.ShardManager.ConcurrencyLimiter, inviteCode, withCounts)
+	return rest.GetInvite(s.Token, s.ShardManager.RateLimiter, inviteCode, withCounts)
 }
 
 func (s *Shard) DeleteInvite(inviteCode string) (invite.Invite, error) {
-	return rest.DeleteInvite(s.Token, s.ShardManager.ConcurrencyLimiter, inviteCode)
+	return rest.DeleteInvite(s.Token, s.ShardManager.RateLimiter, inviteCode)
 }
 
 func (s *Shard) GetCurrentUser() (user.User, error) {
@@ -432,7 +432,7 @@ func (s *Shard) GetCurrentUser() (user.User, error) {
 		return *cached, nil
 	}
 
-	self, err := rest.GetCurrentUser(s.Token, s.ShardManager.ConcurrencyLimiter)
+	self, err := rest.GetCurrentUser(s.Token, s.ShardManager.RateLimiter)
 
 	if err == nil {
 		go s.Cache.StoreSelf(self)
@@ -451,7 +451,7 @@ func (s *Shard) GetUser(userId uint64) (user.User, error) {
 		}
 	}
 
-	user, err := rest.GetUser(s.Token, s.ShardManager.ConcurrencyLimiter, userId)
+	user, err := rest.GetUser(s.Token, s.ShardManager.RateLimiter, userId)
 
 	if shouldCache && err == nil {
 		go s.Cache.StoreUser(user)
@@ -461,23 +461,23 @@ func (s *Shard) GetUser(userId uint64) (user.User, error) {
 }
 
 func (s *Shard) ModifyCurrentUser(data rest.ModifyUserData) (user.User, error) {
-	return rest.ModifyCurrentUser(s.Token, s.ShardManager.ConcurrencyLimiter, data)
+	return rest.ModifyCurrentUser(s.Token, s.ShardManager.RateLimiter, data)
 }
 
 func (s *Shard) GetCurrentUserGuilds(data rest.CurrentUserGuildsData) ([]guild.Guild, error) {
-	return rest.GetCurrentUserGuilds(s.Token, s.ShardManager.ConcurrencyLimiter, data)
+	return rest.GetCurrentUserGuilds(s.Token, s.ShardManager.RateLimiter, data)
 }
 
 func (s *Shard) LeaveGuild(guildId uint64) error {
-	return rest.LeaveGuild(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.LeaveGuild(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) CreateDM(recipientId uint64) (channel.Channel, error) {
-	return rest.CreateDM(s.Token, s.ShardManager.ConcurrencyLimiter, recipientId)
+	return rest.CreateDM(s.Token, s.ShardManager.RateLimiter, recipientId)
 }
 
 func (s *Shard) GetUserConnections() ([]integration.Connection, error) {
-	return rest.GetUserConnections(s.Token, s.ShardManager.ConcurrencyLimiter)
+	return rest.GetUserConnections(s.Token, s.ShardManager.RateLimiter)
 }
 
 // GetGuildVoiceRegions should be preferred, as it returns VIP servers if available to the guild
@@ -486,29 +486,29 @@ func (s *Shard) ListVoiceRegions() ([]guild.VoiceRegion, error) {
 }
 
 func (s *Shard) CreateWebhook(channelId uint64, data rest.WebhookData) (guild.Webhook, error) {
-	return rest.CreateWebhook(s.Token, s.ShardManager.ConcurrencyLimiter, channelId, data)
+	return rest.CreateWebhook(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 
 func (s *Shard) GetChannelWebhooks(channelId uint64) ([]guild.Webhook, error) {
-	return rest.GetChannelWebhooks(s.Token, s.ShardManager.ConcurrencyLimiter, channelId)
+	return rest.GetChannelWebhooks(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
 func (s *Shard) GetGuildWebhooks(guildId uint64) ([]guild.Webhook, error) {
-	return rest.GetGuildWebhooks(s.Token, s.ShardManager.ConcurrencyLimiter, guildId)
+	return rest.GetGuildWebhooks(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) GetWebhook(webhookId uint64) (guild.Webhook, error) {
-	return rest.GetWebhook(s.Token, s.ShardManager.ConcurrencyLimiter, webhookId)
+	return rest.GetWebhook(s.Token, s.ShardManager.RateLimiter, webhookId)
 }
 
 func (s *Shard) ModifyWebhook(webhookId uint64, data rest.ModifyWebhookData) (guild.Webhook, error) {
-	return rest.ModifyWebhook(s.Token, s.ShardManager.ConcurrencyLimiter, webhookId, data)
+	return rest.ModifyWebhook(s.Token, s.ShardManager.RateLimiter, webhookId, data)
 }
 
 func (s *Shard) DeleteWebhook(webhookId uint64) error {
-	return rest.DeleteWebhook(s.Token, s.ShardManager.ConcurrencyLimiter, webhookId)
+	return rest.DeleteWebhook(s.Token, s.ShardManager.RateLimiter, webhookId)
 }
 
 func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) {
-	rest.ExecuteWebhook(webhookToken, s.ShardManager.ConcurrencyLimiter, webhookId, wait, data)
+	rest.ExecuteWebhook(webhookToken, s.ShardManager.RateLimiter, webhookId, wait, data)
 }
