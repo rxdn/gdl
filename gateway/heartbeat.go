@@ -8,11 +8,12 @@ import (
 )
 
 func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
+	loop:
 	for {
 		select {
 		case <-s.KillHeartbeat:
 			ticker.Stop()
-			break
+			break loop
 		case <-ticker.C:
 			s.HeartbeatMutex.Lock()
 
