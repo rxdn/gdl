@@ -311,7 +311,10 @@ func (s *Shard) writeRaw(data []byte) error {
 }
 
 func (s *Shard) Kill() error {
-	debug.PrintStack()
+	if s.ShardManager.ShardOptions.Debug {
+		debug.PrintStack()
+	}
+
 	logrus.Infof("killing shard %d", s.ShardId)
 
 	go func() {

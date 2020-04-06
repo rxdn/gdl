@@ -13,6 +13,7 @@ type ShardOptions struct {
 	GuildSubscriptions bool
 	Presence           user.UpdateStatus
 	Hooks              Hooks
+	Debug              bool
 }
 
 type ShardCount struct {
