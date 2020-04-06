@@ -113,16 +113,16 @@ func (s *Shard) Connect() error {
 	s.WebSocket = conn
 
 	// Read hello
-	if err := s.Read(); err != nil {
+	if err := s.read(); err != nil {
 		logrus.Warnf("shard %d: Error whilst reading Hello: %s", s.ShardId, err.Error())
 		s.Kill()
 		return err
 	}
 
 	if s.SessionId == "" || s.SequenceNumber == nil {
-		s.Identify()
+		s.identify()
 	} else {
-		s.Resume()
+		s.resume()
 	}
 
 	logrus.Infof("shard %d: Connected", s.ShardId)
@@ -142,7 +142,7 @@ func (s *Shard) Connect() error {
 			}
 
 			// Read
-			if err := s.Read(); err != nil {
+			if err := s.read(); err != nil {
 				logrus.Warnf("shard %d: Error whilst reading payload: %s", s.ShardId, err.Error())
 
 				s.StateLock.Lock()
@@ -160,32 +160,32 @@ func (s *Shard) Connect() error {
 	return nil
 }
 
-func (s *Shard) Identify() {
+func (s *Shard) identify() {
 	s.ShardManager.ShardOptions.Hooks.IdentifyHook(s)
 
 	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.ShardCount.Total, s.Token, s.ShardManager.ShardOptions.Presence, s.ShardManager.ShardOptions.GuildSubscriptions)
 	s.ShardManager.GatewayBucket.Wait(1)
 
-	if err := s.Write(identify); err != nil {
+	if err := s.write(identify); err != nil {
 		logrus.Warnf("shard %d: Error whilst sending Identify: %s", s.ShardId, err.Error())
-		s.Identify()
+		s.identify()
 	}
 }
 
-func (s *Shard) Resume() {
+func (s *Shard) resume() {
 	s.SequenceLock.RLock()
 	resume := payloads.NewResume(s.Token, s.SessionId, *s.SequenceNumber)
 	s.SequenceLock.RUnlock()
 
 	logrus.Infof("shard %d: Resuming", s.ShardId)
 
-	if err := s.Write(resume); err != nil {
+	if err := s.write(resume); err != nil {
 		logrus.Warnf("shard %d: Error whilst sending Resume: %s", s.ShardId, err.Error())
-		s.Identify()
+		s.identify()
 	}
 }
 
-func (s *Shard) Read() error {
+func (s *Shard) read() error {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Warnf("Recovered panic while reading: %s", r)
@@ -194,24 +194,7 @@ func (s *Shard) Read() error {
 		}
 	}()
 
-	s.ReadLock.Lock()
-
-	if s.WebSocket == nil {
-		return errors.New("websocket is nil")
-	}
-
-	_, reader, err := s.WebSocket.Reader(s.Context)
-	if err != nil {
-		s.ReadLock.Unlock()
-		return err
-	}
-
-	// decompress
-	var buffer bytes.Buffer
-	s.ZLibReader.(czlib.Resetter).Reset(reader)
-	_, err = buffer.ReadFrom(s.ZLibReader)
-
-	s.ReadLock.Unlock()
+	buffer, err := s.readData()
 
 	if err != nil {
 		return err
@@ -284,16 +267,38 @@ func (s *Shard) Read() error {
 	return nil
 }
 
-func (s *Shard) Write(payload interface{}) error {
+func (s *Shard) readData() (bytes.Buffer, error) {
+	var buffer bytes.Buffer
+
+	s.ReadLock.Lock()
+	defer s.ReadLock.Unlock()
+
+	if s.WebSocket == nil {
+		return buffer, errors.New("websocket is nil")
+	}
+
+	_, reader, err := s.WebSocket.Reader(s.Context)
+	if err != nil {
+		s.ReadLock.Unlock()
+		return buffer, err
+	}
+
+	// decompress
+	s.ZLibReader.(czlib.Resetter).Reset(reader)
+	_, err = buffer.ReadFrom(s.ZLibReader)
+	return buffer, err
+}
+
+func (s *Shard) write(payload interface{}) error {
 	encoded, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	return s.WriteRaw(encoded)
+	return s.writeRaw(encoded)
 }
 
-func (s *Shard) WriteRaw(data []byte) error {
+func (s *Shard) writeRaw(data []byte) error {
 	if s.WebSocket == nil {
 		msg := fmt.Sprintf("shard %d: WS is closed", s.ShardId)
 		log.Println(msg)

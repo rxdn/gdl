@@ -43,5 +43,5 @@ func (s *Shard) Heartbeat() error {
 	s.HasDoneHeartbeat = true
 	s.LastHeartbeat = utils.GetCurrentTimeMillis()
 
-	return s.Write(payload)
+	return s.write(payload)
 }
