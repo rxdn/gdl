@@ -237,11 +237,13 @@ func (s *Shard) Read() error {
 		}
 	case 7: // Reconnect
 		{
+			logrus.Infof("shard %d: received reconnect payload from discord", s.ShardId)
 			s.Kill()
 			go s.EnsureConnect()
 		}
 	case 9: // Invalid session
 		{
+			logrus.Infof("shard %d: received invalid session payload from discord", s.ShardId)
 			s.Kill()
 			s.SessionId = ""
 			go s.EnsureConnect()
