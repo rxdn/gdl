@@ -79,7 +79,9 @@ func (s *Shard) Connect() error {
 	state := s.State
 	s.StateLock.RUnlock()
 	if state != DEAD {
-		return s.Kill()
+		if err := s.Kill(); err != nil {
+			return err
+		}
 	}
 
 	s.StateLock.Lock()
