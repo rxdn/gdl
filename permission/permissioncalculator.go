@@ -14,6 +14,10 @@ func HasPermissionsChannel(shard *gateway.Shard, guildId, userId, channelId uint
 		return false
 	}
 
+	if HasPermissionRaw(sum, Administrator) {
+		return true
+	}
+
 	hasPermission := true
 
 	for _, permission := range permissions {
@@ -30,6 +34,10 @@ func HasPermissions(shard *gateway.Shard, guildId, userId uint64, permissions ..
 	sum, err := GetEffectivePermissions(shard, guildId, userId)
 	if err != nil {
 		return false
+	}
+
+	if HasPermissionRaw(sum, Administrator) {
+		return true
 	}
 
 	hasPermission := true
