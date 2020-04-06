@@ -12,6 +12,7 @@ type ShardOptions struct {
 	RateLimitStore     ratelimit.RateLimitStore
 	GuildSubscriptions bool
 	Presence           user.UpdateStatus
+	Hooks              Hooks
 }
 
 type ShardCount struct {

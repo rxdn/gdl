@@ -1,17 +1,17 @@
 package utils
 
-func BoolPointer(value bool) *bool {
+func BoolPtr(value bool) *bool {
 	return &value
 }
 
-func StringPointer(value string) *string {
+func StrPtr(value string) *string {
 	return &value
 }
 
-func Uint64Pointer(value uint64) *uint64 {
+func Uint64Ptr(value uint64) *uint64 {
 	return &value
 }
 
-func IntPointer(value int) *int {
+func IntPtr(value int) *int {
 	return &value
 }

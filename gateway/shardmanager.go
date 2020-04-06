@@ -4,6 +4,7 @@ import (
 	"github.com/juju/ratelimit"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	restlimiter "github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/rxdn/gdl/rest/request"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,6 +37,8 @@ func NewShardManager(token string, shardOptions ShardOptions) ShardManager {
 		shard := NewShard(&manager, token, i)
 		manager.Shards[i] = &shard
 	}
+
+	request.Hook = shardOptions.Hooks.RestHook
 
 	RegisterCacheListeners(&manager)
 
