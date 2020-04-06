@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"nhooyr.io/websocket"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -305,6 +306,7 @@ func (s *Shard) WriteRaw(data []byte) error {
 }
 
 func (s *Shard) Kill() error {
+	debug.PrintStack()
 	logrus.Infof("killing shard %d", s.ShardId)
 
 	go func() {
