@@ -30,14 +30,12 @@ type ResponseWithContent struct {
 }
 
 // figure out a better way to do this
-var Hook *func(string)
+var Hook func(string)
 
 func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
 
-	if Hook != nil {
-		(*Hook)(url)
-	}
+	Hook(url)
 
 	// Ratelimit
 	if e.RateLimiter != nil {

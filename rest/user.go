@@ -116,7 +116,7 @@ func CreateDM(token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/users/@me/channels"),
-		Bucket:      ratelimit.NewUserBucket(0), // TODO: Investigate whether this takes the recipient ID
+		Bucket:      ratelimit.NewUserBucket(recipientId), // TODO: Investigate whether this takes the recipient ID
 		RateLimiter: rateLimiter,
 	}
 

@@ -161,7 +161,7 @@ func (s *Shard) Connect() error {
 
 func (s *Shard) Identify() {
 	if s.ShardManager.ShardOptions.Hooks.IdentifyHook != nil {
-		(*s.ShardManager.ShardOptions.Hooks.IdentifyHook)(s)
+		s.ShardManager.ShardOptions.Hooks.IdentifyHook(s)
 	}
 
 	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.ShardCount.Total, s.Token, s.ShardManager.ShardOptions.Presence, s.ShardManager.ShardOptions.GuildSubscriptions)
@@ -244,7 +244,7 @@ func (s *Shard) Read() error {
 			logrus.Infof("shard %d: received reconnect payload from discord", s.ShardId)
 
 			if s.ShardManager.ShardOptions.Hooks.ReconnectHook != nil {
-				(*s.ShardManager.ShardOptions.Hooks.ReconnectHook)(s)
+				s.ShardManager.ShardOptions.Hooks.ReconnectHook(s)
 			}
 
 			s.Kill()
