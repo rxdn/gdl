@@ -33,10 +33,13 @@ func readyListener(s *Shard, e *events.Ready) {
 
 	s.SessionId = e.SessionId
 
+	s.guildsLock.Lock()
 	s.Cache.StoreSelf(e.User)
 	for _, guild := range e.Guilds {
 		s.Cache.StoreGuild(guild)
+		s.guilds = append(s.guilds, guild.Id)
 	}
+	s.guildsLock.Unlock()
 }
 
 func channelCreateListener(s *Shard, e *events.ChannelCreate) {
@@ -52,6 +55,10 @@ func channelDeleteListener(s *Shard, e *events.ChannelDelete) {
 }
 
 func guildCreateListener(s *Shard, e *events.GuildCreate) {
+	s.guildsLock.Lock()
+	s.guilds = append(s.guilds, e.Id)
+	s.guildsLock.Unlock()
+
 	s.Cache.StoreGuild(e.Guild)
 }
 

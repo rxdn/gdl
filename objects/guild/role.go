@@ -18,3 +18,15 @@ type Role struct {
 func (r *Role) Mention() string {
 	return fmt.Sprintf("<@&%d>", r.Id)
 }
+
+func (r *Role) ToCachedRole() CachedRole {
+	return CachedRole{
+		Name:        r.Name,
+		Color:       r.Color,
+		Hoist:       r.Hoist,
+		Position:    r.Position,
+		Permissions: r.Permissions,
+		Managed:     r.Managed,
+		Mentionable: r.Mentionable,
+	}
+}

@@ -30,3 +30,23 @@ type Channel struct {
 func (c *Channel) Mention() string {
 	return fmt.Sprintf("<#%d>", c.Id)
 }
+
+func (c *Channel) ToCachedChannel() CachedChannel {
+	return CachedChannel{
+		Type:                 c.Type,
+		Position:             c.Position,
+		PermissionOverwrites: c.PermissionOverwrites,
+		Name:                 c.Name,
+		Topic:                c.Topic,
+		Nsfw:                 c.Nsfw,
+		LastMessageId:        c.LastMessageId,
+		Bitrate:              c.Bitrate,
+		UserLimit:            c.UserLimit,
+		RateLimitPerUser:     c.RateLimitPerUser,
+		Icon:                 c.Icon,
+		OwnerId:              c.OwnerId,
+		ApplicationId:        c.ApplicationId,
+		ParentId:             c.ParentId,
+		LastPinTimestamp:     c.LastPinTimestamp,
+	}
+}

@@ -14,3 +14,15 @@ type VoiceState struct {
 	SelfMute  bool          `json:"self_mute"`
 	Suppress  bool          `json:"suppress"`
 }
+
+func (s *VoiceState) ToCachedVoiceState() CachedVoiceState {
+	return CachedVoiceState{
+		ChannelId: s.ChannelId,
+		SessionId: s.SessionId,
+		Deaf:      s.Deaf,
+		Mute:      s.Mute,
+		SelfDeaf:  s.SelfDeaf,
+		SelfMute:  s.SelfMute,
+		Suppress:  s.Suppress,
+	}
+}

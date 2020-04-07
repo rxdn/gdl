@@ -15,3 +15,14 @@ type Emoji struct {
 	Managed       bool                    `json:"managed"`
 	Animated      bool                    `json:"animated"`
 }
+
+func (e *Emoji) ToCachedEmoji() CachedEmoji {
+	return CachedEmoji{
+		Name:          e.Name,
+		Roles:         e.Roles,
+		User:          e.User.Id,
+		RequireColons: e.RequireColons,
+		Managed:       e.Managed,
+		Animated:      e.Animated,
+	}
+}

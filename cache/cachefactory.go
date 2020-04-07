@@ -1,16 +1,12 @@
 package cache
 
 import (
-	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/guild"
-	"github.com/rxdn/gdl/objects/guild/emoji"
-	"github.com/rxdn/gdl/objects/user"
-	"sync"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type CacheFactory func() Cache
 
-func MemoryCacheFactory(options CacheOptions) CacheFactory {
+/*func MemoryCacheFactory(options CacheOptions) CacheFactory {
 	return func() Cache {
 		return &MemoryCache{
 			Options:      options,
@@ -27,5 +23,12 @@ func MemoryCacheFactory(options CacheOptions) CacheFactory {
 			emojisLock:   &sync.RWMutex{},
 			selfLock:     &sync.RWMutex{},
 		}
+	}
+}*/
+
+func PgCacheFactory(db *pgxpool.Pool, options CacheOptions) CacheFactory {
+	return func() Cache {
+		c := NewPgCache(db, options)
+		return &c
 	}
 }

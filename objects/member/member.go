@@ -24,3 +24,15 @@ func (m *Member) HasRole(roleId uint64) bool {
 	}
 	return false
 }
+
+func (m *Member) ToCachedMember() CachedMember {
+	return CachedMember{
+		Nick:         m.Nick,
+		Roles:        m.Roles,
+		JoinedAt:     m.JoinedAt,
+		PremiumSince: m.PremiumSince,
+		Deaf:         m.Deaf,
+		Mute:         m.Mute,
+	}
+}
+

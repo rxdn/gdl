@@ -17,9 +17,8 @@ import (
 func (s *Shard) GetChannel(channelId uint64) (channel.Channel, error) {
 	shouldCache := s.Cache.GetOptions().Channels
 	if shouldCache {
-		cached := s.Cache.GetChannel(channelId)
-		if cached != nil {
-			return *cached, nil
+		if cached, found := s.Cache.GetChannel(channelId); found {
+			return cached, nil
 		}
 	}
 
@@ -143,8 +142,7 @@ func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	shouldCacheGuild := s.Cache.GetOptions().Guilds
 
 	if shouldCacheEmoji && shouldCacheGuild {
-		guild := s.Cache.GetGuild(guildId)
-		if guild != nil {
+		if guild, found := s.Cache.GetGuild(guildId); found {
 			return guild.Emojis, nil
 		}
 	}
@@ -165,9 +163,8 @@ func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 func (s *Shard) GetGuildEmoji(guildId uint64, emojiId uint64) (emoji.Emoji, error) {
 	shouldCache := s.Cache.GetOptions().Emojis
 	if shouldCache {
-		emoji := s.Cache.GetEmoji(emojiId)
-		if emoji != nil {
-			return *emoji, nil
+		if emoji, found := s.Cache.GetEmoji(emojiId); found {
+			return emoji, nil
 		}
 	}
 
@@ -197,9 +194,8 @@ func (s *Shard) GetGuild(guildId uint64) (guild.Guild, error) {
 	shouldCache := s.Cache.GetOptions().Guilds
 
 	if shouldCache {
-		cachedGuild := s.Cache.GetGuild(guildId)
-		if cachedGuild != nil {
-			return *cachedGuild, nil
+		if cachedGuild, found := s.Cache.GetGuild(guildId); found {
+			return cachedGuild, nil
 		}
 	}
 
@@ -227,8 +223,7 @@ func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
 	shouldCache := s.Cache.GetOptions().Guilds && s.Cache.GetOptions().Channels
 
 	if shouldCache {
-		guild := s.Cache.GetGuild(guildId)
-		if guild != nil {
+		if guild, found := s.Cache.GetGuild(guildId); found {
 			return guild.Channels, nil
 		}
 	}
@@ -259,8 +254,7 @@ func (s *Shard) GetGuildMember(guildId, userId uint64) (member.Member, error) {
 	cacheUsers := s.Cache.GetOptions().Users
 
 	if cacheGuilds && cacheUsers {
-		guild := s.Cache.GetGuild(guildId)
-		if guild != nil {
+		if guild, found := s.Cache.GetGuild(guildId); found {
 			for _, member := range guild.Members {
 				if member.User.Id == userId {
 					return member, nil
@@ -330,8 +324,7 @@ func (s *Shard) RemoveGuildBan(guildId, userId uint64) error {
 func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 	shouldCache := s.Cache.GetOptions().Guilds
 	if shouldCache {
-		cachedGuild := s.Cache.GetGuild(guildId)
-		if cachedGuild != nil {
+		if cachedGuild, found := s.Cache.GetGuild(guildId); found {
 			return cachedGuild.Roles, nil
 		}
 	}
@@ -428,8 +421,8 @@ func (s *Shard) DeleteInvite(inviteCode string) (invite.Invite, error) {
 }
 
 func (s *Shard) GetCurrentUser() (user.User, error) {
-	if cached := s.Cache.GetSelf(); cached != nil {
-		return *cached, nil
+	if cached, found := s.Cache.GetSelf(); found {
+		return cached, nil
 	}
 
 	self, err := rest.GetCurrentUser(s.Token, s.ShardManager.RateLimiter)
@@ -445,9 +438,8 @@ func (s *Shard) GetUser(userId uint64) (user.User, error) {
 	shouldCache := s.Cache.GetOptions().Users
 
 	if shouldCache {
-		cached := s.Cache.GetUser(userId)
-		if cached != nil {
-			return *cached, nil
+		if cached, found := s.Cache.GetUser(userId); found {
+			return cached, nil
 		}
 	}
 

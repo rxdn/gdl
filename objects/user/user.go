@@ -23,3 +23,14 @@ func (u *User) AvatarUrl(size int) string {
 func (u *User) Mention() string {
 	return fmt.Sprintf("<@%d>", u.Id)
 }
+
+func (u *User) ToCachedUser() CachedUser {
+	return CachedUser{
+		Username:      u.Username,
+		Discriminator: u.Discriminator,
+		Avatar:        u.Avatar,
+		Bot:           u.Bot,
+		Flags:         u.Flags,
+		PremiumType:   u.PremiumType,
+	}
+}

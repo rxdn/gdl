@@ -1,45 +1,35 @@
 package guild
 
 import (
-	"github.com/rxdn/gdl/objects/channel"
-	"github.com/rxdn/gdl/objects/guild/emoji"
-	"github.com/rxdn/gdl/objects/member"
-	"github.com/rxdn/gdl/objects/user"
 	"time"
 )
 
-type Guild struct {
-	Id                          uint64            `json:"id,string"`
+type CachedGuild struct {
+	Id                          uint64            `json:"id"`
 	Name                        string            `json:"name"`
 	Icon                        string            `json:"icon"`
 	Splash                      string            `json:"splash"`
 	Owner                       bool              `json:"owner"`
-	OwnerId                     uint64            `json:"owner_id,string"`
+	OwnerId                     uint64            `json:"owner_id"`
 	Permissions                 int               `json:"permissions"`
 	Region                      string            `json:"region"`
-	AfkChannelId                uint64            `json:"afk_channel_id,string"`
+	AfkChannelId                uint64            `json:"afk_channel_id"`
 	AfkTimeout                  int               `json:"afk_timeout"`
 	EmbedEnabled                bool              `json:"embed_enabled"`
-	EmbedChannelId              uint64            `json:"embed_channel_id,string"`
+	EmbedChannelId              uint64            `json:"embed_channel_id"`
 	VerificationLevel           int               `json:"verification_level"`
 	DefaultMessageNotifications int               `json:"default_message_notifications"`
 	ExplicitContentFilter       int               `json:"explicit_content_filter"`
-	Roles                       []Role            `json:"roles"`
-	Emojis                      []emoji.Emoji     `json:"emojis"`
 	Features                    []GuildFeature    `json:"features"`
 	MfaLevel                    int               `json:"mfa_level"`
 	ApplicationId               uint64            `json:"application_id,string"`
 	WidgetEnabled               bool              `json:"widget_enabled"`
-	WidgetChannelId             uint64            `json:"widget_channel_id,string"`
-	SystemChannelId             uint64            `json:"system_channel_id,string"`
+	WidgetChannelId             uint64            `json:"widget_channel_id"`
+	SystemChannelId             uint64            `json:"system_channel_id"`
 	JoinedAt                    time.Time         `json:"joined_at"`
 	Large                       bool              `json:"large"`
 	Unavailable                 *bool             `json:"unavailable"`
 	MemberCount                 int               `json:"member_count"`
-	VoiceStates                 []VoiceState      `json:"voice_state"`
-	Members                     []member.Member   `json:"members"`
-	Channels                    []channel.Channel `json:"channels"`
-	Presences                   []user.Presence   `json:"presences"`
 	MaxPresences                int               `json:"max_presences"`
 	MaxMembers                  int               `json:"max_members"`
 	VanityUrlCode               string            `json:"vanity_url_code"`
@@ -47,9 +37,9 @@ type Guild struct {
 	Banner                      string            `json:"banner"`
 }
 
-func (g *Guild) ToCachedGuild() CachedGuild {
-	return CachedGuild{
-		Id:                          g.Id,
+func (g *CachedGuild) ToGuild(guildId uint64) Guild {
+	return Guild{
+		Id:                          guildId,
 		Name:                        g.Name,
 		Icon:                        g.Icon,
 		Splash:                      g.Splash,
@@ -81,3 +71,4 @@ func (g *Guild) ToCachedGuild() CachedGuild {
 		Banner:                      g.Banner,
 	}
 }
+
