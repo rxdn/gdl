@@ -293,7 +293,6 @@ func (s *Shard) readData() (bytes.Buffer, error) {
 
 	_, reader, err := s.WebSocket.Reader(s.Context)
 	if err != nil {
-		s.ReadLock.Unlock()
 		return buffer, err
 	}
 
