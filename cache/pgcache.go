@@ -283,6 +283,12 @@ func (c *PgCache) DeleteGuild(id uint64) {
 	}
 }
 
+func (c *PgCache) GetGuildCount() int {
+	var count int
+	_ = c.QueryRow(context.Background(), "SELECT COUNT(*) FROM guilds;").Scan(&count)
+	return count
+}
+
 func (c *PgCache) StoreMember(m member.Member, guildId uint64) {
 	if c.Options.Members {
 		if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
