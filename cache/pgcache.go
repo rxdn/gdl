@@ -18,7 +18,7 @@ type PgCache struct {
 
 	// TODO: Should we store self in the DB? Seems kinda redundant
 	selfLock sync.RWMutex
-	self user.User
+	self     user.User
 }
 
 func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
@@ -31,8 +31,17 @@ func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
 	mustRun(db, `CREATE TABLE IF NOT EXISTS emojis("emoji_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("emoji_id", "guild_id"));`)
 	mustRun(db, `CREATE TABLE IF NOT EXISTS voice_states("guild_id" int8 NOT NULL, "user_id" INT8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`) // we may not have a cached user
 
+	// create indexes
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS channels_guild_id ON channels("guild_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS members_guild_id ON members("guild_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS member_user_id ON members("user_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS roles_guild_id ON roles("guild_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS emojis_guild_id ON emojis("guild_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_guild_id ON voice_states("guild_id");`)
+	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_user_id ON voice_states("user_id");`)
+
 	return PgCache{
-		Pool: db,
+		Pool:    db,
 		Options: options,
 	}
 }
@@ -107,7 +116,7 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 	g.Channels = c.getChannels(id)
 	g.Roles = c.getRoles(id)
 	g.Members = c.getMembers(id, withUserData)
-	g.Emojis = c.getEmojis(id,)
+	g.Emojis = c.getEmojis(id, )
 	g.VoiceStates = c.getVoiceStates(id)
 
 	return g, true
