@@ -72,6 +72,7 @@ func (c *PgCache) StoreGuild(g guild.Guild) {
 	}
 
 	for _, channel := range g.Channels {
+		channel.GuildId = g.Id
 		c.StoreChannel(channel)
 	}
 
@@ -93,7 +94,8 @@ func (c *PgCache) StoreGuild(g guild.Guild) {
 	}
 }
 
-func (c *PgCache) GetGuild(id uint64) (guild.Guild, bool) {
+// use withMembers with extreme caution!
+func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 	var cachedGuild guild.CachedGuild
 
 	if err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&cachedGuild); err != nil {
@@ -102,16 +104,168 @@ func (c *PgCache) GetGuild(id uint64) (guild.Guild, bool) {
 
 	g := cachedGuild.ToGuild(id)
 
-	// TODO: Add, channels, roles, etc
+	g.Channels = c.getChannels(id)
+	g.Roles = c.getRoles(id)
+	g.Members = c.getMembers(id, withUserData)
+	g.Emojis = c.getEmojis(id,)
+	g.VoiceStates = c.getVoiceStates(id)
 
 	return g, true
+}
+
+func (c *PgCache) getChannels(guildId uint64) []channel.Channel {
+	if !c.Options.Channels {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "channel_id", "data" FROM channels WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var channels []channel.Channel
+
+	for rows.Next() {
+		var channelId uint64
+		var data channel.CachedChannel
+
+		if err := rows.Scan(&channelId, &data); err != nil {
+			continue
+		}
+
+		channels = append(channels, data.ToChannel(channelId))
+	}
+
+	return channels
+}
+
+func (c *PgCache) getRoles(guildId uint64) []guild.Role {
+	if !c.Options.Roles {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "role_id", "data" FROM roles WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var roles []guild.Role
+
+	for rows.Next() {
+		var roleId uint64
+		var data guild.CachedRole
+
+		if err := rows.Scan(&roleId, &data); err != nil {
+			continue
+		}
+
+		roles = append(roles, data.ToRole(roleId))
+	}
+
+	return roles
+}
+
+func (c *PgCache) getMembers(guildId uint64, withUserData bool) []member.Member {
+	if !c.Options.Members {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM members WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var members []member.Member
+
+	for rows.Next() {
+		var userId uint64
+		var data member.CachedMember
+
+		if err := rows.Scan(&userId, &data); err != nil {
+			continue
+		}
+
+		var userData user.User
+		if withUserData {
+			userData, _ = c.GetUser(userId)
+		} else {
+			userData = user.User{
+				Id: userId,
+			}
+		}
+
+		members = append(members, data.ToMember(userData))
+	}
+
+	return members
+}
+
+func (c *PgCache) getEmojis(guildId uint64) []emoji.Emoji {
+	if !c.Options.Emojis {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "emoji_id", "data" FROM emojis WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var emojis []emoji.Emoji
+
+	for rows.Next() {
+		var emojiId uint64
+		var data emoji.CachedEmoji
+
+		if err := rows.Scan(&emojiId, &data); err != nil {
+			continue
+		}
+
+		user, _ := c.GetUser(data.User)
+		emojis = append(emojis, data.ToEmoji(emojiId, user))
+	}
+
+	return emojis
+}
+
+func (c *PgCache) getVoiceStates(guildId uint64) []guild.VoiceState {
+	if !c.Options.VoiceStates {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM voice_states WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var states []guild.VoiceState
+
+	for rows.Next() {
+		var userId uint64
+		var data guild.CachedVoiceState
+
+		if err := rows.Scan(&userId, &data); err != nil {
+			continue
+		}
+
+		member, _ := c.GetMember(guildId, userId)
+
+		states = append(states, data.ToVoiceState(guildId, member))
+	}
+
+	return states
 }
 
 // TODO: FIX
 func (c *PgCache) GetGuilds() []guild.Guild {
 	var guilds []guild.Guild
 
-	rows, err := c.Query(context.Background(), `SELECT *" FROM guilds;`)
+	rows, err := c.Query(context.Background(), `SELECT * FROM guilds;`)
+	defer rows.Close()
 	if err != nil {
 		return nil
 	}

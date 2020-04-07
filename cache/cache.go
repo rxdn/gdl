@@ -15,11 +15,12 @@ type Cache interface {
 	GetUser(id uint64) (user.User, bool)
 
 	StoreGuild(guild guild.Guild)
-	GetGuild(id uint64) (guild.Guild, bool)
+	GetGuild(id uint64, withUserData bool) (guild.Guild, bool)
 	GetGuilds() []guild.Guild
 	DeleteGuild(id uint64)
 
 	StoreMember(member member.Member, guildId uint64)
+	GetMember(guildId, userId uint64) (member.Member, bool)
 	DeleteMember(userId, guildId uint64)
 
 	StoreChannel(channel channel.Channel)

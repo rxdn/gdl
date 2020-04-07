@@ -19,3 +19,10 @@ func (s *Shard) SelfUsername() string {
 func (s *Shard) HeartbeatLatency() int64 {
 	return s.LastHeartbeatAcknowledgement - s.LastHeartbeat
 }
+
+func (s *Shard) GetShardGuildIds() []uint64 {
+	s.guildsLock.RLock()
+	ids := s.guilds
+	s.guildsLock.RUnlock()
+	return ids
+}
