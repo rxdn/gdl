@@ -79,16 +79,17 @@ func (s *Shard) Connect() error {
 	logrus.Infof("shard %d: Starting", s.ShardId)
 
 	// Connect to Discord
-	s.StateLock.RLock()
+	s.StateLock.Lock() // Can't RLock - potential state issue
 	state := s.State
-	s.StateLock.RUnlock()
+
 	if state != DEAD {
+		s.StateLock.Unlock()
 		if err := s.Kill(); err != nil {
 			return err
 		}
+		s.StateLock.Lock()
 	}
 
-	s.StateLock.Lock()
 	s.State = CONNECTING
 	s.StateLock.Unlock()
 
