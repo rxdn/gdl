@@ -12,8 +12,8 @@ import (
 	"github.com/rxdn/gdl/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tatsuworks/czlib"
-	"io"
 	"log"
+	"net/http"
 	"nhooyr.io/websocket"
 	"runtime/debug"
 	"sync"
@@ -25,16 +25,16 @@ type Shard struct {
 	Token        string
 	ShardId      int
 
-	State     State
-	StateLock sync.RWMutex
+	state     State
+	stateLock sync.RWMutex
 
 	WebSocket  *websocket.Conn
-	Context    context.Context
-	ZLibReader io.ReadCloser
-	ReadLock   sync.Mutex
+	context    context.Context
+	zLibReader wrappedReader
+	readLock   *sync.Mutex
 
-	SequenceLock   sync.RWMutex
-	SequenceNumber *int
+	sequenceLock   sync.RWMutex
+	sequenceNumber *int
 
 	LastHeartbeat     int64 // Millis
 	HeartbeatInterval int
@@ -59,11 +59,12 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		ShardManager:                 shardManager,
 		Token:                        token,
 		ShardId:                      shardId,
-		State:                        DEAD,
-		Context:                      context.Background(),
+		state:                        DEAD,
+		context:                      context.Background(),
 		LastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
 		Cache:                        cache,
 		guildsLock:                   &sync.RWMutex{},
+		readLock:                     &sync.Mutex{},
 	}
 }
 
@@ -79,19 +80,19 @@ func (s *Shard) Connect() error {
 	logrus.Infof("shard %d: Starting", s.ShardId)
 
 	// Connect to Discord
-	s.StateLock.Lock() // Can't RLock - potential state issue
-	state := s.State
+	s.stateLock.Lock() // Can't RLock - potential state issue
+	state := s.state
 
 	if state != DEAD {
-		s.StateLock.Unlock()
+		s.stateLock.Unlock()
 		if err := s.Kill(); err != nil {
 			return err
 		}
-		s.StateLock.Lock()
+		s.stateLock.Lock()
 	}
 
-	s.State = CONNECTING
-	s.StateLock.Unlock()
+	s.state = CONNECTING
+	s.stateLock.Unlock()
 
 	// initialise zlib reader
 	zlibReader, err := czlib.NewReader(bytes.NewReader(nil))
@@ -99,17 +100,24 @@ func (s *Shard) Connect() error {
 		return err
 	}
 
-	s.ZLibReader = zlibReader
+	s.zLibReader = wrappedReader{
+		ReadCloser: zlibReader,
+		closeChan:  make(chan struct{}),
+	}
 	defer zlibReader.Close()
 
-	conn, _, err := websocket.Dial(s.Context, "wss://gateway.discord.gg/?v=6&encoding=json&compress=zlib-stream", &websocket.DialOptions{
+	headers := http.Header{}
+	headers.Add("accept-encoding", "zlib")
+
+	conn, _, err := websocket.Dial(s.context, "wss://gateway.discord.gg/?v=6&encoding=json&compress=zlib-stream", &websocket.DialOptions{
 		CompressionMode: websocket.CompressionContextTakeover,
+		HTTPHeader:      headers,
 	})
 
 	if err != nil {
-		s.StateLock.Lock()
-		s.State = DEAD
-		s.StateLock.Unlock()
+		s.stateLock.Lock()
+		s.state = DEAD
+		s.stateLock.Unlock()
 		return err
 	}
 
@@ -124,7 +132,7 @@ func (s *Shard) Connect() error {
 		return err
 	}
 
-	if s.SessionId == "" || s.SequenceNumber == nil {
+	if s.SessionId == "" || s.sequenceNumber == nil {
 		s.identify()
 	} else {
 		s.resume()
@@ -132,16 +140,16 @@ func (s *Shard) Connect() error {
 
 	logrus.Infof("shard %d: Connected", s.ShardId)
 
-	s.StateLock.Lock()
-	s.State = CONNECTED
-	s.StateLock.Unlock()
+	s.stateLock.Lock()
+	s.state = CONNECTED
+	s.stateLock.Unlock()
 
 	go func() {
 		for {
 			// Verify that we are still connected
-			s.StateLock.RLock()
-			state := s.State
-			s.StateLock.RUnlock()
+			s.stateLock.RLock()
+			state := s.state
+			s.stateLock.RUnlock()
 			if state != CONNECTED {
 				break
 			}
@@ -150,9 +158,9 @@ func (s *Shard) Connect() error {
 			if err := s.read(); err != nil {
 				logrus.Warnf("shard %d: Error whilst reading payload: %s", s.ShardId, err.Error())
 
-				s.StateLock.Lock()
-				state := s.State
-				s.StateLock.Unlock()
+				s.stateLock.Lock()
+				state := s.state
+				s.stateLock.Unlock()
 
 				if state == CONNECTED {
 					s.Kill()
@@ -186,9 +194,9 @@ func (s *Shard) identify() {
 }
 
 func (s *Shard) resume() {
-	s.SequenceLock.RLock()
-	resume := payloads.NewResume(s.Token, s.SessionId, *s.SequenceNumber)
-	s.SequenceLock.RUnlock()
+	s.sequenceLock.RLock()
+	resume := payloads.NewResume(s.Token, s.SessionId, *s.sequenceNumber)
+	s.sequenceLock.RUnlock()
 
 	logrus.Infof("shard %d: Resuming", s.ShardId)
 
@@ -207,24 +215,18 @@ func (s *Shard) read() error {
 		}
 	}()
 
-	buffer, err := s.readData()
-
+	data, err := s.readData()
 	if err != nil {
 		return err
 	}
-
-	data := buffer.Bytes()
 
 	payload, err := payloads.NewPayload(data)
-	if err != nil {
-		return err
-	}
 
 	// Handle new sequence number
 	if payload.SequenceNumber != nil {
-		s.SequenceLock.Lock()
-		s.SequenceNumber = payload.SequenceNumber
-		s.SequenceLock.Unlock()
+		s.sequenceLock.Lock()
+		s.sequenceNumber = payload.SequenceNumber
+		s.sequenceLock.Unlock()
 	}
 
 	// Handle payload
@@ -282,25 +284,24 @@ func (s *Shard) read() error {
 	return nil
 }
 
-func (s *Shard) readData() (bytes.Buffer, error) {
-	var buffer bytes.Buffer
-
-	s.ReadLock.Lock()
-	defer s.ReadLock.Unlock()
+func (s *Shard) readData() ([]byte, error) {
+	s.readLock.Lock()
+	defer s.readLock.Unlock()
 
 	if s.WebSocket == nil {
-		return buffer, errors.New("websocket is nil")
+		return nil, errors.New("websocket is nil")
 	}
 
-	_, reader, err := s.WebSocket.Reader(s.Context)
+	_, reader, err := s.WebSocket.Reader(context.Background())
 	if err != nil {
-		return buffer, err
+		return nil, err
 	}
 
 	// decompress
-	s.ZLibReader.(czlib.Resetter).Reset(reader)
-	_, err = buffer.ReadFrom(s.ZLibReader)
-	return buffer, err
+	s.zLibReader.Reset(reader)
+	data, err := s.zLibReader.Read()
+
+	return data, err
 }
 
 func (s *Shard) write(payload interface{}) error {
@@ -315,11 +316,11 @@ func (s *Shard) write(payload interface{}) error {
 func (s *Shard) writeRaw(data []byte) error {
 	if s.WebSocket == nil {
 		msg := fmt.Sprintf("shard %d: WS is closed", s.ShardId)
-		log.Println(msg)
+		logrus.Warn(msg)
 		return errors.New(msg)
 	}
 
-	err := s.WebSocket.Write(s.Context, websocket.MessageText, data)
+	err := s.WebSocket.Write(s.context, websocket.MessageText, data)
 
 	return err
 }
@@ -335,10 +336,12 @@ func (s *Shard) Kill() error {
 		s.KillHeartbeat <- struct{}{}
 	}()
 
-	s.ZLibReader.Close()
+	if err := s.zLibReader.Close(); err != nil {
+		logrus.Warnf("shard %d: error closing zlib: %s", s.ShardId, err.Error())
+	}
 
-	s.StateLock.Lock()
-	s.State = DISCONNECTING
+	s.stateLock.Lock()
+	s.state = DISCONNECTING
 
 	var err error
 	if s.WebSocket != nil {
@@ -347,8 +350,8 @@ func (s *Shard) Kill() error {
 
 	s.WebSocket = nil
 
-	s.State = DEAD
-	s.StateLock.Unlock()
+	s.state = DEAD
+	s.stateLock.Unlock()
 
 	logrus.Infof("killed shard %d", s.ShardId)
 

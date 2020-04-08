@@ -19,7 +19,7 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 
 			// Check we received an ACK
 			timeElapsed := utils.GetCurrentTimeMillis() - s.LastHeartbeatAcknowledgement
-			if s.HasDoneHeartbeat && timeElapsed > int64(s.HeartbeatInterval) {
+			if s.HasDoneHeartbeat && timeElapsed < int64(s.HeartbeatInterval) {
 				logrus.Warnf("shard %d didn't receive acknowledgement, restarting", s.ShardId)
 				s.Kill()
 				go s.EnsureConnect()
@@ -36,9 +36,9 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 }
 
 func (s *Shard) Heartbeat() error {
-	s.SequenceLock.RLock()
-	payload := payloads.NewHeartbeat(s.SequenceNumber)
-	s.SequenceLock.RUnlock()
+	s.sequenceLock.RLock()
+	payload := payloads.NewHeartbeat(s.sequenceNumber)
+	s.sequenceLock.RUnlock()
 
 	s.HasDoneHeartbeat = true
 	s.LastHeartbeat = utils.GetCurrentTimeMillis()
