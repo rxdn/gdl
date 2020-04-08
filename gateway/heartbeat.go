@@ -19,7 +19,7 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 
 			// Check we received an ACK
 			timeElapsed := utils.GetCurrentTimeMillis() - s.LastHeartbeatAcknowledgement
-			if s.HasDoneHeartbeat && timeElapsed < int64(s.HeartbeatInterval) {
+			if s.HasDoneHeartbeat && timeElapsed > int64(s.HeartbeatInterval) {
 				logrus.Warnf("shard %d didn't receive acknowledgement, restarting", s.ShardId)
 				s.Kill()
 				go s.EnsureConnect()
