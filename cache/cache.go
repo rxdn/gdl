@@ -26,10 +26,12 @@ type Cache interface {
 
 	StoreChannel(channel channel.Channel)
 	GetChannel(id uint64) (channel.Channel, bool)
+	GetGuildChannels(guildId uint64) []channel.Channel
 	DeleteChannel(channelId, guildId uint64)
 
 	StoreRole(role guild.Role, guildId uint64)
 	GetRole(id uint64) (guild.Role, bool)
+	GetGuildRoles(guildId uint64) []guild.Role
 	DeleteRole(roleId, guildId uint64)
 
 	StoreEmoji(emoji emoji.Emoji, guildId uint64)

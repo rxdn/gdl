@@ -24,6 +24,11 @@ func (u *User) Mention() string {
 	return fmt.Sprintf("<@%d>", u.Id)
 }
 
+// converts a discrim of 1 => 0001
+func (u *User) PadDiscriminator() string {
+	return fmt.Sprintf("%04d", u.Discriminator)
+}
+
 func (u *User) ToCachedUser() CachedUser {
 	return CachedUser{
 		Username:      u.Username,

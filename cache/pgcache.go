@@ -113,8 +113,8 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 
 	g := cachedGuild.ToGuild(id)
 
-	g.Channels = c.getChannels(id)
-	g.Roles = c.getRoles(id)
+	g.Channels = c.GetGuildChannels(id)
+	g.Roles = c.GetGuildRoles(id)
 	g.Members = c.getMembers(id, withUserData)
 	g.Emojis = c.getEmojis(id, )
 	g.VoiceStates = c.getVoiceStates(id)
@@ -122,7 +122,7 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 	return g, true
 }
 
-func (c *PgCache) getChannels(guildId uint64) []channel.Channel {
+func (c *PgCache) GetGuildChannels(guildId uint64) []channel.Channel {
 	if !c.Options.Channels {
 		return nil
 	}
@@ -149,7 +149,7 @@ func (c *PgCache) getChannels(guildId uint64) []channel.Channel {
 	return channels
 }
 
-func (c *PgCache) getRoles(guildId uint64) []guild.Role {
+func (c *PgCache) GetGuildRoles(guildId uint64) []guild.Role {
 	if !c.Options.Roles {
 		return nil
 	}

@@ -223,8 +223,11 @@ func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
 	shouldCache := s.Cache.GetOptions().Guilds && s.Cache.GetOptions().Channels
 
 	if shouldCache {
-		if guild, found := s.Cache.GetGuild(guildId, false); found {
-			return guild.Channels, nil
+		cached := s.Cache.GetGuildChannels(guildId)
+
+		// either not cached (more likely), or guild has no channels
+		if len(cached) > 0 {
+			return cached, nil
 		}
 	}
 
@@ -320,8 +323,11 @@ func (s *Shard) RemoveGuildBan(guildId, userId uint64) error {
 func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 	shouldCache := s.Cache.GetOptions().Guilds
 	if shouldCache {
-		if cachedGuild, found := s.Cache.GetGuild(guildId, false); found {
-			return cachedGuild.Roles, nil
+		cached := s.Cache.GetGuildRoles(guildId)
+
+		// either not cached (more likely), or guild has no channels
+		if len(cached) > 0 {
+			return cached, nil
 		}
 	}
 
