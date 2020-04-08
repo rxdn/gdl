@@ -34,7 +34,9 @@ func readyListener(s *Shard, e *events.Ready) {
 	s.SessionId = e.SessionId
 
 	s.Cache.StoreSelf(e.User)
-	s.Cache.StoreGuilds(e.Guilds)
+
+	// Don't store guilds twice
+	//s.Cache.StoreGuilds(e.Guilds)
 }
 
 func channelCreateListener(s *Shard, e *events.ChannelCreate) {

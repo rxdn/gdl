@@ -74,6 +74,7 @@ func (c *PgCache) GetUser(id uint64) (user.User, bool) {
 	return user.ToUser(id), true
 }
 
+// TODO: The "data" field just has null values. Find the cause and solution.
 func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
 	if c.Options.Guilds {
 		// store guilds
