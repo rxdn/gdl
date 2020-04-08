@@ -15,6 +15,7 @@ type Cache interface {
 	GetUser(id uint64) (user.User, bool)
 
 	StoreGuild(guild guild.Guild)
+	StoreGuilds(guilds []guild.Guild)
 	GetGuild(id uint64, withUserData bool) (guild.Guild, bool)
 	GetGuilds() []guild.Guild
 	DeleteGuild(id uint64)

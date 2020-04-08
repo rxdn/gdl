@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
@@ -71,6 +72,81 @@ func (c *PgCache) GetUser(id uint64) (user.User, bool) {
 	}
 
 	return user.ToUser(id), true
+}
+
+func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
+	if c.Options.Guilds {
+		// store guilds
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, guild := range guilds {
+			// append guild
+			if encoded, err := json.Marshal(guild.ToCachedGuild()); err == nil {
+				batch.Queue(`INSERT INTO guilds("guild_id", "data") VALUES($1, $2) ON CONFLICT("guild_id") DO UPDATE SET "data" = $2;`, guild.Id, string(encoded))
+			}
+
+			// append channels
+			if c.Options.Channels {
+				for _, channel := range guild.Channels {
+					if encoded, err := json.Marshal(channel.ToCachedChannel()); err == nil {
+						batch.Queue(`INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, channel.Id, channel.GuildId, string(encoded))
+					}
+				}
+			}
+
+			// append roles
+			if c.Options.Roles {
+				for _, role := range guild.Roles {
+					if encoded, err := json.Marshal(role.ToCachedRole()); err == nil {
+						batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guild.Id, string(encoded))
+					}
+				}
+			}
+
+			// append members
+			if c.Options.Members {
+				for _, member := range guild.Members {
+					if encoded, err := json.Marshal(member.ToCachedMember()); err == nil {
+						batch.Queue(`INSERT INTO members("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, guild.Id, member.User.Id, string(encoded))
+					}
+				}
+			}
+
+			// append users
+			if c.Options.Users {
+				for _, member := range guild.Members {
+					if encoded, err := json.Marshal(member.User.ToCachedUser()); err == nil {
+						batch.Queue(`INSERT INTO users("user_id", "data") VALUES($1, $2) ON CONFLICT("user_id") DO UPDATE SET "data" = $2;`, member.User.Id, string(encoded))
+					}
+				}
+			}
+
+			// append emojis
+			if c.Options.Emojis {
+				for _, emoji := range guild.Emojis {
+					if encoded, err := json.Marshal(emoji.ToCachedEmoji()); err == nil {
+						batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guild.Id, string(encoded))
+					}
+				}
+			}
+
+			// append voice states
+			if c.Options.VoiceStates {
+				for _, state := range guild.VoiceStates {
+					if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
+						batch.Queue(`INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
+					}
+				}
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
+	}
 }
 
 func (c *PgCache) StoreGuild(g guild.Guild) {
@@ -143,7 +219,7 @@ func (c *PgCache) GetGuildChannels(guildId uint64) []channel.Channel {
 			continue
 		}
 
-		channels = append(channels, data.ToChannel(channelId))
+		channels = append(channels, data.ToChannel(channelId, guildId))
 	}
 
 	return channels
@@ -271,19 +347,7 @@ func (c *PgCache) getVoiceStates(guildId uint64) []guild.VoiceState {
 
 // TODO: FIX
 func (c *PgCache) GetGuilds() []guild.Guild {
-	var guilds []guild.Guild
-
-	rows, err := c.Query(context.Background(), `SELECT * FROM guilds;`)
-	defer rows.Close()
-	if err != nil {
-		return nil
-	}
-
-	if err := rows.Scan(&guilds); err != nil {
-		return nil
-	}
-
-	return guilds
+	return nil
 }
 
 func (c *PgCache) DeleteGuild(id uint64) {
@@ -336,16 +400,17 @@ func (c *PgCache) StoreChannel(ch channel.Channel) {
 }
 
 func (c *PgCache) GetChannel(id uint64) (channel.Channel, bool) {
+	var guildId uint64
 	var ch channel.CachedChannel
 	if !c.Options.Channels {
-		return ch.ToChannel(id), false
+		return ch.ToChannel(id, guildId), false
 	}
 
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM channels WHERE "channel_id" = $1;`, id).Scan(&ch); err != nil {
-		return ch.ToChannel(id), false
+	if err := c.QueryRow(context.Background(), `SELECT "guild_id", "data" FROM channels WHERE "channel_id" = $1;`, id).Scan(&guildId, &ch); err != nil {
+		return ch.ToChannel(id, guildId), false
 	}
 
-	return ch.ToChannel(id), true
+	return ch.ToChannel(id, guildId), true
 }
 
 func (c *PgCache) DeleteChannel(channelId, guildId uint64) {

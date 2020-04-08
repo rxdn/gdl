@@ -4,7 +4,6 @@ import "time"
 
 type CachedChannel struct {
 	Type                 ChannelType           `db:"type"`
-	GuildId              uint64                `db:"guild_id"`
 	Position             int                   `db:"position"`
 	PermissionOverwrites []PermissionOverwrite `db:"permission_overwrites"`
 	Name                 string                `db:"name"`
@@ -21,11 +20,11 @@ type CachedChannel struct {
 	LastPinTimestamp     time.Time             `db:"last_pin_timestamp"`
 }
 
-func (c *CachedChannel) ToChannel(channelId uint64) Channel {
+func (c *CachedChannel) ToChannel(channelId, guildId uint64) Channel {
 	return Channel{
 		Id:                   channelId,
 		Type:                 c.Type,
-		GuildId:              c.GuildId,
+		GuildId:              guildId,
 		Position:             c.Position,
 		PermissionOverwrites: c.PermissionOverwrites,
 		Name:                 c.Name,

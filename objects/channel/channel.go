@@ -21,7 +21,7 @@ type Channel struct {
 	RateLimitPerUser     int                   `json:"rate_limit_per_user"`
 	Recipients           []user.User           `json:"recipients"`
 	Icon                 string                `json:"icon"`
-	OwnerId              uint64                `json:"owner_id,string"`
+	OwnerId              uint64                `json:"owner_id,string"` // Owner of a group DM
 	ApplicationId        uint64                `json:"application_id,string"`
 	ParentId             uint64                `json:"parent_id,string,omitempty"`
 	LastPinTimestamp     time.Time             `json:"last_pin_timestamp"`
