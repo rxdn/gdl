@@ -339,7 +339,6 @@ func (s *Shard) Kill() error {
 
 	s.StateLock.Lock()
 	s.State = DISCONNECTING
-	s.StateLock.Unlock()
 
 	var err error
 	if s.WebSocket != nil {
@@ -348,7 +347,6 @@ func (s *Shard) Kill() error {
 
 	s.WebSocket = nil
 
-	s.StateLock.Lock()
 	s.State = DEAD
 	s.StateLock.Unlock()
 
