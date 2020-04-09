@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"fmt"
 	"github.com/rxdn/gdl/gateway/payloads"
 	"github.com/rxdn/gdl/utils"
 	"github.com/sirupsen/logrus"
@@ -19,6 +20,7 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 
 			// Check we received an ACK
 			timeElapsed := utils.GetCurrentTimeMillis() - s.LastHeartbeatAcknowledgement
+			fmt.Printf("current time millis: %d; last ack: %d; elapsed: %d; interval: %d", utils.GetCurrentTimeMillis(), s.LastHeartbeatAcknowledgement, timeElapsed, s.HeartbeatInterval)
 			if s.HasDoneHeartbeat && timeElapsed > int64(s.HeartbeatInterval) {
 				logrus.Warnf("shard %d didn't receive acknowledgement, restarting", s.ShardId)
 				s.HeartbeatMutex.Unlock()

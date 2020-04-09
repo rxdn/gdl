@@ -65,6 +65,26 @@ func (c *PgCache) StoreUser(user user.User) {
 	}
 }
 
+func (c *PgCache) StoreUsers(users []user.User) {
+	if c.Options.Users {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, u := range users {
+			if encoded, err := json.Marshal(u.ToCachedUser()); err == nil {
+				batch.Queue(`INSERT INTO users("user_id", "data") VALUES($1, $2) ON CONFLICT("user_id") DO UPDATE SET "data" = $2;`, u.Id, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
+	}
+}
+
+
 func (c *PgCache) GetUser(id uint64) (user.User, bool) {
 	var user user.CachedUser
 	if err := c.QueryRow(context.Background(), `SELECT "data" FROM users WHERE "user_id" = $1;`, id).Scan(&user); err != nil {
@@ -156,28 +176,22 @@ func (c *PgCache) StoreGuild(g guild.Guild) {
 			_, _ = c.Exec(context.Background(), `INSERT INTO guilds("guild_id", "data") VALUES($1, $2) ON CONFLICT("guild_id") DO UPDATE SET "data" = $2;`, g.Id, string(encoded))
 		}
 	}
-
-	for _, channel := range g.Channels {
+	for i, channel := range g.Channels {
 		channel.GuildId = g.Id
-		c.StoreChannel(channel)
+		g.Channels[i] = channel
 	}
 
-	for _, role := range g.Roles {
-		c.StoreRole(role, g.Id)
-	}
+	c.StoreChannels(g.Channels)
+	c.StoreRoles(g.Roles, g.Id)
+	c.StoreMembers(g.Members, g.Id)
+	c.StoreEmojis(g.Emojis, g.Id)
+	c.StoreVoiceStates(g.VoiceStates)
 
-	for _, member := range g.Members {
-		c.StoreUser(member.User)
-		c.StoreMember(member, g.Id)
+	var users []user.User
+	for _, m := range g.Members {
+		users = append(users, m.User)
 	}
-
-	for _, emoji := range g.Emojis {
-		c.StoreEmoji(emoji, g.Id)
-	}
-
-	for _, voiceState := range g.VoiceStates {
-		c.StoreVoiceState(voiceState)
-	}
+	c.StoreUsers(users)
 }
 
 // use withMembers with extreme caution!
@@ -371,6 +385,25 @@ func (c *PgCache) StoreMember(m member.Member, guildId uint64) {
 	}
 }
 
+func (c *PgCache) StoreMembers(members []member.Member, guildId uint64) {
+	if c.Options.Members {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, m := range members {
+			if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
+				batch.Queue(`INSERT INTO members("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, guildId, m.User.Id, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
+	}
+}
+
 func (c *PgCache) GetMember(guildId, userId uint64) (member.Member, bool) {
 	var cachedMember member.CachedMember
 	if !c.Options.Members {
@@ -397,6 +430,25 @@ func (c *PgCache) StoreChannel(ch channel.Channel) {
 		if encoded, err := json.Marshal(ch.ToCachedChannel()); err == nil {
 			_, err = c.Exec(context.Background(), `INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, ch.Id, ch.GuildId, string(encoded))
 		}
+	}
+}
+
+func (c *PgCache) StoreChannels(channels []channel.Channel) {
+	if c.Options.Channels {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, ch := range channels {
+			if encoded, err := json.Marshal(ch.ToCachedChannel()); err == nil {
+				batch.Queue(`INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, ch.Id, ch.GuildId, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
 	}
 }
 
@@ -428,6 +480,25 @@ func (c *PgCache) StoreRole(role guild.Role, guildId uint64) {
 	}
 }
 
+func (c *PgCache) StoreRoles(roles []guild.Role, guildId uint64) {
+	if c.Options.Roles {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, role := range roles {
+			if encoded, err := json.Marshal(role.ToCachedRole()); err == nil {
+				batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guildId, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
+	}
+}
+
 func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
 	var role guild.CachedRole
 	if !c.Options.Roles {
@@ -452,6 +523,25 @@ func (c *PgCache) StoreEmoji(emoji emoji.Emoji, guildId uint64) {
 		if encoded, err := json.Marshal(emoji.ToCachedEmoji()); err == nil {
 			_, _ = c.Exec(context.Background(), `INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guildId, string(encoded))
 		}
+	}
+}
+
+func (c *PgCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
+	if c.Options.Emojis {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, e := range emojis {
+			if encoded, err := json.Marshal(e.ToCachedEmoji()); err == nil {
+				batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, e.Id, guildId, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
 	}
 }
 
@@ -482,6 +572,25 @@ func (c *PgCache) StoreVoiceState(state guild.VoiceState) {
 		if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
 			_, _ = c.Exec(context.Background(), `INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
 		}
+	}
+}
+
+func (c *PgCache) StoreVoiceStates(states []guild.VoiceState) {
+	if c.Options.VoiceStates {
+		batch := &pgx.Batch{}
+
+		batch.Queue(`SET synchronous_commit TO OFF;`)
+
+		for _, state := range states {
+			if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
+				batch.Queue(`INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
+			}
+		}
+
+		batch.Queue(`SET synchronous_commit TO ON;`)
+
+		br := c.SendBatch(context.Background(), batch)
+		_ = br.Close()
 	}
 }
 

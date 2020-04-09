@@ -276,7 +276,7 @@ func (s *Shard) read() error {
 			}
 
 			s.HeartbeatMutex.Lock()
-			s.LastHeartbeatAcknowledgement = time.Now().UnixNano() / int64(time.Millisecond)
+			s.LastHeartbeatAcknowledgement = utils.GetCurrentTimeMillis()
 			s.HeartbeatMutex.Unlock()
 		}
 	}

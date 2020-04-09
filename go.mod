@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/TicketsBot/ttlcache v1.6.1-0.20200405150101-acc18e37b261
+	github.com/boltdb/bolt v1.3.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
