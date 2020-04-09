@@ -48,7 +48,7 @@ func channelUpdateListener(s *Shard, e *events.ChannelUpdate) {
 }
 
 func channelDeleteListener(s *Shard, e *events.ChannelDelete) {
-	s.Cache.DeleteChannel(e.Channel.Id, e.GuildId)
+	s.Cache.DeleteChannel(e.Channel.Id)
 }
 
 func guildCreateListener(s *Shard, e *events.GuildCreate) {
@@ -105,7 +105,7 @@ func guildRoleUpdateListener(s *Shard, e *events.GuildRoleUpdate) {
 }
 
 func guildRoleDeleteListener(s *Shard, e *events.GuildRoleDelete) {
-	s.Cache.DeleteRole(e.RoleId, e.GuildId)
+	s.Cache.DeleteRole(e.RoleId)
 }
 
 func userUpdateListener(s *Shard, e *events.UserUpdate) {

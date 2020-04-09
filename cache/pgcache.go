@@ -24,22 +24,22 @@ type PgCache struct {
 
 func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
 	// create schema
-	mustRun(db, `CREATE TABLE IF NOT EXISTS guilds("guild_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("guild_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS channels("channel_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("channel_id", "guild_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS users("user_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("user_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS members("guild_id" int8 NOT NULL, "user_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS roles("role_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("role_id", "guild_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS emojis("emoji_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("emoji_id", "guild_id"));`)
-	mustRun(db, `CREATE TABLE IF NOT EXISTS voice_states("guild_id" int8 NOT NULL, "user_id" INT8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`) // we may not have a cached user
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS guilds("guild_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("guild_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS channels("channel_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("channel_id", "guild_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS users("user_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("user_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS members("guild_id" int8 NOT NULL, "user_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS roles("role_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("role_id", "guild_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS emojis("emoji_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("emoji_id", "guild_id"));`)
+	pgMustRun(db, `CREATE TABLE IF NOT EXISTS voice_states("guild_id" int8 NOT NULL, "user_id" INT8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`) // we may not have a cached user
 
 	// create indexes
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS channels_guild_id ON channels("guild_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS members_guild_id ON members("guild_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS member_user_id ON members("user_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS roles_guild_id ON roles("guild_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS emojis_guild_id ON emojis("guild_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_guild_id ON voice_states("guild_id");`)
-	mustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_user_id ON voice_states("user_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS channels_guild_id ON channels("guild_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS members_guild_id ON members("guild_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS member_user_id ON members("user_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS roles_guild_id ON roles("guild_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS emojis_guild_id ON emojis("guild_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_guild_id ON voice_states("guild_id");`)
+	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_user_id ON voice_states("user_id");`)
 
 	return PgCache{
 		Pool:    db,
@@ -47,7 +47,7 @@ func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
 	}
 }
 
-func mustRun(db *pgxpool.Pool, query string) {
+func pgMustRun(db *pgxpool.Pool, query string) {
 	if _, err := db.Exec(context.Background(), query); err != nil {
 		panic(err)
 	}
@@ -206,8 +206,8 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 
 	g.Channels = c.GetGuildChannels(id)
 	g.Roles = c.GetGuildRoles(id)
-	g.Members = c.getMembers(id, withUserData)
-	g.Emojis = c.getEmojis(id, )
+	g.Members = c.GetGuildMembers(id, withUserData)
+	g.Emojis = c.GetGuildEmojis(id, )
 	g.VoiceStates = c.getVoiceStates(id)
 
 	return g, true
@@ -267,7 +267,7 @@ func (c *PgCache) GetGuildRoles(guildId uint64) []guild.Role {
 	return roles
 }
 
-func (c *PgCache) getMembers(guildId uint64, withUserData bool) []member.Member {
+func (c *PgCache) GetGuildMembers(guildId uint64, withUserData bool) []member.Member {
 	if !c.Options.Members {
 		return nil
 	}
@@ -303,7 +303,7 @@ func (c *PgCache) getMembers(guildId uint64, withUserData bool) []member.Member 
 	return members
 }
 
-func (c *PgCache) getEmojis(guildId uint64) []emoji.Emoji {
+func (c *PgCache) GetGuildEmojis(guildId uint64) []emoji.Emoji {
 	if !c.Options.Emojis {
 		return nil
 	}
@@ -466,7 +466,7 @@ func (c *PgCache) GetChannel(id uint64) (channel.Channel, bool) {
 	return ch.ToChannel(id, guildId), true
 }
 
-func (c *PgCache) DeleteChannel(channelId, guildId uint64) {
+func (c *PgCache) DeleteChannel(channelId uint64) {
 	if c.Options.Channels {
 		_, _ = c.Exec(context.Background(), `DELETE FROM channels WHERE "channel_id" = $1;`, channelId)
 	}
@@ -512,7 +512,7 @@ func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
 	return role.ToRole(id), true
 }
 
-func (c *PgCache) DeleteRole(roleId, guildId uint64) {
+func (c *PgCache) DeleteRole(roleId uint64) {
 	if c.Options.Roles {
 		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "role_id" = $1;`, roleId)
 	}
@@ -561,7 +561,7 @@ func (c *PgCache) GetEmoji(id uint64) (emoji.Emoji, bool) {
 	return cachedEmoji.ToEmoji(id, user), true
 }
 
-func (c *PgCache) DeleteEmoji(emojiId, guildId uint64) {
+func (c *PgCache) DeleteEmoji(emojiId uint64) {
 	if c.Options.Emojis {
 		_, _ = c.Exec(context.Background(), `DELETE FROM emojis WHERE "emoji_id" = $1;`, emojiId)
 	}
@@ -613,6 +613,40 @@ func (c *PgCache) GetVoiceState(userId, guildId uint64) (guild.VoiceState, bool)
 	// fill user field
 	member, _ := c.GetMember(guildId, userId)
 	return cachedVoiceState.ToVoiceState(guildId, member), true
+}
+
+func (c *PgCache) GetGuildVoiceStates(guildId uint64) []guild.VoiceState {
+	if !c.Options.VoiceStates {
+		return nil
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM voice_states WHERE "guild_id" = $1;`, guildId)
+	defer rows.Close()
+	if err != nil {
+		return nil
+	}
+
+	var states []guild.VoiceState
+
+	for rows.Next() {
+		var userId uint64
+		var data guild.CachedVoiceState
+
+		if err := rows.Scan(&userId, &data); err != nil {
+			continue
+		}
+
+		member, _ := c.GetMember(guildId, userId)
+		states = append(states, data.ToVoiceState(userId, member))
+	}
+
+	return states
+}
+
+func (c *PgCache) DeleteVoiceState(userId, guildId uint64) {
+	if c.Options.Emojis {
+		_, _ = c.Exec(context.Background(), `DELETE FROM voice_states WHERE "user_id" = $1 AND "guild_id" = $2;`, userId, guildId)
+	}
 }
 
 func (c *PgCache) StoreSelf(self user.User) {
