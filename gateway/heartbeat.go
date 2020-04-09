@@ -21,9 +21,12 @@ func (s *Shard) CountdownHeartbeat(ticker *time.Ticker) {
 			timeElapsed := utils.GetCurrentTimeMillis() - s.LastHeartbeatAcknowledgement
 			if s.HasDoneHeartbeat && timeElapsed > int64(s.HeartbeatInterval) {
 				logrus.Warnf("shard %d didn't receive acknowledgement, restarting", s.ShardId)
+				s.HeartbeatMutex.Unlock()
 				s.Kill()
 				go s.EnsureConnect()
+				return
 			}
+
 			s.HeartbeatMutex.Unlock()
 
 			if err := s.Heartbeat(); err != nil {
