@@ -64,7 +64,7 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		lastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
 		Cache:                        cache,
 		guildsLock:                   &sync.RWMutex{},
-		readLock:                     &sync.Mutex{},
+		readLock:                     &sync.Mutex{},fm
 	}
 }
 
