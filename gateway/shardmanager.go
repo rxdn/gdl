@@ -58,6 +58,7 @@ func (sm *ShardManager) ShardForGuild(guildId uint64) *Shard {
 		shard.guildsLock.RLock()
 		for _, shardGuild := range shard.guilds {
 			if shardGuild == guildId {
+				shard.guildsLock.RUnlock()
 				return shard
 			}
 		}
