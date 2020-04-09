@@ -31,7 +31,7 @@ func RegisterCacheListeners(sm *ShardManager) {
 func readyListener(s *Shard, e *events.Ready) {
 	logrus.Infof("shard %d: received ready", s.ShardId)
 
-	s.SessionId = e.SessionId
+	s.sessionId = e.SessionId
 
 	s.Cache.StoreSelf(e.User)
 

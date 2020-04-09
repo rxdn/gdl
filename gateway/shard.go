@@ -36,15 +36,15 @@ type Shard struct {
 	sequenceLock   sync.RWMutex
 	sequenceNumber *int
 
-	LastHeartbeat     int64 // Millis
-	HeartbeatInterval int
-	HasDoneHeartbeat  bool
+	lastHeartbeat     int64 // Millis
+	heartbeatInterval int
+	hasDoneHeartbeat  bool
 
-	LastHeartbeatAcknowledgement int64 // Millis
-	HeartbeatMutex               sync.Mutex
-	KillHeartbeat                chan struct{}
+	lastHeartbeatAcknowledgement int64 // Millis
+	heartbeatLock                sync.RWMutex
+	killHeartbeat                chan struct{}
 
-	SessionId string
+	sessionId string
 
 	Cache cache.Cache
 
@@ -61,7 +61,7 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		ShardId:                      shardId,
 		state:                        DEAD,
 		context:                      context.Background(),
-		LastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
+		lastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
 		Cache:                        cache,
 		guildsLock:                   &sync.RWMutex{},
 		readLock:                     &sync.Mutex{},
@@ -132,7 +132,7 @@ func (s *Shard) Connect() error {
 		return err
 	}
 
-	if s.SessionId == "" || s.sequenceNumber == nil {
+	if s.sessionId == "" || s.sequenceNumber == nil {
 		s.identify()
 	} else {
 		s.resume()
@@ -195,7 +195,7 @@ func (s *Shard) identify() {
 
 func (s *Shard) resume() {
 	s.sequenceLock.RLock()
-	resume := payloads.NewResume(s.Token, s.SessionId, *s.sequenceNumber)
+	resume := payloads.NewResume(s.Token, s.sessionId, *s.sequenceNumber)
 	s.sequenceLock.RUnlock()
 
 	logrus.Infof("shard %d: Resuming", s.ShardId)
@@ -251,7 +251,7 @@ func (s *Shard) read() error {
 		{
 			logrus.Infof("shard %d: received invalid session payload from discord", s.ShardId)
 			s.Kill()
-			s.SessionId = ""
+			s.sessionId = ""
 			go s.EnsureConnect()
 		}
 	case 10: // Hello
@@ -261,10 +261,10 @@ func (s *Shard) read() error {
 				return err
 			}
 
-			s.HeartbeatInterval = hello.EventData.Interval
-			s.KillHeartbeat = make(chan struct{})
+			s.heartbeatInterval = hello.EventData.Interval
+			s.killHeartbeat = make(chan struct{})
 
-			ticker := time.NewTicker(time.Duration(int32(s.HeartbeatInterval)) * time.Millisecond)
+			ticker := time.NewTicker(time.Duration(int32(s.heartbeatInterval)) * time.Millisecond)
 			go s.CountdownHeartbeat(ticker)
 		}
 	case 11: // Heartbeat ACK
@@ -275,9 +275,9 @@ func (s *Shard) read() error {
 				return err
 			}
 
-			s.HeartbeatMutex.Lock()
-			s.LastHeartbeatAcknowledgement = utils.GetCurrentTimeMillis()
-			s.HeartbeatMutex.Unlock()
+			s.heartbeatLock.Lock()
+			s.lastHeartbeatAcknowledgement = utils.GetCurrentTimeMillis()
+			s.heartbeatLock.Unlock()
 		}
 	}
 
@@ -333,7 +333,7 @@ func (s *Shard) Kill() error {
 	logrus.Infof("killing shard %d", s.ShardId)
 
 	go func() {
-		s.KillHeartbeat <- struct{}{}
+		s.killHeartbeat <- struct{}{}
 	}()
 
 	if err := s.zLibReader.Close(); err != nil {

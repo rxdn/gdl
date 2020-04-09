@@ -17,7 +17,7 @@ func (s *Shard) SelfUsername() string {
 
 // millis
 func (s *Shard) HeartbeatLatency() int64 {
-	return s.LastHeartbeatAcknowledgement - s.LastHeartbeat
+	return s.lastHeartbeatAcknowledgement - s.lastHeartbeat
 }
 
 func (s *Shard) GetShardGuildIds() []uint64 {
