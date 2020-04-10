@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pasztorpisti/qs"
 	"github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -123,7 +124,13 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 226 {
-		return errors.New(fmt.Sprintf("http status %d at %s: %s", res.StatusCode, e.Endpoint, string(content))), nil
+		err, ok := errorCodes[res.StatusCode]
+		if !ok {
+			err = ErrUnknown
+			logrus.Warnf("http status %d at %s: %s", res.StatusCode, e.Endpoint, string(content))
+		}
+
+		return err, nil
 	}
 
 	if response != nil {

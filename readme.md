@@ -160,9 +160,37 @@ shardOptions := gateway.ShardOptions{
 }
 ```
 
+# Error Handling
+When calling a REST API method, Discord may send an error response. You can tell what kind of error has occurred through
+calling `errors.Is` and comparing the error to one of [GDL's error types](https://github.com/rxdn/gdl/blob/master/rest/request/errors.go).
+
+More generally, GDL wraps common errors, such as 404, 403 in either a ClientError or ServerError type. You can then run
+`request.IsServerError(err)` and `request.IsClientError(err)` to determine whether an error is a ClientError or
+ServerError.
+
+If an error that GDl does not provide a wrapper for occurs (it provides wrappers for all response codes that I have
+seen Discord return), an `ErrUnknown` will be returned, and full details will be logged. In this case, you should open
+an issue so that I can create the required error wrapper (or PR it!).
+
+The benefit of this is that you are able to do things like this:
+```go
+ch, err := s.CreateGuildChannel(guildId, data)
+if err != nil {
+	if errors.Is(err, request.ErrForbidden) {
+		_, _ = s.CreateMessage(e.ChannelId, "I do not have permission to create channels!")
+	}
+	return
+}
+```
+
+Note: However, in this case it is recommended to use GDL's [permission calculator](https://github.com/rxdn/gdl/blob/master/permission/permissioncalculator.go)
+to determine whether your bot has the required permissions for an action, rather than sending a request to Discord that
+is guaranteed to fail, as sending 10000 requests in 10 minutes that fail with a 401, 403 or 429 will ban your token
+from the API for an entire hour.
+
 # FAQ  
 ## I'm getting a pkg-config / zlib error!  
-The czlib library that GDL uses for compression requires the C zlib library to be installed. You can install it by:  
+The library that GDL uses for compression requires the C zlib library to be installed. You can install it by:  
   
 - Ubuntu: `# apt-get install zlib1g-dev`  
 - CentOS: `# yum install zlib-devel`
