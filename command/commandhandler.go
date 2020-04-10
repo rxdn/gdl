@@ -97,11 +97,7 @@ func (h *CommandHandler) commandListener(s *gateway.Shard, e *events.MessageCrea
 				}
 			}
 
-			if cmd.Async {
-				go cmd.Handler(ctx)
-			} else {
-				cmd.Handler(ctx)
-			}
+			go cmd.Handler(ctx)
 		}
 	}
 }

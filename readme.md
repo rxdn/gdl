@@ -77,13 +77,13 @@ GDL comes with a built-in command handler, however, feel free to build your own.
 sm := gateway.NewShardManager(token, shardOptions)
 ch := command.NewCommandHandler(sm, "!", "-") // register a new command handler with the prefixes ! and -
 
-// create a new "hello" command, with no aliases, that executes in a goroutine
-myCommand := command.NewCommand("hello", nil, true, func(ctx command.CommandContext) {
+// create a new "hello" command, with no aliases
+myCommand := command.NewCommand("hello", nil, func(ctx command.CommandContext) {
     _, _ = ctx.Shard.CreateMessage(ctx.ChannelId, fmt.Sprintf("Hello, %s!", ctx.Author.Username))
 })
 
-// create a subcommand (i.e. when the user runs !hello world), with an alias of "alias" (so !hello alias), that doesn't execute in a goroutine
-myCommand.RegisterSubCommand(command.NewCommand("world", []string{"alias"}, false, func(ctx command.CommandContext) {
+// create a subcommand (i.e. when the user runs !hello world), with an alias of "alias" (so !hello alias)
+myCommand.RegisterSubCommand(command.NewCommand("world", []string{"alias"}, func(ctx command.CommandContext) {
     _ = ctx.Shard.CreateReaction(ctx.ChannelId, ctx.Message.Id, "👍")
 }))
 
