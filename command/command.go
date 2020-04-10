@@ -1,21 +1,22 @@
 package command
 
-import "github.com/rxdn/gdl/gateway"
-
 type Command struct {
-	Name    string
-	Aliases []string
-	Handler func(CommandContext)
+	Name        string
+	Aliases     []string
+	Async       bool
+	Handler     func(CommandContext)
+	SubCommands []Command
 }
 
-func NewCommand(name string, aliases []string, handler func(CommandContext)) Command {
+func NewCommand(name string, aliases []string, async bool, handler func(CommandContext)) Command {
 	return Command{
 		Name:    name,
 		Aliases: aliases,
+		Async:   async,
 		Handler: handler,
 	}
 }
 
-func (c *Command) Register(sm *gateway.ShardManager) {
-
+func (c *Command) RegisterSubCommand(sub Command) {
+	c.SubCommands = append(c.SubCommands, sub)
 }

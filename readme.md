@@ -62,10 +62,40 @@ func echoListener(s *gateway.Shard, e *events.MessageCreate) {
 }    
 ```
 
+Other examples are available in the examples package
+
 # Events
 View the following package for a list of events: [gateway/payloads/events](https://github.com/rxdn/gdl/tree/master/gateway/payloads/events)
 
 Gateway events are also available to listen on: [gateway/payloads](https://github.com/rxdn/gdl/tree/master/gateway/payloads)
+
+# Commands
+GDL comes with a built-in command handler, however, feel free to build your own.
+
+## Example
+```go
+sm := gateway.NewShardManager(token, shardOptions)
+ch := command.NewCommandHandler(sm, "!", "-") // register a new command handler with the prefixes ! and -
+
+// create a new "hello" command, with no aliases, that executes in a goroutine
+myCommand := command.NewCommand("hello", nil, true, func(ctx command.CommandContext) {
+    _, _ = ctx.Shard.CreateMessage(ctx.ChannelId, fmt.Sprintf("Hello, %s!", ctx.Author.Username))
+})
+
+// create a subcommand (i.e. when the user runs !hello world), with an alias of "alias" (so !hello alias), that doesn't execute in a goroutine
+myCommand.RegisterSubCommand(command.NewCommand("world", []string{"alias"}, false, func(ctx command.CommandContext) {
+    _ = ctx.Shard.CreateReaction(ctx.ChannelId, ctx.Message.Id, "👍")
+}))
+
+// register our hello command
+// subcommands do not need to be registered on the command handler
+ch.RegisterCommand(myCommand)
+```
+
+![Command handler in action](https://i.imgur.com/eNH0NIb.png)
+
+Take a look at the [examples package](https://github.com/rxdn/gdl/tree/master/examples) for more usage examples
+(also feel free to contribute some!).
 
 # Caching
 GDL currently offers 2 caches, however, you are free to develop your own:

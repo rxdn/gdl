@@ -20,8 +20,8 @@ type ShardManager struct {
 	EventBus *events.EventBus
 }
 
-func NewShardManager(token string, shardOptions ShardOptions) ShardManager {
-	manager := ShardManager{
+func NewShardManager(token string, shardOptions ShardOptions) *ShardManager {
+	manager := &ShardManager{
 		Token:        token,
 		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore),
 		ShardOptions: shardOptions,
@@ -30,13 +30,13 @@ func NewShardManager(token string, shardOptions ShardOptions) ShardManager {
 
 	manager.Shards = make(map[int]*Shard)
 	for i := shardOptions.ShardCount.Lowest; i < shardOptions.ShardCount.Highest; i++ {
-		shard := NewShard(&manager, token, i)
+		shard := NewShard(manager, token, i)
 		manager.Shards[i] = &shard
 	}
 
 	request.Hook = shardOptions.Hooks.RestHook
 
-	RegisterCacheListeners(&manager)
+	RegisterCacheListeners(manager)
 
 	return manager
 }
