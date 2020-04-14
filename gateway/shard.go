@@ -186,7 +186,7 @@ func (s *Shard) identify() {
 		s.Token,
 		s.ShardManager.ShardOptions.Presence,
 		s.ShardManager.ShardOptions.GuildSubscriptions,
-		s.ShardManager.ShardOptions.Intents,
+		s.ShardManager.ShardOptions.Intents...,
 	)
 
 	// wait for ratelimit
