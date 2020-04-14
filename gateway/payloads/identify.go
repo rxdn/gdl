@@ -1,7 +1,7 @@
 package payloads
 
 import (
-	"github.com/rxdn/gdl/gateway"
+	"github.com/rxdn/gdl/gateway/intents"
 	"github.com/rxdn/gdl/objects/user"
 )
 
@@ -41,7 +41,7 @@ type (
 	}
 )
 
-func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateStatus, guildSubscriptions bool, intents []gateway.Intent) Identify {
+func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateStatus, guildSubscriptions bool, intents []intents.Intent) Identify {
 	var sum int
 	for _, intent := range intents {
 		sum += int(intent)

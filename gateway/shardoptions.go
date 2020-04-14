@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"github.com/rxdn/gdl/cache"
+	"github.com/rxdn/gdl/gateway/intents"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest/ratelimit"
 )
@@ -14,7 +15,7 @@ type ShardOptions struct {
 	Presence           user.UpdateStatus
 	Hooks              Hooks
 	Debug              bool
-	Intents            []Intent
+	Intents            []intents.Intent
 }
 
 type ShardCount struct {
