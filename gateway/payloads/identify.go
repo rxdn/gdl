@@ -1,7 +1,7 @@
 package payloads
 
 import (
-	"github.com/rxdn/gdl/gateway/intents"
+	gatewayintents "github.com/rxdn/gdl/gateway/intents"
 	"github.com/rxdn/gdl/objects/user"
 )
 
@@ -41,12 +41,7 @@ type (
 	}
 )
 
-func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateStatus, guildSubscriptions bool, intents []intents.Intent) Identify {
-	var sum int
-	for _, intent := range intents {
-		sum += int(intent)
-	}
-
+func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateStatus, guildSubscriptions bool, intents ...gatewayintents.Intent) Identify {
 	payload := Identify{
 		Opcode: 2,
 		Data: IdentifyData{
@@ -60,7 +55,7 @@ func NewIdentify(shardId int, shardTotal int, token string, status user.UpdateSt
 			Shard:              []int{shardId, shardTotal},
 			Presence:           status,
 			GuildSubscriptions: guildSubscriptions,
-			Intents:            sum,
+			Intents:            gatewayintents.SumIntents(intents...),
 		},
 	}
 
