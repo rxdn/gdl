@@ -180,7 +180,14 @@ func (s *Shard) identify() {
 	}
 
 	// build payload
-	identify := payloads.NewIdentify(s.ShardId, s.ShardManager.ShardOptions.ShardCount.Total, s.Token, s.ShardManager.ShardOptions.Presence, s.ShardManager.ShardOptions.GuildSubscriptions)
+	identify := payloads.NewIdentify(
+		s.ShardId,
+		s.ShardManager.ShardOptions.ShardCount.Total,
+		s.Token,
+		s.ShardManager.ShardOptions.Presence,
+		s.ShardManager.ShardOptions.GuildSubscriptions,
+		s.ShardManager.ShardOptions.Intents,
+	)
 
 	// wait for ratelimit
 	if err := s.ShardManager.RateLimiter.IdentifyWait(); err != nil {

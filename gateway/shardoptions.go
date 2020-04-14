@@ -14,6 +14,7 @@ type ShardOptions struct {
 	Presence           user.UpdateStatus
 	Hooks              Hooks
 	Debug              bool
+	Intents            []Intent
 }
 
 type ShardCount struct {
