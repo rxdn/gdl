@@ -21,9 +21,13 @@ type ShardManager struct {
 }
 
 func NewShardManager(token string, shardOptions ShardOptions) *ShardManager {
+	if shardOptions.LargeShardingBuckets == 0 {
+		shardOptions.LargeShardingBuckets = 1
+	}
+
 	manager := &ShardManager{
 		Token:        token,
-		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore, shardOptions.LargeSharding),
+		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore, shardOptions.LargeShardingBuckets),
 		ShardOptions: shardOptions,
 		EventBus:     events.NewEventBus(),
 	}
