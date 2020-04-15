@@ -1,4 +1,4 @@
-![GDL](https://all-my-homies-use.aurieh.services/5eNXRKJ.png)
+![GDL](https://all-my-homies-use.aurieh.services/3c6A1Dx.png)
 # About  
 
 GDL (Go Discord Library) provides a wrapper around the Discord API with additional helper functions to make life easier for developers.
