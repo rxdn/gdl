@@ -190,7 +190,7 @@ func (s *Shard) identify() {
 	)
 
 	// wait for ratelimit
-	if err := s.ShardManager.RateLimiter.IdentifyWait(); err != nil {
+	if err := s.ShardManager.RateLimiter.IdentifyWait(s.ShardId); err != nil {
 		logrus.Warnf("shard %d: Error whilst waiting on identify ratelimit: %s", s.ShardId, err.Error())
 	}
 

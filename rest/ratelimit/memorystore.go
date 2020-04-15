@@ -9,15 +9,22 @@ import (
 
 type MemoryStore struct {
 	sync.Mutex
-	Cache         *ttlcache.Cache // handles mutex for us
-	GatewayBucket *ratelimit.Bucket
+	Cache *ttlcache.Cache // handles mutex for us
+
+	bucketLock     sync.Mutex
+	gatewayBuckets []*ratelimit.Bucket
 }
 
 func NewMemoryStore() *MemoryStore {
+	buckets := make([]*ratelimit.Bucket, 16)
+	for i := 0; i < 16; i++ {
+		buckets[i] = ratelimit.NewBucket(IdentifyWait, 1)
+	}
+
 	cache := ttlcache.NewCache()
 	return &MemoryStore{
-		Cache: cache,
-		GatewayBucket: ratelimit.NewBucket(IdentifyWait, 1),
+		Cache:          cache,
+		gatewayBuckets: buckets,
 	}
 }
 
@@ -49,7 +56,14 @@ func (s *MemoryStore) UpdateRateLimit(endpoint string, remaining int, resetAfter
 	s.Unlock()
 }
 
-func (s *MemoryStore) identifyWait() error {
-	s.GatewayBucket.Wait(1)
+func (s *MemoryStore) identifyWait(shardId int, largeSharding bool) error {
+	var bucket *ratelimit.Bucket
+	if largeSharding {
+		bucket = s.gatewayBuckets[shardId % 16]
+	} else {
+		bucket = s.gatewayBuckets[0]
+	}
+
+	bucket.Wait(1)
 	return nil
 }

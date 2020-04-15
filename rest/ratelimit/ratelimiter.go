@@ -10,11 +10,13 @@ import (
 type Ratelimiter struct {
 	sync.Mutex
 	Store RateLimitStore
+	largeSharding bool
 }
 
-func NewRateLimiter(store RateLimitStore) *Ratelimiter {
+func NewRateLimiter(store RateLimitStore, largeSharding bool) *Ratelimiter {
 	return &Ratelimiter{
 		Store: store,
+		largeSharding: largeSharding,
 	}
 }
 
@@ -33,6 +35,6 @@ func (l *Ratelimiter) ExecuteCall(bucket string, ch chan error) {
 	}
 }
 
-func (l *Ratelimiter) IdentifyWait() error {
-	return l.Store.identifyWait()
+func (l *Ratelimiter) IdentifyWait(shardId int) error {
+	return l.Store.identifyWait(shardId, l.largeSharding)
 }

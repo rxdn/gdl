@@ -50,8 +50,14 @@ func (s *RedisStore) UpdateRateLimit(endpoint string, remaining int, resetAfter 
 	s.Set(key, remaining, resetAfter)
 }
 
-func (s *RedisStore) identifyWait() error {
-	key := fmt.Sprintf("%s:identify", s.keyPrefix)
+func (s *RedisStore) identifyWait(shardId int, largeSharding bool) error {
+	var key string
+	if largeSharding {
+		key = fmt.Sprintf("%s:identify:%d", shardId)
+	} else {
+		key = fmt.Sprintf("%s:identify", s.keyPrefix)
+	}
+
 	set := false
 
 	for !set {

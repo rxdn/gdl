@@ -16,6 +16,7 @@ type ShardOptions struct {
 	Hooks              Hooks
 	Debug              bool
 	Intents            []intents.Intent
+	LargeSharding      bool
 }
 
 type ShardCount struct {

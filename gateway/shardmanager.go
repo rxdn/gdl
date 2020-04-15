@@ -23,7 +23,7 @@ type ShardManager struct {
 func NewShardManager(token string, shardOptions ShardOptions) *ShardManager {
 	manager := &ShardManager{
 		Token:        token,
-		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore),
+		RateLimiter:  ratelimit.NewRateLimiter(shardOptions.RateLimitStore, shardOptions.LargeSharding),
 		ShardOptions: shardOptions,
 		EventBus:     events.NewEventBus(),
 	}
