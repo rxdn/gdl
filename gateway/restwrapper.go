@@ -113,7 +113,7 @@ func (s *Shard) GetChannelInvites(channelId uint64) ([]invite.InviteMetadata, er
 	return rest.GetChannelInvites(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
-func (s *Shard) CreateChannelInvite(channelId uint64, data invite.InviteMetadata) (invite.Invite, error) {
+func (s *Shard) CreateChannelInvite(channelId uint64, data rest.CreateInviteData) (invite.Invite, error) {
 	return rest.CreateChannelInvite(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 

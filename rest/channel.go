@@ -434,10 +434,19 @@ func GetChannelInvites(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	return invites, nil
 }
 
-func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data invite.InviteMetadata) (invite.Invite, error) {
+type CreateInviteData struct {
+	MaxAge         int    `json:"max_age"`  // seconds, 0 = never
+	MaxUses        int    `json:"max_uses"` // 0 = unlimited
+	Temporary      bool   `json:"temporary"`
+	Unique         bool   `json:"unique"`
+	TargetUser     uint64 `json:"target_user,string,omitempty"`
+	TargetUserType int    `json:"target_user_type,omitempty"`
+}
+
+func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateInviteData) (invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
-		ContentType: request.Nil,
+		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
 		Bucket:      ratelimit.NewInviteCreateBucket(channelId),
 		RateLimiter: rateLimiter,
