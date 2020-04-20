@@ -50,7 +50,7 @@ func GetGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) 
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/guilds/%d", guildId),
+		Endpoint:    fmt.Sprintf("/guilds/%d?with_counts=true", guildId), // TODO: Allow users to specify whether they want with_counts
 		Bucket:      ratelimit.NewGuildBucket(guildId),
 		RateLimiter: rateLimiter,
 	}

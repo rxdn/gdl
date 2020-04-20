@@ -45,6 +45,8 @@ type Guild struct {
 	VanityUrlCode               string            `json:"vanity_url_code"`
 	Description                 string            `json:"description"`
 	Banner                      string            `json:"banner"`
+	ApproximateMemberCount      int               `json:"approximate_member_count"`   // Returned on GET /guild/:id
+	ApproximatePresenceCount    int               `json:"approximate_presence_count"` // Returned on GET /guild/:id
 }
 
 func (g *Guild) ToCachedGuild() CachedGuild {

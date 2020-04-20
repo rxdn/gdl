@@ -17,7 +17,7 @@ func (s *Shard) ExecuteEvent(eventType events.EventType, data json.RawMessage) {
 	if err := json.Unmarshal(data, event.Interface()); err != nil {
 		logrus.Warnf("error whilst decoding event data: %s", err.Error())
 	}
-
+	
 	for _, listener := range s.ShardManager.EventBus.Listeners {
 		fn := reflect.TypeOf(listener)
 		if fn.NumIn() != 2 {
