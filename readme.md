@@ -1,4 +1,4 @@
-![GDL](https://all-my-homies-use.aurieh.services/5eNXRKJ.png)
+![GDL](https://all-my-homies-use.aurieh.services/3c6A1Dx.png)
 # About  
 
 GDL (Go Discord Library) provides a wrapper around the Discord API with additional helper functions to make life easier for developers.
@@ -9,7 +9,7 @@ Simple and easy to learn.
 Most methods and properties are named directly after what the Discord API names them.
 
 # Support
-Join our [Discord](https://discord.gg/adVPPGp) and ask in #support if you're having trouble with some code or the library itself.
+[![Support guild](https://discordapp.com/api/v6/guilds/691411922477908008/widget.png?style=banner2)](https://discord.gg/adVPPGp)
 
 # Getting Started  
 ## Installation  
