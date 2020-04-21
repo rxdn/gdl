@@ -213,18 +213,16 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 	return g, true
 }
 
-func (c *PgCache) GetGuildChannels(guildId uint64) []channel.Channel {
+func (c *PgCache) GetGuildChannels(guildId uint64) (channels []channel.Channel) {
 	if !c.Options.Channels {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "channel_id", "data" FROM channels WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var channels []channel.Channel
 
 	for rows.Next() {
 		var channelId uint64
@@ -237,21 +235,19 @@ func (c *PgCache) GetGuildChannels(guildId uint64) []channel.Channel {
 		channels = append(channels, data.ToChannel(channelId, guildId))
 	}
 
-	return channels
+	return
 }
 
-func (c *PgCache) GetGuildRoles(guildId uint64) []guild.Role {
+func (c *PgCache) GetGuildRoles(guildId uint64) (roles []guild.Role) {
 	if !c.Options.Roles {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "role_id", "data" FROM roles WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var roles []guild.Role
 
 	for rows.Next() {
 		var roleId uint64
@@ -264,21 +260,19 @@ func (c *PgCache) GetGuildRoles(guildId uint64) []guild.Role {
 		roles = append(roles, data.ToRole(roleId))
 	}
 
-	return roles
+	return
 }
 
-func (c *PgCache) GetGuildMembers(guildId uint64, withUserData bool) []member.Member {
+func (c *PgCache) GetGuildMembers(guildId uint64, withUserData bool) (members []member.Member) {
 	if !c.Options.Members {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM members WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var members []member.Member
 
 	for rows.Next() {
 		var userId uint64
@@ -300,21 +294,19 @@ func (c *PgCache) GetGuildMembers(guildId uint64, withUserData bool) []member.Me
 		members = append(members, data.ToMember(userData))
 	}
 
-	return members
+	return
 }
 
-func (c *PgCache) GetGuildEmojis(guildId uint64) []emoji.Emoji {
+func (c *PgCache) GetGuildEmojis(guildId uint64) (emojis []emoji.Emoji) {
 	if !c.Options.Emojis {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "emoji_id", "data" FROM emojis WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var emojis []emoji.Emoji
 
 	for rows.Next() {
 		var emojiId uint64
@@ -328,21 +320,19 @@ func (c *PgCache) GetGuildEmojis(guildId uint64) []emoji.Emoji {
 		emojis = append(emojis, data.ToEmoji(emojiId, user))
 	}
 
-	return emojis
+	return
 }
 
-func (c *PgCache) getVoiceStates(guildId uint64) []guild.VoiceState {
+func (c *PgCache) getVoiceStates(guildId uint64) (states []guild.VoiceState) {
 	if !c.Options.VoiceStates {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM voice_states WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var states []guild.VoiceState
 
 	for rows.Next() {
 		var userId uint64
@@ -357,7 +347,7 @@ func (c *PgCache) getVoiceStates(guildId uint64) []guild.VoiceState {
 		states = append(states, data.ToVoiceState(guildId, member))
 	}
 
-	return states
+	return
 }
 
 // TODO: FIX
@@ -615,18 +605,16 @@ func (c *PgCache) GetVoiceState(userId, guildId uint64) (guild.VoiceState, bool)
 	return cachedVoiceState.ToVoiceState(guildId, member), true
 }
 
-func (c *PgCache) GetGuildVoiceStates(guildId uint64) []guild.VoiceState {
+func (c *PgCache) GetGuildVoiceStates(guildId uint64) (states []guild.VoiceState) {
 	if !c.Options.VoiceStates {
-		return nil
+		return
 	}
 
 	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM voice_states WHERE "guild_id" = $1;`, guildId)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		return
 	}
-
-	var states []guild.VoiceState
 
 	for rows.Next() {
 		var userId uint64
@@ -640,7 +628,7 @@ func (c *PgCache) GetGuildVoiceStates(guildId uint64) []guild.VoiceState {
 		states = append(states, data.ToVoiceState(userId, member))
 	}
 
-	return states
+	return
 }
 
 func (c *PgCache) DeleteVoiceState(userId, guildId uint64) {

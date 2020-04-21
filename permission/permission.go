@@ -78,7 +78,3 @@ func BuildPermissions(permissions ...Permission) int {
 
 	return i
 }
-
-func twosComplement(i int) int {
-	return (-i) - 1
-}
