@@ -12,14 +12,14 @@ type (
 	}
 
 	IdentifyData struct {
-		Token              string            `json:"token"`
-		Properties         Properties        `json:"properties"`
-		Compress           bool              `json:"compress"`
-		LargeThreshold     int               `json:"large_threshold"`
-		Shard              []int             `json:"shard"`
-		Presence           user.UpdateStatus `json:"presence"`
-		GuildSubscriptions bool              `json:"guild_subscriptions"`
-		Intents            int               `json:"intents,omitempty"`
+		Token              string     `json:"token"`
+		Properties         Properties `json:"properties"`
+		Compress           bool       `json:"compress"`
+		LargeThreshold     int        `json:"large_threshold"`
+		Shard              []int      `json:"shard"`
+		Presence           Presence   `json:"presence,omitempty"`
+		GuildSubscriptions bool       `json:"guild_subscriptions"`
+		Intents            int        `json:"intents,omitempty"`
 	}
 
 	Properties struct {
@@ -29,9 +29,9 @@ type (
 	}
 
 	Presence struct {
-		Game   Game   `json:"game"`
+		Game   Game   `json:"game,omitempty"`
 		Status string `json:"status"`
-		Since  *int   `json:"since"`
+		Since  *int   `json:"since,omitempty"`
 		Afk    bool   `json:"afk"`
 	}
 

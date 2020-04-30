@@ -364,3 +364,7 @@ func (s *Shard) Kill() error {
 
 	return err
 }
+
+func (s *Shard) UpdateStatus(data payloads.Presence) error {
+	return s.write(payloads.NewPresenceUpdate(data))
+}
