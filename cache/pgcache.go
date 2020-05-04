@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rxdn/gdl/objects/channel"
@@ -198,9 +199,10 @@ func (c *PgCache) StoreGuild(g guild.Guild) {
 func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 	var cachedGuild guild.CachedGuild
 
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&cachedGuild); err != nil {
+	err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&cachedGuild); if err != nil {
 		return cachedGuild.ToGuild(id), false
 	}
+	fmt.Println(err)
 
 	g := cachedGuild.ToGuild(id)
 

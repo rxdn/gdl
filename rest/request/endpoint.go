@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const BASE_URL = "https://discordapp.com/api/v6"
+const BASE_URL = "https://discord.com/api/v6"
 
 type Endpoint struct {
 	RequestType       RequestType

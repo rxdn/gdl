@@ -9,7 +9,7 @@ Simple and easy to learn.
 Most methods and properties are named directly after what the Discord API names them.
 
 # Support
-[![Support guild](https://discordapp.com/api/v6/guilds/691411922477908008/widget.png?style=banner2)](https://discord.gg/adVPPGp)
+[![Support guild](https://discord.com/api/v6/guilds/691411922477908008/widget.png?style=banner2)](https://discord.gg/adVPPGp)
 
 # Getting Started  
 ## Installation  

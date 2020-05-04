@@ -1,4 +1,4 @@
-package starboard
+package main
 
 import (
 	"github.com/rxdn/gdl/cache"

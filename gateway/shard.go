@@ -9,6 +9,7 @@ import (
 	"github.com/rxdn/gdl/cache"
 	"github.com/rxdn/gdl/gateway/payloads"
 	"github.com/rxdn/gdl/gateway/payloads/events"
+	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/tatsuworks/czlib"
@@ -365,6 +366,6 @@ func (s *Shard) Kill() error {
 	return err
 }
 
-func (s *Shard) UpdateStatus(data payloads.Presence) error {
+func (s *Shard) UpdateStatus(data user.UpdateStatus) error {
 	return s.write(payloads.NewPresenceUpdate(data))
 }
