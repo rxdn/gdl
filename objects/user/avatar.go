@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -11,9 +10,9 @@ type Avatar struct {
 	data []uint64
 }
 
-func (a *Avatar) String() (string, error) {
+func (a *Avatar) String() string {
 	if len(a.data) < 2 {
-		return "", errors.New("invalid avatar data")
+		return "" // blank avatar
 	}
 
 	var animatedPrefix string
@@ -24,16 +23,11 @@ func (a *Avatar) String() (string, error) {
 	first := fmt.Sprintf("%016x", a.data[0])
 	second := fmt.Sprintf("%016x", a.data[1])
 
-	return fmt.Sprintf(`%s%s%s`, animatedPrefix, first, second), nil
+	return fmt.Sprintf(`%s%s%s`, animatedPrefix, first, second)
 }
 
 func (a *Avatar) MarshalJSON() ([]byte, error) {
-	hash, err := a.String()
-	if err != nil {
-		return []byte(hash), err
-	}
-
-	return []byte(fmt.Sprintf(`"%s"`, hash)), nil
+	return []byte(fmt.Sprintf(`"%s"`, a.String())), nil
 }
 
 func (a *Avatar) UnmarshalJSON(data []byte) error {
