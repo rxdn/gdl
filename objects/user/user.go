@@ -18,7 +18,11 @@ type User struct {
 
 // shortcut, ignores errors
 func (u *User) AvatarUrl(size int) string {
-	avatar, _ := u.Avatar.String()
+	hash := u.Avatar.String()
+	// if blank avatar, return a blank string so that we can use omitempty
+	if len(hash) == 0 {
+		return ""
+	}
 
 	var extension string
 	if u.Avatar.Animated {
@@ -27,7 +31,7 @@ func (u *User) AvatarUrl(size int) string {
 		extension = "webp"
 	}
 
-	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%d/%s.%s?size=%d", u.Id, avatar, extension, size)
+	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%d/%s.%s?size=%d", u.Id, u.Avatar.String(), extension, size)
 }
 
 func (u *User) Mention() string {
@@ -40,12 +44,10 @@ func (u *User) PadDiscriminator() string {
 }
 
 func (u *User) ToCachedUser() CachedUser {
-	avatar, _ := u.Avatar.String()
-
 	return CachedUser{
 		Username:      u.Username,
 		Discriminator: u.Discriminator,
-		Avatar:        avatar,
+		Avatar:        u.Avatar.String(),
 		Bot:           u.Bot,
 		Flags:         u.Flags,
 		PremiumType:   u.PremiumType,
