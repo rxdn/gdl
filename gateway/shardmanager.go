@@ -58,18 +58,8 @@ func (sm *ShardManager) RegisterListeners(listeners ...interface{}) {
 }
 
 func (sm *ShardManager) ShardForGuild(guildId uint64) *Shard {
-	for _, shard := range sm.Shards {
-		shard.guildsLock.RLock()
-		for _, shardGuild := range shard.guilds {
-			if shardGuild == guildId {
-				shard.guildsLock.RUnlock()
-				return shard
-			}
-		}
-		shard.guildsLock.RUnlock()
-	}
-
-	return nil
+	shardId := int((guildId >> 22) % uint64(sm.ShardOptions.ShardCount.Total))
+	return sm.Shards[shardId]
 }
 
 func (sm *ShardManager) WaitForInterrupt() {

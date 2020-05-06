@@ -52,10 +52,6 @@ func channelDeleteListener(s *Shard, e *events.ChannelDelete) {
 }
 
 func guildCreateListener(s *Shard, e *events.GuildCreate) {
-	s.guildsLock.Lock()
-	s.guilds = append(s.guilds, e.Id)
-	s.guildsLock.Unlock()
-
 	s.Cache.StoreGuild(e.Guild)
 }
 

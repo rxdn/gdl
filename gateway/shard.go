@@ -48,9 +48,6 @@ type Shard struct {
 	sessionId string
 
 	Cache cache.Cache
-
-	guilds     []uint64
-	guildsLock *sync.RWMutex
 }
 
 func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
@@ -64,7 +61,6 @@ func NewShard(shardManager *ShardManager, token string, shardId int) Shard {
 		context:                      context.Background(),
 		lastHeartbeatAcknowledgement: utils.GetCurrentTimeMillis(),
 		Cache:                        cache,
-		guildsLock:                   &sync.RWMutex{},
 		readLock:                     &sync.Mutex{},
 	}
 }
