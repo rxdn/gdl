@@ -1,7 +1,7 @@
 package user
 
 type UpdateStatus struct {
-	Since  int              `json:"since,omitempty"` // time since client went idle (unix epoch millis)
+	Since  int              `json:"since"` // time since client went idle (unix epoch millis)
 	Game   Activity         `json:"game,omitempty"`
 	Status ClientStatusType `json:"status"`
 	Afk    bool             `json:"afk"`

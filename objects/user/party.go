@@ -1,8 +1,8 @@
 package user
 
 type Party struct {
-	Id   string `json:"id"`
-	Size []int  `json:"size"`
+	Id   string `json:"id,omitempty"`
+	Size []int  `json:"size,omitempty"`
 }
 
 func (p *Party) GetCurrentSize() int {

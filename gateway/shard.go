@@ -318,6 +318,8 @@ func (s *Shard) write(payload interface{}) error {
 }
 
 func (s *Shard) writeRaw(data []byte) error {
+	fmt.Println(string(data))
+
 	if s.WebSocket == nil {
 		msg := fmt.Sprintf("shard %d: WS is closed", s.ShardId)
 		logrus.Warn(msg)
