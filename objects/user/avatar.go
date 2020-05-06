@@ -37,10 +37,14 @@ func (a *Avatar) MarshalJSON() ([]byte, error) {
 }
 
 func (a *Avatar) UnmarshalJSON(data []byte) error {
+	// 36 = animated
+	// 34 = regular
+	// != 36 & 34 = no avatar
+
 	if len(data) == 36 {
 		a.Animated = true
-	} else if len(data) != 34 {
-		return errors.New("invalid data")
+	} else if len(data) != 34 { // no avatar
+		return nil
 	}
 
 	var first []byte
