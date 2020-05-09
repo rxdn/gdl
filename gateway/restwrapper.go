@@ -503,6 +503,7 @@ func (s *Shard) DeleteWebhook(webhookId uint64) error {
 	return rest.DeleteWebhook(s.Token, s.ShardManager.RateLimiter, webhookId)
 }
 
-func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) {
-	rest.ExecuteWebhook(webhookToken, s.ShardManager.RateLimiter, webhookId, wait, data)
+// if wait=true, a message object will be returned
+func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) (*message.Message, error) {
+	return rest.ExecuteWebhook(webhookToken, s.ShardManager.RateLimiter, webhookId, wait, data)
 }
