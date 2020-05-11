@@ -232,9 +232,9 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 
 	}
 	if wait {
-		var message *message.Message
-		err, _ := endpoint.Request("", data, message)
-		return message, err
+		var message message.Message
+		err, _ := endpoint.Request("", data, &message)
+		return &message, err
 	} else {
 		err, _ := endpoint.Request("", data, nil)
 		return nil, err
