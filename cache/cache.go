@@ -17,7 +17,7 @@ type Cache interface {
 
 	StoreGuild(guild guild.Guild)
 	StoreGuilds(guilds []guild.Guild)
-	GetGuild(id uint64, withUserData bool) (guild.Guild, bool)
+	GetGuild(id uint64, withMembers bool) (guild.Guild, bool)
 	GetGuilds() []guild.Guild // Note: Guilds will not have Channels, Roles, Members etc to reduce cache lookup time
 	DeleteGuild(id uint64)
 	GetGuildCount() int

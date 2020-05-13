@@ -143,7 +143,7 @@ func (c *BoltCache) StoreGuilds(guilds []guild.Guild) {
 	}
 }
 
-func (c *BoltCache) GetGuild(guildId uint64, withUserData bool) (guild.Guild, bool) {
+func (c *BoltCache) GetGuild(guildId uint64, withMembers bool) (guild.Guild, bool) {
 	var cached guild.CachedGuild
 	var found bool
 
@@ -161,7 +161,11 @@ func (c *BoltCache) GetGuild(guildId uint64, withUserData bool) (guild.Guild, bo
 	g := cached.ToGuild(guildId)
 	g.Channels = c.GetGuildChannels(guildId)
 	g.Roles = c.GetGuildRoles(guildId)
-	g.Members = c.GetGuildMembers(guildId, withUserData)
+
+	if withMembers {
+		g.Members = c.GetGuildMembers(guildId, false)
+	}
+
 	g.Emojis = c.GetGuildEmojis(guildId)
 	g.VoiceStates = c.GetGuildVoiceStates(guildId)
 

@@ -195,7 +195,7 @@ func (c *PgCache) StoreGuild(g guild.Guild) {
 }
 
 // use withMembers with extreme caution!
-func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
+func (c *PgCache) GetGuild(id uint64, withMembers bool) (guild.Guild, bool) {
 	var cachedGuild guild.CachedGuild
 
 	err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&cachedGuild); if err != nil {
@@ -206,7 +206,11 @@ func (c *PgCache) GetGuild(id uint64, withUserData bool) (guild.Guild, bool) {
 
 	g.Channels = c.GetGuildChannels(id)
 	g.Roles = c.GetGuildRoles(id)
-	g.Members = c.GetGuildMembers(id, withUserData)
+
+	if withMembers {
+		g.Members = c.GetGuildMembers(id, false)
+	}
+
 	g.Emojis = c.GetGuildEmojis(id, )
 	g.VoiceStates = c.getVoiceStates(id)
 
