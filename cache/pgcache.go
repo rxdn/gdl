@@ -80,7 +80,9 @@ func (c *PgCache) StoreUsers(users []user.User) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+
+		_, _ = br.Exec()
 	}
 }
 
@@ -166,7 +168,8 @@ func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
@@ -394,7 +397,8 @@ func (c *PgCache) StoreMembers(members []member.Member, guildId uint64) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
@@ -442,7 +446,8 @@ func (c *PgCache) StoreChannels(channels []channel.Channel) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
@@ -489,7 +494,8 @@ func (c *PgCache) StoreRoles(roles []guild.Role, guildId uint64) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
@@ -535,7 +541,8 @@ func (c *PgCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
@@ -584,7 +591,8 @@ func (c *PgCache) StoreVoiceStates(states []guild.VoiceState) {
 		batch.Queue(`SET synchronous_commit TO ON;`)
 
 		br := c.SendBatch(context.Background(), batch)
-		_ = br.Close()
+		defer br.Close()
+		_, _ = br.Exec()
 	}
 }
 
