@@ -141,7 +141,7 @@ type CreateChannelData struct {
 	UserLimit            int                            `json:"user_limit,omitempty"`
 	RateLimitPerUser     int                            `json:"rate_limit_per_user"`
 	Position             int                            `json:"position,omitempty"`
-	PermissionOverwrites []*channel.PermissionOverwrite `json:"permission_overwrites"`
+	PermissionOverwrites []channel.PermissionOverwrite `json:"permission_overwrites"`
 	ParentId             uint64                         `json:"parent_id,string,omitempty"`
 	Nsfw                 bool                           `json:"nsfw,omitempty"`
 }
