@@ -33,6 +33,14 @@ type ResponseWithContent struct {
 // figure out a better way to do this
 var Hook func(string)
 
+// TODO: Allow users to specify custom timeouts
+var client = http.Client{
+	Transport: &http.Transport{
+		TLSHandshakeTimeout: time.Second * 3,
+	},
+	Timeout: time.Second * 3,
+}
+
 func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
 
@@ -105,14 +113,11 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		req.Header.Set(key, value)
 	}
 
-	client := &http.Client{}
-	client.Timeout = 3 * time.Second
-
 	res, err := client.Do(req)
+	defer res.Body.Close()
 	if err != nil {
 		return err, nil
 	}
-	defer res.Body.Close()
 
 	if e.RateLimiter != nil {
 		e.applyNewRatelimits(res.Header)
