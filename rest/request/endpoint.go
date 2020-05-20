@@ -114,10 +114,10 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	}
 
 	res, err := client.Do(req)
-	defer res.Body.Close()
 	if err != nil {
 		return err, nil
 	}
+	defer res.Body.Close()
 
 	if e.RateLimiter != nil {
 		e.applyNewRatelimits(res.Header)
