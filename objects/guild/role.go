@@ -19,8 +19,9 @@ func (r *Role) Mention() string {
 	return fmt.Sprintf("<@&%d>", r.Id)
 }
 
-func (r *Role) ToCachedRole() CachedRole {
+func (r *Role) ToCachedRole(guildId uint64) CachedRole {
 	return CachedRole{
+		GuildId:     guildId,
 		Name:        r.Name,
 		Color:       r.Color,
 		Hoist:       r.Hoist,

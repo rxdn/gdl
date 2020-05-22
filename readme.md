@@ -42,7 +42,7 @@ func main() {
         RateLimitStore: ratelimit.NewMemoryStore(), // ratelimit.NewRedisStore() is also available
         
         // We can choose exactly what we want to cache. Remember the zero value of a bool is false!
-        CacheFactory: cache.BoltCacheFactory(cache.CacheOptions{
+        CacheFactory: cache.MemoryCacheFactory(cache.CacheOptions{
             Guilds:      true,
             Users:       true,
             Members:     true,
@@ -50,11 +50,6 @@ func main() {
             Roles:       true,
             Emojis:      true,
             VoiceStates: true,
-        }, cache.BoltOptions{
-            ClearOnRestart: false, // Should we clear the cache on start-up? (Do not use on WSL)
-            Path:           "bolt.db",
-            FileMode:       600,
-            Options:        nil, // Additional bolt options
         }),
         GuildSubscriptions: false,
         Presence: user.BuildStatus(user.ActivityTypePlaying, "DM for help | t!help"), // Set the status of the bot
@@ -109,7 +104,7 @@ Take a look at the [examples package](https://github.com/rxdn/gdl/tree/master/ex
 (also feel free to contribute some!).
 
 # Caching
-GDL currently offers 2 caches, however, you are free to develop your own:
+GDL currently offers 3 caches, however, you are free to develop your own:
 
 ## PostgreSQL cache (recommended)
 The PostgreSQL cache offers the best performance and scalability, as well as multi-instance support. So therefore, it is
@@ -142,12 +137,44 @@ shardOptions := gateway.ShardOptions{
 }
 ```
 
-## Bolt cache
-If you do not have access to a PostgreSQL database, GDL offers a [Bolt](https://github.com/boltdb/bolt) based cache.
-Bolt is a flat-file key-value store, which means that it is not able to offer the best performance or scalability, as
-well as being restricted to use by a single instance.
+## Memory cache
+If you do not have access to a PostgreSQL database, GDL offers a simple in-memory cache.
 
-## Example
+It has been tested to show ~450MB memory usage when caching:
+
+- 10k guilds
+- 75k channels
+- 56k roles
+- 18k emojis 
+- 1.6k members
+
+### Example
+```go
+c := cache.MemoryCacheFactory(cache.CacheOptions{
+    Guilds:      true,
+    Users:       true,
+    Members:     true,
+    Channels:    true,
+    Roles:       true,
+    Emojis:      true,
+    VoiceStates: true,
+})
+
+shardOptions := gateway.ShardOptions{
+    ...
+    CacheFactory: c,
+    ...
+}
+```
+
+
+## Bolt cache
+[Bolt](https://github.com/boltdb/bolt) is a high performance flat-file key-value store. GDL offers Bolt integration, as
+bots can benefit from a persistent cache, however, using the in-memory cache is recommended if you do not require
+this functionality due to better storage efficiency (albeit in memory, rather than on disk), as the Bolt cache
+implementation encodes to JSON, and better performance.
+
+### Example
 ```go
 c := cache.BoltCacheFactory(cache.CacheOptions{
     Guilds:      true,

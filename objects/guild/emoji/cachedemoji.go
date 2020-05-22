@@ -3,12 +3,13 @@ package emoji
 import "github.com/rxdn/gdl/objects/user"
 
 type CachedEmoji struct {
-	Name          string   `db:"name"`
-	Roles         []uint64 `db:"roles"`
-	User          uint64   `db:"user"`
-	RequireColons bool     `db:"require_colons"`
-	Managed       bool     `db:"managed"`
-	Animated      bool     `db:"animated"`
+	GuildId       uint64   `json:"-"`
+	Name          string   `json:"name"`
+	Roles         []uint64 `json:"roles"`
+	User          uint64   `json:"user"`
+	RequireColons bool     `json:"require_colons"`
+	Managed       bool     `json:"managed"`
+	Animated      bool     `json:"animated"`
 }
 
 func (e *CachedEmoji) ToEmoji(emojiId uint64, user user.User) Emoji {

@@ -19,3 +19,10 @@ func BoltCacheFactory(cacheOptions CacheOptions, boltOptions BoltOptions) CacheF
 		return &c
 	}
 }
+
+func MemoryCacheFactory(cacheOptions CacheOptions) CacheFactory {
+	return func() Cache {
+		c := NewMemoryCache(cacheOptions)
+		return &c
+	}
+}

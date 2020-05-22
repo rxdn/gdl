@@ -5,36 +5,40 @@ import (
 )
 
 type CachedGuild struct {
-	Id                          uint64            `json:"id"`
-	Name                        string            `json:"name"`
-	Icon                        string            `json:"icon"`
-	Splash                      string            `json:"splash"`
-	Owner                       bool              `json:"owner"`
-	OwnerId                     uint64            `json:"owner_id"`
-	Permissions                 int               `json:"permissions"`
-	Region                      string            `json:"region"`
-	AfkChannelId                uint64            `json:"afk_channel_id"`
-	AfkTimeout                  int               `json:"afk_timeout"`
-	EmbedEnabled                bool              `json:"embed_enabled"`
-	EmbedChannelId              uint64            `json:"embed_channel_id"`
-	VerificationLevel           int               `json:"verification_level"`
-	DefaultMessageNotifications int               `json:"default_message_notifications"`
-	ExplicitContentFilter       int               `json:"explicit_content_filter"`
-	Features                    []GuildFeature    `json:"features"`
-	MfaLevel                    int               `json:"mfa_level"`
-	ApplicationId               uint64            `json:"application_id,string"`
-	WidgetEnabled               bool              `json:"widget_enabled"`
-	WidgetChannelId             uint64            `json:"widget_channel_id"`
-	SystemChannelId             uint64            `json:"system_channel_id"`
-	JoinedAt                    time.Time         `json:"joined_at"`
-	Large                       bool              `json:"large"`
-	Unavailable                 *bool             `json:"unavailable"`
-	MemberCount                 int               `json:"member_count"`
-	MaxPresences                int               `json:"max_presences"`
-	MaxMembers                  int               `json:"max_members"`
-	VanityUrlCode               string            `json:"vanity_url_code"`
-	Description                 string            `json:"description"`
-	Banner                      string            `json:"banner"`
+	Id                          uint64         `json:"id"`
+	Name                        string         `json:"name"`
+	Icon                        string         `json:"icon"`
+	Splash                      string         `json:"splash"`
+	Owner                       bool           `json:"owner"`
+	OwnerId                     uint64         `json:"owner_id"`
+	Permissions                 int            `json:"permissions"`
+	Region                      string         `json:"region"`
+	AfkChannelId                uint64         `json:"afk_channel_id"`
+	AfkTimeout                  int            `json:"afk_timeout"`
+	EmbedEnabled                bool           `json:"embed_enabled"`
+	EmbedChannelId              uint64         `json:"embed_channel_id"`
+	VerificationLevel           int            `json:"verification_level"`
+	DefaultMessageNotifications int            `json:"default_message_notifications"`
+	ExplicitContentFilter       int            `json:"explicit_content_filter"`
+	Roles                       []uint64       `json:"-"`
+	Emojis                      []uint64       `json:"-"`
+	Features                    []GuildFeature `json:"features"`
+	MfaLevel                    int            `json:"mfa_level"`
+	ApplicationId               uint64         `json:"application_id,string"`
+	WidgetEnabled               bool           `json:"widget_enabled"`
+	WidgetChannelId             uint64         `json:"widget_channel_id"`
+	SystemChannelId             uint64         `json:"system_channel_id"`
+	JoinedAt                    time.Time      `json:"joined_at"`
+	Large                       bool           `json:"large"`
+	Unavailable                 *bool          `json:"unavailable"`
+	MemberCount                 int            `json:"member_count"`
+	Channels                    []uint64       `json:"-"`
+	Presences                   []uint64       `json:"-"`
+	MaxPresences                int            `json:"max_presences"`
+	MaxMembers                  int            `json:"max_members"`
+	VanityUrlCode               string         `json:"vanity_url_code"`
+	Description                 string         `json:"description"`
+	Banner                      string         `json:"banner"`
 }
 
 func (g *CachedGuild) ToGuild(guildId uint64) Guild {
@@ -71,4 +75,3 @@ func (g *CachedGuild) ToGuild(guildId uint64) Guild {
 		Banner:                      g.Banner,
 	}
 }
-

@@ -122,7 +122,7 @@ func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
 			// append roles
 			if c.Options.Roles {
 				for _, role := range guild.Roles {
-					if encoded, err := json.Marshal(role.ToCachedRole()); err == nil {
+					if encoded, err := json.Marshal(role.ToCachedRole(guild.Id)); err == nil {
 						batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guild.Id, string(encoded))
 					}
 				}
@@ -149,7 +149,7 @@ func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
 			// append emojis
 			if c.Options.Emojis {
 				for _, emoji := range guild.Emojis {
-					if encoded, err := json.Marshal(emoji.ToCachedEmoji()); err == nil {
+					if encoded, err := json.Marshal(emoji.ToCachedEmoji(guild.Id)); err == nil {
 						batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guild.Id, string(encoded))
 					}
 				}
@@ -215,7 +215,7 @@ func (c *PgCache) GetGuild(id uint64, withMembers bool) (guild.Guild, bool) {
 	}
 
 	g.Emojis = c.GetGuildEmojis(id, )
-	g.VoiceStates = c.getVoiceStates(id)
+	g.VoiceStates = c.GetGuildVoiceStates(id)
 
 	return g, true
 }
@@ -325,33 +325,6 @@ func (c *PgCache) GetGuildEmojis(guildId uint64) (emojis []emoji.Emoji) {
 
 		user, _ := c.GetUser(data.User)
 		emojis = append(emojis, data.ToEmoji(emojiId, user))
-	}
-
-	return
-}
-
-func (c *PgCache) getVoiceStates(guildId uint64) (states []guild.VoiceState) {
-	if !c.Options.VoiceStates {
-		return
-	}
-
-	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM voice_states WHERE "guild_id" = $1;`, guildId)
-	defer rows.Close()
-	if err != nil {
-		return
-	}
-
-	for rows.Next() {
-		var userId uint64
-		var data guild.CachedVoiceState
-
-		if err := rows.Scan(&userId, &data); err != nil {
-			continue
-		}
-
-		member, _ := c.GetMember(guildId, userId)
-
-		states = append(states, data.ToVoiceState(guildId, member))
 	}
 
 	return
@@ -473,7 +446,7 @@ func (c *PgCache) DeleteChannel(channelId uint64) {
 
 func (c *PgCache) StoreRole(role guild.Role, guildId uint64) {
 	if c.Options.Roles {
-		if encoded, err := json.Marshal(role.ToCachedRole()); err == nil {
+		if encoded, err := json.Marshal(role.ToCachedRole(guildId)); err == nil {
 			_, _ = c.Exec(context.Background(), `INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guildId, string(encoded))
 		}
 	}
@@ -486,7 +459,7 @@ func (c *PgCache) StoreRoles(roles []guild.Role, guildId uint64) {
 		batch.Queue(`SET synchronous_commit TO OFF;`)
 
 		for _, role := range roles {
-			if encoded, err := json.Marshal(role.ToCachedRole()); err == nil {
+			if encoded, err := json.Marshal(role.ToCachedRole(guildId)); err == nil {
 				batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guildId, string(encoded))
 			}
 		}
@@ -520,7 +493,7 @@ func (c *PgCache) DeleteRole(roleId uint64) {
 
 func (c *PgCache) StoreEmoji(emoji emoji.Emoji, guildId uint64) {
 	if c.Options.Emojis {
-		if encoded, err := json.Marshal(emoji.ToCachedEmoji()); err == nil {
+		if encoded, err := json.Marshal(emoji.ToCachedEmoji(guildId)); err == nil {
 			_, _ = c.Exec(context.Background(), `INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guildId, string(encoded))
 		}
 	}
@@ -533,7 +506,7 @@ func (c *PgCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 		batch.Queue(`SET synchronous_commit TO OFF;`)
 
 		for _, e := range emojis {
-			if encoded, err := json.Marshal(e.ToCachedEmoji()); err == nil {
+			if encoded, err := json.Marshal(e.ToCachedEmoji(guildId)); err == nil {
 				batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, e.Id, guildId, string(encoded))
 			}
 		}

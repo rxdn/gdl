@@ -422,7 +422,7 @@ func (c *BoltCache) StoreRoles(roles []guild.Role, guildId uint64) {
 
 			for _, role := range roles {
 				rwg := roleWithGuild{
-					CachedRole: role.ToCachedRole(),
+					CachedRole: role.ToCachedRole(guildId),
 					guildId:    guildId,
 				}
 
@@ -506,7 +506,7 @@ func (c *BoltCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 
 		for _, emoji := range emojis {
 			ewg := emojiWithGuild{
-				CachedEmoji: emoji.ToCachedEmoji(),
+				CachedEmoji: emoji.ToCachedEmoji(guildId),
 				guildId:    guildId,
 			}
 

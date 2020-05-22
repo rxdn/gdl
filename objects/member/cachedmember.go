@@ -6,12 +6,12 @@ import (
 )
 
 type CachedMember struct {
-	Nick         string     `db:"nick"`
-	Roles        []uint64   `db:"roles"`
-	JoinedAt     time.Time  `db:"joined_at"`
-	PremiumSince *time.Time `db:"premium_since"` // when the user started boosting the guild
-	Deaf         bool       `db:"deaf"`
-	Mute         bool       `db:"mute"`
+	Nick         string     `json:"nick"`
+	Roles        []uint64   `json:"roles"`
+	JoinedAt     time.Time  `json:"joined_at"`
+	PremiumSince *time.Time `json:"premium_since"` // when the user started boosting the guild
+	Deaf         bool       `json:"deaf"`
+	Mute         bool       `json:"mute"`
 }
 
 func (m *CachedMember) ToMember(user user.User) Member {

@@ -4,12 +4,12 @@ import "fmt"
 
 type (
 	CachedUser struct {
-		Username      string `db:"username"`
-		Discriminator uint16 `db:"discriminator"`
-		Avatar        string `db:"avatar"`
-		Bot           bool   `db:"bot"`
-		Flags         uint32 `db:"flags"`
-		PremiumType   int    `db:"premium_type"`
+		Username      string `json:"username"`
+		Discriminator uint16 `json:"discriminator"`
+		Avatar        string `json:"avatar"`
+		Bot           bool   `json:"bot"`
+		Flags         uint32 `json:"flags"`
+		PremiumType   int    `json:"premium_type"`
 	}
 )
 

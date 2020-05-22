@@ -4,7 +4,6 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/member"
-	"github.com/rxdn/gdl/objects/user"
 	"time"
 )
 
@@ -39,7 +38,6 @@ type Guild struct {
 	VoiceStates                 []VoiceState      `json:"voice_state"`
 	Members                     []member.Member   `json:"members"`
 	Channels                    []channel.Channel `json:"channels"`
-	Presences                   []user.Presence   `json:"presences"`
 	MaxPresences                int               `json:"max_presences"`
 	MaxMembers                  int               `json:"max_members"`
 	VanityUrlCode               string            `json:"vanity_url_code"`
@@ -49,8 +47,8 @@ type Guild struct {
 	ApproximatePresenceCount    int               `json:"approximate_presence_count"` // Returned on GET /guild/:id
 }
 
-func (g *Guild) ToCachedGuild() CachedGuild {
-	return CachedGuild{
+func (g *Guild) ToCachedGuild() (cached CachedGuild) {
+	cached = CachedGuild{
 		Id:                          g.Id,
 		Name:                        g.Name,
 		Icon:                        g.Icon,
@@ -82,4 +80,18 @@ func (g *Guild) ToCachedGuild() CachedGuild {
 		Description:                 g.Description,
 		Banner:                      g.Banner,
 	}
+
+	for _, role := range g.Roles {
+		cached.Roles = append(cached.Roles, role.Id)
+	}
+
+	for _, emoji := range g.Emojis {
+		cached.Emojis = append(cached.Emojis, emoji.Id)
+	}
+
+	for _, channel := range g.Channels {
+		cached.Channels = append(cached.Channels, channel.Id)
+	}
+
+	return
 }

@@ -16,8 +16,9 @@ type Emoji struct {
 	Animated      bool                    `json:"animated"`
 }
 
-func (e *Emoji) ToCachedEmoji() CachedEmoji {
+func (e *Emoji) ToCachedEmoji(guildId uint64) CachedEmoji {
 	return CachedEmoji{
+		GuildId:       guildId,
 		Name:          e.Name,
 		Roles:         e.Roles,
 		User:          e.User.Id,

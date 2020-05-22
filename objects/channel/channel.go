@@ -33,6 +33,7 @@ func (c *Channel) Mention() string {
 
 func (c *Channel) ToCachedChannel() CachedChannel {
 	return CachedChannel{
+		GuildId:              c.GuildId,
 		Type:                 c.Type,
 		Position:             c.Position,
 		PermissionOverwrites: c.PermissionOverwrites,
