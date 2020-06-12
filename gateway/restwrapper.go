@@ -93,7 +93,7 @@ func (s *Shard) DeleteAllReactionsEmoji(channelId, messageId uint64, emoji strin
 	return rest.DeleteAllReactionsEmoji(s.Token, s.ShardManager.RateLimiter, channelId, messageId, emoji)
 }
 
-func (s *Shard) EditMessage(channelId, messageId uint64, data rest.ModifyChannelData) (message.Message, error) {
+func (s *Shard) EditMessage(channelId, messageId uint64, data rest.EditMessageData) (message.Message, error) {
 	return rest.EditMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId, data)
 }
 
