@@ -355,7 +355,7 @@ type EditMessageData struct {
 	Flags   int          `json:"flags,omitempty"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 }
 
-func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data ModifyChannelData) (message.Message, error) {
+func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data EditMessageData) (message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
