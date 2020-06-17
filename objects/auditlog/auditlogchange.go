@@ -4,5 +4,5 @@ package auditlog
 type AuditLogChange struct {
 	NewValue interface{} `json:"new_value"`
 	OldValue interface{} `json:"old_value"`
-	Key ChangeKey `json:"key"`
+	Key      ChangeKey   `json:"key"`
 }

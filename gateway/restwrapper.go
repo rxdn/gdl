@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"github.com/rxdn/gdl/objects/auditlog"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
@@ -506,4 +507,8 @@ func (s *Shard) DeleteWebhook(webhookId uint64) error {
 // if wait=true, a message object will be returned
 func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool, data rest.WebhookBody) (*message.Message, error) {
 	return rest.ExecuteWebhook(webhookToken, s.ShardManager.RateLimiter, webhookId, wait, data)
+}
+
+func (s *Shard) GetGuildAuditLog(guildId uint64, data rest.GetGuildAuditLogData) (auditlog.AuditLog, error) {
+	return rest.GetGuildAuditLog(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
