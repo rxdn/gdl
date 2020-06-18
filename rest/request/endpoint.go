@@ -152,21 +152,18 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 }
 
 func (e *Endpoint) applyNewRatelimits(header http.Header) {
-	// TODO: Global limit
-	/*// check global limit
+	// check global limit
 	if global, err := strconv.ParseBool(header.Get("X-RateLimit-Global")); err == nil && global {
 		if retryAfter, err := strconv.ParseInt(header.Get("Retry-After"), 10, 64); err == nil {
-			ratelimiter.RouteManager.Lock()
-			ratelimiter.RouteManager.GlobalRetryAfter = utils.GetCurrentTimeMillis() + retryAfter
-			ratelimiter.RouteManager.Unlock()
-			ratelimiter.Unlock()
+			e.RateLimiter.Store.UpdateGlobalRateLimit(time.Duration(retryAfter) * time.Millisecond)
 			return
 		}
-	}*/
+	}
 
+	// check route limit
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
 		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
-			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond)
+			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000) * time.Millisecond)
 		}
 	}
 }

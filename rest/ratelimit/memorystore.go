@@ -13,12 +13,15 @@ type MemoryStore struct {
 
 	bucketLock     sync.RWMutex
 	gatewayBuckets []*ratelimit.Bucket
+
+	globalLock       sync.RWMutex
+	globalResetAfter time.Time
 }
 
 func NewMemoryStore() *MemoryStore {
 	cache := ttlcache.NewCache()
 	return &MemoryStore{
-		Cache:          cache,
+		Cache: cache,
 	}
 }
 
@@ -44,10 +47,22 @@ func (s *MemoryStore) getTTLAndDecrease(endpoint string) (time.Duration, error) 
 	}
 }
 
+func (s *MemoryStore) getGlobalTTL() (time.Duration, error) {
+	s.globalLock.RLock()
+	defer s.globalLock.RUnlock()
+	return s.globalResetAfter.Sub(time.Now()), nil
+}
+
 func (s *MemoryStore) UpdateRateLimit(endpoint string, remaining int, resetAfter time.Duration) {
 	s.Lock()
 	s.Cache.SetWithTTL(endpoint, remaining, resetAfter)
 	s.Unlock()
+}
+
+func (s *MemoryStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
+	s.globalLock.Lock()
+	s.globalResetAfter = time.Now().Add(resetAfter)
+	s.globalLock.Unlock()
 }
 
 func (s *MemoryStore) identifyWait(shardId int, largeShardingBuckets int) error {
@@ -59,7 +74,7 @@ func (s *MemoryStore) identifyWait(shardId int, largeShardingBuckets int) error 
 		}
 	}
 
-	bucket := s.gatewayBuckets[shardId % largeShardingBuckets]
+	bucket := s.gatewayBuckets[shardId%largeShardingBuckets]
 	s.bucketLock.Unlock()
 
 	bucket.Wait(1)

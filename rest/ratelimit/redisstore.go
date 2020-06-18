@@ -50,6 +50,16 @@ func (s *RedisStore) UpdateRateLimit(endpoint string, remaining int, resetAfter 
 	s.Set(key, remaining, resetAfter)
 }
 
+func (s *RedisStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
+	key := fmt.Sprintf("%s:global", s.keyPrefix)
+	s.Set(key, true, resetAfter)
+}
+
+func (s *RedisStore) getGlobalTTL() (time.Duration, error) {
+	key := fmt.Sprintf("%s:global", s.keyPrefix)
+	return s.PTTL(key).Result()
+}
+
 func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
 	key := fmt.Sprintf("%s:identify:%d", s.keyPrefix, shardId % largeShardingBuckets)
 
