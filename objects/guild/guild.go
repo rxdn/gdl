@@ -43,6 +43,11 @@ type Guild struct {
 	VanityUrlCode               string            `json:"vanity_url_code"`
 	Description                 string            `json:"description"`
 	Banner                      string            `json:"banner"`
+	PremiumTier                 PremiumTier       `json:"premium_tier"`
+	PremiumSubscriptionCount    int               `json:"premium_subscription_count"`
+	PreferredLocale             string            `json:"preferred_locale"`
+	PublicUpdatesChannelId      uint64            `json:"public_updates_channel_id,string"`
+	MaxVideoChannelUsers        int               `json:"max_video_channel_users"`
 	ApproximateMemberCount      int               `json:"approximate_member_count"`   // Returned on GET /guild/:id
 	ApproximatePresenceCount    int               `json:"approximate_presence_count"` // Returned on GET /guild/:id
 }
@@ -79,6 +84,11 @@ func (g *Guild) ToCachedGuild() (cached CachedGuild) {
 		VanityUrlCode:               g.VanityUrlCode,
 		Description:                 g.Description,
 		Banner:                      g.Banner,
+		PremiumTier:                 g.PremiumTier,
+		PremiumSubscriptionCount:    g.PremiumSubscriptionCount,
+		PreferredLocale:             g.PreferredLocale,
+		PublicUpdatesChannelId:      g.PublicUpdatesChannelId,
+		MaxVideoChannelUsers:        g.MaxVideoChannelUsers,
 	}
 
 	for _, role := range g.Roles {

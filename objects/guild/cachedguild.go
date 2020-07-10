@@ -39,6 +39,11 @@ type CachedGuild struct {
 	VanityUrlCode               string         `json:"vanity_url_code"`
 	Description                 string         `json:"description"`
 	Banner                      string         `json:"banner"`
+	PremiumTier                 PremiumTier    `json:"premium_tier"`
+	PremiumSubscriptionCount    int            `json:"premium_subscription_count"`
+	PreferredLocale             string         `json:"preferred_locale"`
+	PublicUpdatesChannelId      uint64         `json:"public_updates_channel_id"`
+	MaxVideoChannelUsers        int            `json:"max_video_channel_users"`
 }
 
 func (g *CachedGuild) ToGuild(guildId uint64) Guild {
@@ -73,5 +78,10 @@ func (g *CachedGuild) ToGuild(guildId uint64) Guild {
 		VanityUrlCode:               g.VanityUrlCode,
 		Description:                 g.Description,
 		Banner:                      g.Banner,
+		PremiumTier:                 g.PremiumTier,
+		PremiumSubscriptionCount:    g.PremiumSubscriptionCount,
+		PreferredLocale:             g.PreferredLocale,
+		PublicUpdatesChannelId:      g.PublicUpdatesChannelId,
+		MaxVideoChannelUsers:        g.MaxVideoChannelUsers,
 	}
 }
