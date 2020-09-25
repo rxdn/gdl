@@ -7,14 +7,13 @@ import (
 	"fmt"
 	"github.com/pasztorpisti/qs"
 	"github.com/rxdn/gdl/rest/ratelimit"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-const BASE_URL = "https://discord.com/api/v6"
+const BASE_URL = "https://discord.com/api/v8"
 
 type Endpoint struct {
 	RequestType       RequestType
@@ -107,8 +106,6 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		req.Header.Set("Authorization", fmt.Sprintf("Bot %s", token))
 	}
 
-	req.Header.Set("X-RateLimit-Precision", "millisecond")
-
 	for key, value := range e.AdditionalHeaders {
 		req.Header.Set(key, value)
 	}
@@ -129,13 +126,15 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 226 {
-		err, ok := errorCodes[res.StatusCode]
-		if !ok {
-			err = ErrUnknown
-			logrus.Warnf("http status %d at %s: %s", res.StatusCode, e.Endpoint, string(content))
+		err = RestError{
+			ErrorCode: res.StatusCode,
+			Message:   string(content),
 		}
 
-		return err, nil
+		return err, &ResponseWithContent{
+			Response: res,
+			Content:  content,
+		}
 	}
 
 	if response != nil {
@@ -155,7 +154,7 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 	// check global limit
 	if global, err := strconv.ParseBool(header.Get("X-RateLimit-Global")); err == nil && global {
 		if retryAfter, err := strconv.ParseInt(header.Get("Retry-After"), 10, 64); err == nil {
-			e.RateLimiter.Store.UpdateGlobalRateLimit(time.Duration(retryAfter) * time.Millisecond)
+			e.RateLimiter.Store.UpdateGlobalRateLimit(time.Duration(retryAfter) * time.Second)
 			return
 		}
 	}
@@ -163,7 +162,7 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 	// check route limit
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
 		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
-			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000) * time.Millisecond)
+			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond)
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
@@ -11,8 +10,6 @@ import (
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/utils"
-	"image"
-	"image/png"
 	"net/url"
 	"strconv"
 )
@@ -134,16 +131,16 @@ func GetGuildChannels(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 }
 
 type CreateChannelData struct {
-	Name                 string                         `json:"name"`
-	Type                 channel.ChannelType            `json:"type"`
-	Topic                string                         `json:"topic,omitempty"`
-	Bitrate              int                            `json:"bitrate,omitempty"`
-	UserLimit            int                            `json:"user_limit,omitempty"`
-	RateLimitPerUser     int                            `json:"rate_limit_per_user"`
-	Position             int                            `json:"position,omitempty"`
+	Name                 string                        `json:"name"`
+	Type                 channel.ChannelType           `json:"type"`
+	Topic                string                        `json:"topic,omitempty"`
+	Bitrate              int                           `json:"bitrate,omitempty"`
+	UserLimit            int                           `json:"user_limit,omitempty"`
+	RateLimitPerUser     int                           `json:"rate_limit_per_user"`
+	Position             int                           `json:"position,omitempty"`
 	PermissionOverwrites []channel.PermissionOverwrite `json:"permission_overwrites"`
-	ParentId             uint64                         `json:"parent_id,string,omitempty"`
-	Nsfw                 bool                           `json:"nsfw,omitempty"`
+	ParentId             uint64                        `json:"parent_id,string,omitempty"`
+	Nsfw                 bool                          `json:"nsfw,omitempty"`
 }
 
 func CreateGuildChannel(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data CreateChannelData) (channel.Channel, error) {
@@ -332,7 +329,7 @@ func GetGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, user
 }
 
 type CreateGuildBanData struct {
-	DeleteMessageDays int    `json:"delete-message-days,omitempty"` // 1 - 7
+	DeleteMessageDays int    `json:"delete_message_days,omitempty"` // 1 - 7
 	Reason            string `json:"reason,omitempty"`
 }
 
@@ -377,11 +374,11 @@ func GetGuildRoles(token string, rateLimiter *ratelimit.Ratelimiter, guildId uin
 }
 
 type GuildRoleData struct {
-	Name        string `json:"name,omitempty"`
-	Permissions *int   `json:"permissions,omitempty"`
-	Color       *int   `json:"color,omitempty"`
-	Hoist       *bool  `json:"hoist,omitempty"`
-	Mentionable *bool  `json:"mentionable,omitempty"`
+	Name        string  `json:"name,omitempty"`
+	Permissions *uint64 `json:"permissions,omitempty,string"`
+	Color       *int    `json:"color,omitempty"`
+	Hoist       *bool   `json:"hoist,omitempty"`
+	Mentionable *bool   `json:"mentionable,omitempty"`
 }
 
 func CreateGuildRole(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data GuildRoleData) (guild.Role, error) {
@@ -617,26 +614,4 @@ func GetGuildVanityURL(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 	var invite invite.Invite
 	err, _ := endpoint.Request(token, nil, &invite)
 	return invite, err
-}
-
-func GetGuildWidgetImage(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, style guild.WidgetStyle) (image.Image, error) {
-	endpoint := request.Endpoint{
-		RequestType: request.GET,
-		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/guilds/%d/widget.png?style=%s", guildId, string(style)),
-		Bucket:      ratelimit.NewGuildBucket(guildId),
-		RateLimiter: rateLimiter,
-	}
-
-	err, res := endpoint.Request(token, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	image, err := png.Decode(bytes.NewReader(res.Content))
-	if err != nil {
-		return nil, err
-	}
-
-	return image, err
 }

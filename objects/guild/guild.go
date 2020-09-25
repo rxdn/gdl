@@ -14,12 +14,10 @@ type Guild struct {
 	Splash                      string            `json:"splash"`
 	Owner                       bool              `json:"owner"`
 	OwnerId                     uint64            `json:"owner_id,string"`
-	Permissions                 int               `json:"permissions"`
+	Permissions                 uint64            `json:"permissions,string"`
 	Region                      string            `json:"region"`
 	AfkChannelId                uint64            `json:"afk_channel_id,string"`
 	AfkTimeout                  int               `json:"afk_timeout"`
-	EmbedEnabled                bool              `json:"embed_enabled"`
-	EmbedChannelId              uint64            `json:"embed_channel_id,string"`
 	VerificationLevel           int               `json:"verification_level"`
 	DefaultMessageNotifications int               `json:"default_message_notifications"`
 	ExplicitContentFilter       int               `json:"explicit_content_filter"`
@@ -64,8 +62,6 @@ func (g *Guild) ToCachedGuild() (cached CachedGuild) {
 		Region:                      g.Region,
 		AfkChannelId:                g.AfkChannelId,
 		AfkTimeout:                  g.AfkTimeout,
-		EmbedEnabled:                g.EmbedEnabled,
-		EmbedChannelId:              g.EmbedChannelId,
 		VerificationLevel:           g.VerificationLevel,
 		DefaultMessageNotifications: g.DefaultMessageNotifications,
 		ExplicitContentFilter:       g.ExplicitContentFilter,
