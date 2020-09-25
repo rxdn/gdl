@@ -106,7 +106,7 @@ func (s *Shard) Connect() error {
 	headers := http.Header{}
 	headers.Add("accept-encoding", "zlib")
 
-	conn, _, err := websocket.Dial(s.context, "wss://gateway.discord.gg/?v=6&encoding=json&compress=zlib-stream", &websocket.DialOptions{
+	conn, _, err := websocket.Dial(s.context, "wss://gateway.discord.gg/?v=8&encoding=json&compress=zlib-stream", &websocket.DialOptions{
 		CompressionMode: websocket.CompressionContextTakeover,
 		HTTPHeader:      headers,
 	})

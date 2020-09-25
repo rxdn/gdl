@@ -48,7 +48,7 @@ type CreateEmojiData struct {
 func CreateGuildEmoji(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data CreateEmojiData) (emoji.Emoji, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
-		ContentType: data.Image.ContentType,
+		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/guilds/%d/emojis", guildId),
 		Bucket:      ratelimit.NewEmojiBucket(guildId),
 		RateLimiter: rateLimiter,

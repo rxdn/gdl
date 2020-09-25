@@ -1,8 +1,8 @@
 package channel
 
-type PermissionOverwriteType string
+type PermissionOverwriteType int
 
 const (
-	PermissionTypeRole   PermissionOverwriteType = "role"
-	PermissionTypeMember PermissionOverwriteType = "member"
+	PermissionTypeRole PermissionOverwriteType = iota
+	PermissionTypeMember
 )

@@ -6,7 +6,7 @@ type CachedRole struct {
 	Color       int    `json:"color"`
 	Hoist       bool   `json:"hoist"`
 	Position    int    `json:"position"`
-	Permissions int    `json:"permissions"`
+	Permissions uint64 `json:"permissions"`
 	Managed     bool   `json:"managed"`
 	Mentionable bool   `json:"mentionable"`
 }
