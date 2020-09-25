@@ -94,7 +94,7 @@ func GetAllPermissions(shard *gateway.Shard, guildId, userId uint64) []Permissio
 	return permissions
 }
 
-func GetEffectivePermissionsChannel(shard *gateway.Shard, guildId, userId, channelId uint64) (int, error) {
+func GetEffectivePermissionsChannel(shard *gateway.Shard, guildId, userId, channelId uint64) (uint64, error) {
 	permissions, err := GetBasePermissions(shard, guildId)
 	if err != nil {
 		return 0, err
@@ -123,7 +123,7 @@ func GetEffectivePermissionsChannel(shard *gateway.Shard, guildId, userId, chann
 	return permissions, nil
 }
 
-func GetEffectivePermissions(shard *gateway.Shard, guildId, userId uint64) (int, error) {
+func GetEffectivePermissions(shard *gateway.Shard, guildId, userId uint64) (uint64, error) {
 	permissions, err := GetBasePermissions(shard, guildId)
 	if err != nil {
 		return 0, err
@@ -137,7 +137,7 @@ func GetEffectivePermissions(shard *gateway.Shard, guildId, userId uint64) (int,
 	return permissions, nil
 }
 
-func GetChannelMemberPermissions(shard *gateway.Shard, userId, channelId uint64, initialPermissions int) (int, error) {
+func GetChannelMemberPermissions(shard *gateway.Shard, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	ch, err := shard.GetChannel(channelId)
 	if err != nil {
 		return 0, err
@@ -153,7 +153,7 @@ func GetChannelMemberPermissions(shard *gateway.Shard, userId, channelId uint64,
 	return initialPermissions, nil
 }
 
-func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, channelId uint64, initialPermissions int) (int, error) {
+func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	member, err := shard.GetGuildMember(guildId, userId)
 	if err != nil {
 		return 0, err
@@ -169,7 +169,7 @@ func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, chann
 		return 0, err
 	}
 
-	allow, deny := 0, 0
+	var allow, deny uint64
 
 	for _, memberRole := range member.Roles {
 		for _, role := range roles {
@@ -191,7 +191,7 @@ func GetChannelTotalRolePermissions(shard *gateway.Shard, guildId, userId, chann
 	return initialPermissions, nil
 }
 
-func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, initialPermissions int) (int, error) {
+func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, initialPermissions uint64) (uint64, error) {
 	roles, err := shard.GetGuildRoles(guildId)
 	if err != nil {
 		return 0, err
@@ -225,7 +225,7 @@ func GetChannelBasePermissions(shard *gateway.Shard, guildId, channelId uint64, 
 	return initialPermissions, nil
 }
 
-func GetGuildTotalRolePermissions(shard *gateway.Shard, guildId, userId uint64, initialPermissions int) (int, error) {
+func GetGuildTotalRolePermissions(shard *gateway.Shard, guildId, userId uint64, initialPermissions uint64) (uint64, error) {
 	member, err := shard.GetGuildMember(guildId, userId)
 	if err != nil {
 		return 0, err
@@ -247,7 +247,7 @@ func GetGuildTotalRolePermissions(shard *gateway.Shard, guildId, userId uint64, 
 	return initialPermissions, nil
 }
 
-func GetBasePermissions(shard *gateway.Shard, guildId uint64) (int, error) {
+func GetBasePermissions(shard *gateway.Shard, guildId uint64) (uint64, error) {
 	roles, err := shard.GetGuildRoles(guildId)
 	if err != nil {
 		return 0, err

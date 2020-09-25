@@ -1,6 +1,6 @@
 package permission
 
-type Permission int
+type Permission uint64
 
 const (
 	CreateInstantInvite Permission = 0x00000001
@@ -65,15 +65,15 @@ var AllPermissions = []Permission{
 	ManageEmojis,
 }
 
-func HasPermissionRaw(permissions int, permission Permission) bool {
-	return permissions&int(permission) == int(permission)
+func HasPermissionRaw(permissions uint64, permission Permission) bool {
+	return permissions&uint64(permission) == uint64(permission)
 }
 
-func BuildPermissions(permissions ...Permission) int {
-	i := 0
+func BuildPermissions(permissions ...Permission) uint64 {
+	var i uint64
 
 	for _, permission := range permissions {
-		i |= int(permission)
+		i |= uint64(permission)
 	}
 
 	return i
