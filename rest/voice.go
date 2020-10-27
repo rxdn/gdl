@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 )
 
@@ -11,7 +12,7 @@ func ListVoiceRegions(token string) ([]guild.VoiceRegion, error) {
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/voice/regions"),
-		Bucket:      "vr",
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteListVoiceRegions, 0),
 	}
 
 	var voiceRegions []guild.VoiceRegion

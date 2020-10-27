@@ -11,11 +11,14 @@ type MemoryStore struct {
 	sync.Mutex
 	Cache *ttlcache.Cache // handles mutex for us
 
-	bucketLock     sync.RWMutex
-	gatewayBuckets []*ratelimit.Bucket
+	gatewayBucketLock sync.RWMutex
+	gatewayBuckets    []*ratelimit.Bucket
 
 	globalLock       sync.RWMutex
 	globalResetAfter time.Time
+
+	bucketLock sync.RWMutex
+	buckets    map[RouteId]string
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -25,17 +28,22 @@ func NewMemoryStore() *MemoryStore {
 	}
 }
 
-func (s *MemoryStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
+func (s *MemoryStore) getTTLAndDecrease(route Route) (time.Duration, error) {
+	key, err := getKey(s, route)
+	if err != nil {
+		return 0, err
+	}
+
 	s.Lock()
 	defer s.Unlock()
 
-	item, found, _ := s.Cache.GetItem(endpoint)
+	item, found, _ := s.Cache.GetItem(key)
 
 	if found {
 		remaining := item.Data.(int)
 		ttl := item.ExpireAt.Sub(time.Now())
 
-		s.Cache.SetWithTTL(endpoint, remaining-1, ttl)
+		s.Cache.SetWithTTL(key, remaining-1, ttl)
 
 		if remaining > 0 {
 			return 0, nil
@@ -53,10 +61,17 @@ func (s *MemoryStore) getGlobalTTL() (time.Duration, error) {
 	return s.globalResetAfter.Sub(time.Now()), nil
 }
 
-func (s *MemoryStore) UpdateRateLimit(endpoint string, remaining int, resetAfter time.Duration) {
+func (s *MemoryStore) UpdateRateLimit(route Route, remaining int, resetAfter time.Duration) error {
+	key, err := getKey(s, route)
+	if err != nil {
+		return err
+	}
+
 	s.Lock()
-	s.Cache.SetWithTTL(endpoint, remaining, resetAfter)
-	s.Unlock()
+	defer s.Unlock()
+
+	s.Cache.SetWithTTL(key, remaining, resetAfter)
+	return nil
 }
 
 func (s *MemoryStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
@@ -66,7 +81,7 @@ func (s *MemoryStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
 }
 
 func (s *MemoryStore) identifyWait(shardId int, largeShardingBuckets int) error {
-	s.bucketLock.Lock()
+	s.gatewayBucketLock.Lock()
 
 	if len(s.gatewayBuckets) < largeShardingBuckets {
 		for i := len(s.gatewayBuckets); i < largeShardingBuckets; i++ {
@@ -75,8 +90,27 @@ func (s *MemoryStore) identifyWait(shardId int, largeShardingBuckets int) error 
 	}
 
 	bucket := s.gatewayBuckets[shardId%largeShardingBuckets]
-	s.bucketLock.Unlock()
+	s.gatewayBucketLock.Unlock()
 
 	bucket.Wait(1)
+	return nil
+}
+
+func (s *MemoryStore) getBucket(routeId RouteId) (string, error) {
+	s.bucketLock.RLock()
+	defer s.bucketLock.RUnlock()
+
+	if bucket, ok := s.buckets[routeId]; ok {
+		return bucket, nil
+	} else {
+		return "", nil
+	}
+}
+
+func (s *MemoryStore) setBucket(routeId RouteId, bucket string) error {
+	s.bucketLock.Lock()
+	defer s.bucketLock.Unlock()
+
+	s.buckets[routeId] = bucket
 	return nil
 }

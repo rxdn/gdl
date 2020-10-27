@@ -19,8 +19,13 @@ func NewRedisStore(client *redis.Client, keyPrefix string) *RedisStore {
 	}
 }
 
-func (s *RedisStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
-	key := fmt.Sprintf("%s:%s", s.keyPrefix, endpoint)
+func (s *RedisStore) getTTLAndDecrease(route Route) (time.Duration, error) {
+	hash, err := getKey(s, route)
+	if err != nil {
+		return 0, err
+	}
+
+	key := fmt.Sprintf("%s:route:%s", s.keyPrefix, hash)
 
 	remainingStr, err := s.Get(key).Result()
 	if err != nil {
@@ -36,7 +41,8 @@ func (s *RedisStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
 		return 0, err
 	}
 
-	s.Decr(key) // attempt to decrease, doesn't matter too much if it errors
+	// If it errors, the key doesn't exist
+	s.Decr(key)
 
 	if remaining > 0 {
 		return 0, nil
@@ -45,9 +51,14 @@ func (s *RedisStore) getTTLAndDecrease(endpoint string) (time.Duration, error) {
 	}
 }
 
-func (s *RedisStore) UpdateRateLimit(endpoint string, remaining int, resetAfter time.Duration) {
-	key := fmt.Sprintf("%s:%s", s.keyPrefix, endpoint)
-	s.Set(key, remaining, resetAfter)
+func (s *RedisStore) UpdateRateLimit(route Route, remaining int, resetAfter time.Duration) error {
+	hash, err := getKey(s, route)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:route:%s", s.keyPrefix, hash)
+	return s.Set(key, remaining, resetAfter).Err()
 }
 
 func (s *RedisStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
@@ -61,7 +72,7 @@ func (s *RedisStore) getGlobalTTL() (time.Duration, error) {
 }
 
 func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
-	key := fmt.Sprintf("%s:identify:%d", s.keyPrefix, shardId % largeShardingBuckets)
+	key := fmt.Sprintf("%s:identify:%d", s.keyPrefix, shardId%largeShardingBuckets)
 
 	set := false
 
@@ -78,9 +89,25 @@ func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
 				return err
 			}
 
-			<- time.After(cooldown)
+			<-time.After(cooldown)
 		}
 	}
 
 	return nil
+}
+
+func (s *RedisStore) getBucket(routeId RouteId) (string, error) {
+	key := fmt.Sprintf("%s:buckets:%d", s.keyPrefix, routeId)
+
+	bucket, err := s.Get(key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
+
+	return bucket, err
+}
+
+func (s *RedisStore) setBucket(routeId RouteId, bucket string) error {
+	key := fmt.Sprintf("%s:buckets:%d", s.keyPrefix, routeId)
+	return s.Set(key, bucket, 0).Err()
 }

@@ -44,7 +44,7 @@ func GetGuildAuditLog(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/audit-logs?%s", guildId, data.Query()),
-		Bucket:      ratelimit.NewGuildBucket(guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetGuildAuditLog, guildId),
 		RateLimiter: rateLimiter,
 	}
 

@@ -12,7 +12,7 @@ func GetInvite(token string, rateLimiter *ratelimit.Ratelimiter, inviteCode stri
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/invites/%s?with_counts=%v", inviteCode, withCounts),
-		Bucket:      ratelimit.NewInviteGetBucket(inviteCode),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetInvite, 0), // No ratelimit
 		RateLimiter: rateLimiter,
 	}
 
@@ -26,7 +26,7 @@ func DeleteInvite(token string, rateLimiter *ratelimit.Ratelimiter, inviteCode s
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/invites/%s", inviteCode),
-		Bucket:      inviteCode, // TODO: Figure out better way to do this
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteDeleteInvite, 0), // No ratelimit
 		RateLimiter: rateLimiter,
 	}
 

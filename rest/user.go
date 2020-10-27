@@ -17,7 +17,7 @@ func GetCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter) (user.User
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    "/users/@me",
-		Bucket:      ratelimit.NewUserBucket(0),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteGetCurrentUser, 0),
 		RateLimiter: rateLimiter,
 	}
 
@@ -31,7 +31,7 @@ func GetUser(token string, rateLimiter *ratelimit.Ratelimiter, userId uint64) (u
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/%d", userId),
-		Bucket:      ratelimit.NewUserBucket(userId),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteGetUser, userId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -50,7 +50,7 @@ func ModifyCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter, data Mo
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    "/users/@me",
-		Bucket:      ratelimit.NewUserBucket(0),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteModifyCurrentUser, 0),
 		RateLimiter: rateLimiter,
 	}
 
@@ -89,7 +89,7 @@ func GetCurrentUserGuilds(token string, rateLimiter *ratelimit.Ratelimiter, data
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/guilds?%s", data.Query()),
-		Bucket:      ratelimit.NewUserBucket(0),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteGetCurrentUserGuilds, 0),
 		RateLimiter: rateLimiter,
 	}
 
@@ -103,7 +103,7 @@ func LeaveGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/guilds/%d", guildId),
-		Bucket:      ratelimit.NewUserBucket(0),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteLeaveGuild, 0),
 		RateLimiter: rateLimiter,
 	}
 
@@ -116,7 +116,7 @@ func CreateDM(token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/users/@me/channels"),
-		Bucket:      ratelimit.NewUserBucket(recipientId), // TODO: Investigate whether this takes the recipient ID
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteCreateDM, recipientId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -134,7 +134,7 @@ func GetUserConnections(token string, rateLimiter *ratelimit.Ratelimiter) ([]int
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/users/@me/connections"),
-		Bucket:      ratelimit.NewUserBucket(0),
+		Route:       ratelimit.NewOtherRoute(ratelimit.RouteGetUserConnections, 0),
 		RateLimiter: rateLimiter,
 	}
 

@@ -24,7 +24,7 @@ func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetChannel, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -53,7 +53,7 @@ func ModifyChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteModifyChannel, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -70,7 +70,7 @@ func DeleteChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteChannel, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -118,7 +118,7 @@ func GetChannelMessages(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages?%s", channelId, data.Query()),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetChannelMessages, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -135,7 +135,7 @@ func GetChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetChannelMessage, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -218,7 +218,7 @@ func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
 			Endpoint:    fmt.Sprintf("/channels/%d/messages", channelId),
-			Bucket:      ratelimit.NewMessageWriteBucket(channelId),
+			Route:       ratelimit.NewChannelRoute(ratelimit.RouteCreateMessage, channelId),
 			RateLimiter: rateLimiter,
 		}
 	} else {
@@ -226,7 +226,7 @@ func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 			RequestType: request.POST,
 			ContentType: request.MultipartFormData,
 			Endpoint:    fmt.Sprintf("/channels/%d/messages", channelId),
-			Bucket:      ratelimit.NewMessageWriteBucket(channelId),
+			Route:       ratelimit.NewChannelRoute(ratelimit.RouteCreateMessage, channelId),
 			RateLimiter: rateLimiter,
 		}
 	}
@@ -245,7 +245,7 @@ func CreateReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId,
 		RequestType: request.PUT,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/@me", channelId, messageId, url.QueryEscape(emoji)),
-		Bucket:      ratelimit.NewReactionsBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteCreateReaction, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -259,7 +259,7 @@ func DeleteOwnReaction(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/@me", channelId, messageId, url.QueryEscape(emoji)),
-		Bucket:      ratelimit.NewReactionsBucket(channelId), // TODO: Verify this uses the reaction bucket
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteOwnReaction, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -273,7 +273,7 @@ func DeleteUserReaction(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s/%d", channelId, messageId, url.QueryEscape(emoji), userId),
-		Bucket:      ratelimit.NewReactionsBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteUserReaction, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -311,7 +311,7 @@ func GetReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, m
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s?%s", channelId, messageId, url.QueryEscape(emoji), data.Query()),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetReactions, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -328,7 +328,7 @@ func DeleteAllReactions(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions", channelId, messageId),
-		Bucket:      ratelimit.NewReactionsBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteAllReactions, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -341,7 +341,7 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/reactions/%s", channelId, messageId, url.QueryEscape(emoji)),
-		Bucket:      ratelimit.NewReactionsBucket(channelId), // Verify this endpoint uses this bucket
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteAllReactionsForEmoji, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -360,7 +360,7 @@ func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, me
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
-		Bucket:      ratelimit.NewMessageWriteBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteEditMessage, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -377,7 +377,7 @@ func DeleteMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, 
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d", channelId, messageId),
-		Bucket:      ratelimit.NewMessageDeleteBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteMessage, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -390,7 +390,7 @@ func BulkDeleteMessages(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/messages/bulk-delete", channelId),
-		Bucket:      ratelimit.NewBulkDeleteBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteBulkDeleteMessages, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -407,7 +407,7 @@ func EditChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, ch
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/permissions/%d", channelId, updated.Id),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteEditChannelPermissions, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -422,7 +422,7 @@ func GetChannelInvites(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetChannelInvites, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -448,7 +448,7 @@ func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, chann
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/invites", channelId),
-		Bucket:      ratelimit.NewInviteCreateBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteCreateChannelInvite, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -465,7 +465,7 @@ func DeleteChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, 
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/permissions/%d", channelId, overwriteId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeleteChannelPermission, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -478,7 +478,7 @@ func TriggerTypingIndicator(token string, rateLimiter *ratelimit.Ratelimiter, ch
 		RequestType: request.POST,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/typing", channelId),
-		Bucket:      ratelimit.NewTypingBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteTriggerTypingIndicator, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -491,7 +491,7 @@ func GetPinnedMessages(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetPinnedMessages, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -508,7 +508,7 @@ func AddPinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, c
 		RequestType: request.PUT,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins/%d", channelId, messageId),
-		Bucket:      ratelimit.NewMessageWriteBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteAddPinnedChannelMessage, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -521,7 +521,7 @@ func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/pins/%d", channelId, messageId),
-		Bucket:      ratelimit.NewMessageWriteBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteDeletePinnedChannelMessage, channelId),
 		RateLimiter: rateLimiter,
 	}
 

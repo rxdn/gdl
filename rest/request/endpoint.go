@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pasztorpisti/qs"
 	"github.com/rxdn/gdl/rest/ratelimit"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -19,7 +20,7 @@ type Endpoint struct {
 	RequestType       RequestType
 	ContentType       ContentType
 	Endpoint          string
-	Bucket            string
+	Route             ratelimit.Route
 	RateLimiter       *ratelimit.Ratelimiter
 	AdditionalHeaders map[string]string
 }
@@ -50,7 +51,7 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	// Ratelimit
 	if e.RateLimiter != nil {
 		ch := make(chan error)
-		go e.RateLimiter.ExecuteCall(e.Bucket, ch)
+		go e.RateLimiter.ExecuteCall(e.Route, ch)
 		if err := <-ch; err != nil {
 			return err, nil
 		}
@@ -162,7 +163,9 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 	// check route limit
 	if remaining, err := strconv.Atoi(header.Get("X-Ratelimit-Remaining")); err == nil {
 		if resetAfterSeconds, err := strconv.ParseFloat(header.Get("X-Ratelimit-Reset-After"), 32); err == nil {
-			e.RateLimiter.Store.UpdateRateLimit(e.Bucket, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond)
+			if err := e.RateLimiter.Store.UpdateRateLimit(e.Route, remaining, time.Duration(resetAfterSeconds*1000)*time.Millisecond); err != nil {
+				logrus.Warnf("Error occurred updating ratelimits: %e", err)
+			}
 		}
 	}
 }

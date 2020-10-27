@@ -397,8 +397,8 @@ func (s *Shard) SyncGuildIntegration(guildId, integrationId uint64) error {
 	return rest.SyncGuildIntegration(s.Token, s.ShardManager.RateLimiter, guildId, integrationId)
 }
 
-func (s *Shard) GetGuildEmbed(guildId uint64) (guild.GuildEmbed, error) {
-	return rest.GetGuildEmbed(s.Token, s.ShardManager.RateLimiter, guildId)
+func (s *Shard) GetGuildWidget(guildId uint64) (guild.GuildWidget, error) {
+	return rest.GetGuildWidget(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) ModifyGuildEmbed(guildId uint64, data guild.GuildEmbed) (guild.GuildEmbed, error) {

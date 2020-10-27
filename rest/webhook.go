@@ -25,7 +25,7 @@ func CreateWebhook(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteCreateWebhook, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -39,7 +39,7 @@ func GetChannelWebhooks(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/webhooks", channelId),
-		Bucket:      ratelimit.NewChannelBucket(channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetChannelWebhooks, channelId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -53,7 +53,7 @@ func GetGuildWebhooks(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/guilds/%d/webhooks", guildId),
-		Bucket:      ratelimit.NewGuildBucket(guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetGuildWebhooks, guildId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -67,7 +67,7 @@ func GetWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId uint
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteGetWebhook, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -82,7 +82,7 @@ func GetWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimiter
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteGetWebhookWithToken, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -102,7 +102,7 @@ func ModifyWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId u
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteModifyWebhook, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -116,7 +116,7 @@ func ModifyWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimi
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteModifyWebhookWithToken, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -129,7 +129,7 @@ func DeleteWebhook(token string, rateLimiter *ratelimit.Ratelimiter, webhookId u
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d", webhookId),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteDeleteWebhook, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -142,7 +142,7 @@ func DeleteWebhookWithToken(webhookToken string, rateLimiter *ratelimit.Ratelimi
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", webhookId, webhookToken),
-		Bucket:      ratelimit.NewWebhookBucket(webhookId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteDeleteWebhookWithToken, webhookId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -218,7 +218,7 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
 			Endpoint:    fmt.Sprintf("/webhooks/%d/%s?wait=%t", webhookId, webhookToken, wait),
-			Bucket:      ratelimit.NewWebhookExecuteBucket(webhookId),
+			Route:       ratelimit.NewWebhookRoute(ratelimit.RouteExecuteWebhook, webhookId),
 			RateLimiter: rateLimiter,
 		}
 	} else {
@@ -226,7 +226,7 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 			RequestType: request.POST,
 			ContentType: request.MultipartFormData,
 			Endpoint:    fmt.Sprintf("/webhooks/%d/%s?wait=%t", webhookId, webhookToken, wait),
-			Bucket:      ratelimit.NewWebhookExecuteBucket(webhookId),
+			Route:       ratelimit.NewWebhookRoute(ratelimit.RouteExecuteWebhook, webhookId),
 			RateLimiter: rateLimiter,
 		}
 
