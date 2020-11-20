@@ -36,6 +36,7 @@ type Message struct {
 	Application              MessageApplication      `json:"application"`
 	MessageReference         MessageReference        `json:"message_reference"` // reference data sent with crossposted messages
 	Flags                    int                     `json:"flags"`
+	ReferencedMessage        *MessageReference       `json:"referenced_message"`
 }
 
 var channelMentionRegex = regexp.MustCompile(`<#(\d+)>`)

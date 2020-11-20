@@ -18,4 +18,5 @@ const (
 	MessageTypeChannelFollowAdd
 	MessageTypeGuildDiscoveryDisqualified
 	MessageTypeGuildDiscoveryRequalified
+	MessageTypeReply MessageType = 19
 )

@@ -154,13 +154,14 @@ type File struct {
 }
 
 type CreateMessageData struct {
-	Content         string                 `json:"content"`
-	Nonce           string                 `json:"nonce,omitempty"`
-	Tts             bool                   `json:"tts,omitempty"`
-	File            *File                  `json:"-"`
-	Embed           *embed.Embed           `json:"embed,omitempty"`
-	PayloadJson     string                 `json:"-"` // TODO: Helper method
-	AllowedMentions message.AllowedMention `json:"allowed_mentions"`
+	Content          string                   `json:"content"`
+	Nonce            string                   `json:"nonce,omitempty"`
+	Tts              bool                     `json:"tts,omitempty"`
+	File             *File                    `json:"-"`
+	Embed            *embed.Embed             `json:"embed,omitempty"`
+	PayloadJson      string                   `json:"-"` // TODO: Helper method
+	AllowedMentions  message.AllowedMention   `json:"allowed_mentions"`
+	MessageReference message.MessageReference `json:"message_reference,omitempty"`
 }
 
 func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
