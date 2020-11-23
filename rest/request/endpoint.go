@@ -31,7 +31,8 @@ type ResponseWithContent struct {
 }
 
 // figure out a better way to do this
-var Hook func(string)
+// token, request
+var Hook func(string, *http.Request)
 
 // TODO: Allow users to specify custom timeouts
 var client = http.Client{
@@ -43,10 +44,6 @@ var client = http.Client{
 
 func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
-
-	if Hook != nil {
-		Hook(url)
-	}
 
 	// Ratelimit
 	if e.RateLimiter != nil {
@@ -109,6 +106,11 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 
 	for key, value := range e.AdditionalHeaders {
 		req.Header.Set(key, value)
+	}
+
+	// Do
+	if Hook != nil {
+		Hook(token, req)
 	}
 
 	res, err := client.Do(req)
