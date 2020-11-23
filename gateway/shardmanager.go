@@ -38,7 +38,7 @@ func NewShardManager(token string, shardOptions ShardOptions) *ShardManager {
 		manager.Shards[i] = &shard
 	}
 
-	request.Hook = shardOptions.Hooks.RestHook
+	request.RegisterHook(shardOptions.Hooks.RestHook)
 
 	RegisterCacheListeners(manager)
 
