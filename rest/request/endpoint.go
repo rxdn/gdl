@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -32,10 +33,19 @@ type ResponseWithContent struct {
 
 // figure out a better way to do this
 // token, request
-var Hook func(string, *http.Request)
+var (
+	hooks   []func(string, *http.Request)
+	hooksMu sync.RWMutex
+)
+
+func RegisterHook(hook func(string, *http.Request)) {
+	hooksMu.Lock()
+	hooks = append(hooks, hook)
+	hooksMu.Unlock()
+}
 
 // TODO: Allow users to specify custom timeouts
-var client = http.Client{
+var Client = http.Client{
 	Transport: &http.Transport{
 		TLSHandshakeTimeout: time.Second * 3,
 	},
@@ -108,12 +118,10 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		req.Header.Set(key, value)
 	}
 
-	// Do
-	if Hook != nil {
-		Hook(token, req)
-	}
+	// Execute hooks
+	executeHooks(token, req)
 
-	res, err := client.Do(req)
+	res, err := Client.Do(req)
 	if err != nil {
 		return err, nil
 	}
@@ -169,5 +177,14 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 				logrus.Warnf("Error occurred updating ratelimits: %e", err)
 			}
 		}
+	}
+}
+
+func executeHooks(token string, req *http.Request) {
+	hooksMu.RLock()
+	defer hooksMu.RUnlock()
+
+	for _, hook := range hooks {
+		hook(token, req)
 	}
 }
