@@ -8,6 +8,7 @@ import (
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/integration"
+	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/objects/invite"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -520,4 +521,36 @@ func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool,
 
 func (s *Shard) GetGuildAuditLog(guildId uint64, data rest.GetGuildAuditLogData) (auditlog.AuditLog, error) {
 	return rest.GetGuildAuditLog(s.Token, s.ShardManager.RateLimiter, guildId, data)
+}
+
+func (s *Shard) GetGlobalCommands(applicationId uint64) ([]interaction.ApplicationCommand, error) {
+	return rest.GetGlobalCommands(s.Token, s.ShardManager.RateLimiter, applicationId)
+}
+
+func (s *Shard) CreateGlobalCommand(applicationId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.CreateGlobalCommand(s.Token, s.ShardManager.RateLimiter, applicationId, data)
+}
+
+func (s *Shard) ModifyGlobalCommand(applicationId, commandId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.ModifyGlobalCommand(s.Token, s.ShardManager.RateLimiter, applicationId, commandId, data)
+}
+
+func (s *Shard) DeleteGlobalCommand(applicationId, commandId uint64) error {
+	return rest.DeleteGlobalCommand(s.Token, s.ShardManager.RateLimiter, applicationId, commandId)
+}
+
+func (s *Shard) GetGuildCommands(applicationId, guildId uint64) ([]interaction.ApplicationCommand, error) {
+	return rest.GetGuildCommands(s.Token, s.ShardManager.RateLimiter, applicationId, guildId)
+}
+
+func (s *Shard) CreateGuildCommand(applicationId, guildId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.CreateGuildCommand(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, data)
+}
+
+func (s *Shard) ModifyGuildCommand(applicationId, guildId, commandId uint64, data rest.CreateCommandData) (interaction.ApplicationCommand, error) {
+	return rest.ModifyGuildCommand(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId, data)
+}
+
+func (s *Shard) DeleteGuildCommand(applicationId, guildId, commandId uint64) error {
+	return rest.DeleteGuildCommand(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId)
 }

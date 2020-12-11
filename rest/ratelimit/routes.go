@@ -162,4 +162,14 @@ const (
 	RouteDeleteWebhook
 	RouteDeleteWebhookWithToken
 	RouteExecuteWebhook
+
+	// /applications/:id/...
+	RouteGetGlobalCommands
+	RouteCreateGlobalCommand
+	RouteModifyGlobalCommand
+	RouteDeleteGlobalCommand
+	RouteGetGuildCommands
+	RouteCreateGuildCommand
+	RouteModifyGuildCommand
+	RouteDeleteGuildCommand
 )
