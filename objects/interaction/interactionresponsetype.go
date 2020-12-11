@@ -1,0 +1,11 @@
+package interaction
+
+type InteractionResponseType uint8
+
+const (
+	InteractionResponseTypePong InteractionResponseType = iota + 1
+	InteractionResponseTypeAcknowledge
+	InteractionResponseTypeChannelMessage
+	InteractionResponseTypeChannelMessageWithSource
+	InteractionResponseTypeACKWithSource
+)
