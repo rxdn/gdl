@@ -69,7 +69,7 @@ func GetGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicat
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/applications/%d/guild/%d/commands", applicationId, guildId),
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands", applicationId, guildId),
 		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetGuildCommands, applicationId),
 		RateLimiter: rateLimiter,
 	}
@@ -82,7 +82,7 @@ func CreateGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
-		Endpoint:    fmt.Sprintf("/applications/%d/guild/%d/commands", applicationId, guildId),
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands", applicationId, guildId),
 		Route:       ratelimit.NewGuildRoute(ratelimit.RouteCreateGuildCommand, applicationId),
 		RateLimiter: rateLimiter,
 	}
