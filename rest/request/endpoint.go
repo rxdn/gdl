@@ -101,8 +101,6 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 			contentType = fmt.Sprintf("%s; boundary=%s", MultipartFormData, boundary)
 		}
 
-		fmt.Println(string(encoded))
-
 		buff := bytes.NewBuffer(encoded)
 		req, err = http.NewRequest(string(e.RequestType), url, buff)
 		req.Header.Set("Content-Type", contentType)
