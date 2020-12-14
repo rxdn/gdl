@@ -32,7 +32,7 @@ func (e *Embed) SetColor(color int) *Embed {
 }
 
 func (e *Embed) SetFooter(text, iconUrl string) *Embed {
-	e.Footer = EmbedFooter{
+	e.Footer = &EmbedFooter{
 		Text:    text,
 		IconUrl: iconUrl,
 	}
@@ -40,28 +40,28 @@ func (e *Embed) SetFooter(text, iconUrl string) *Embed {
 }
 
 func (e *Embed) SetImage(url string) *Embed {
-	e.Image = EmbedImage{
+	e.Image = &EmbedImage{
 		Url: url,
 	}
 	return e
 }
 
 func (e *Embed) SetThumbnail(url string) *Embed {
-	e.Thumbnail = EmbedThumbnail{
+	e.Thumbnail = &EmbedThumbnail{
 		Url: url,
 	}
 	return e
 }
 
 func (e *Embed) SetVideo(url string) *Embed {
-	e.Video = EmbedVideo{
+	e.Video = &EmbedVideo{
 		Url: url,
 	}
 	return e
 }
 
 func (e *Embed) SetProvider(name, url string) *Embed {
-	e.Provider = EmbedProvider{
+	e.Provider = &EmbedProvider{
 		Name: name,
 		Url:  url,
 	}
@@ -69,7 +69,7 @@ func (e *Embed) SetProvider(name, url string) *Embed {
 }
 
 func (e *Embed) SetAuthor(name, url, iconUrl string) *Embed {
-	e.Author = EmbedAuthor{
+	e.Author = &EmbedAuthor{
 		Name:    name,
 		Url:     url,
 		IconUrl: iconUrl,
@@ -78,7 +78,7 @@ func (e *Embed) SetAuthor(name, url, iconUrl string) *Embed {
 }
 
 func (e *Embed) AddField(title, content string, inline bool) *Embed {
-	e.Fields = append(e.Fields, EmbedField{
+	e.Fields = append(e.Fields, &EmbedField{
 		Name:   title,
 		Value:  content,
 		Inline: inline,
