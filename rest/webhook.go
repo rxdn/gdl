@@ -156,6 +156,7 @@ type WebhookBody struct {
 	AvatarUrl       string                 `json:"avatar_url,omitempty"`
 	Tts             bool                   `json:"tts"`
 	File            *File                  `json:"file,omitempty"`
+	Flags           uint                   `json:"flags,omitempty"`
 	Embeds          []*embed.Embed         `json:"embeds,omitempty"`
 	PayloadJson     string                 `json:"payload_json"`
 	AllowedMentions message.AllowedMention `json:"allowed_mentions,omitempty"`
