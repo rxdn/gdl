@@ -159,6 +159,7 @@ type CreateMessageData struct {
 	Tts              bool                      `json:"tts,omitempty"`
 	File             *File                     `json:"-"`
 	Embed            *embed.Embed              `json:"embed,omitempty"`
+	Flags            uint                      `json:"flags,omitempty"`
 	PayloadJson      string                    `json:"-"` // TODO: Helper method
 	AllowedMentions  message.AllowedMention    `json:"allowed_mentions"`
 	MessageReference *message.MessageReference `json:"message_reference,omitempty"`
