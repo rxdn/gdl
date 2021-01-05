@@ -19,7 +19,7 @@ type (
 		Shard              []int             `json:"shard"`
 		Presence           user.UpdateStatus `json:"presence,omitempty"`
 		GuildSubscriptions bool              `json:"guild_subscriptions"`
-		Intents            int               `json:"intents,omitempty"`
+		Intents            uint16            `json:"intents"`
 	}
 
 	Properties struct {

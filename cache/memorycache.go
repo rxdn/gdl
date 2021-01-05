@@ -155,10 +155,12 @@ func (c *MemoryCache) GetGuilds() (guilds []guild.Guild) {
 	c.guildLock.RLock()
 	defer c.guildLock.RUnlock()
 
-	for guildId := range c.guilds {
-		if guild, found := c.GetGuild(guildId, false); found {
-			guilds = append(guilds, guild)
-		}
+	guilds = make([]guild.Guild, len(c.guilds))
+	i := 0
+
+	for guildId, guild := range c.guilds {
+		guilds[i] = guild.ToGuild(guildId)
+		i++
 	}
 
 	return

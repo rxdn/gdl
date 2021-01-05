@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -111,7 +112,13 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	}
 
 	if token != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("Bot %s", token))
+		var header string
+		if !strings.HasPrefix(token, "Bot ") && !strings.HasPrefix(token, "Bearer ") {
+			header += "Bot "
+		}
+
+		header += token
+		req.Header.Set("Authorization", header)
 	}
 
 	for key, value := range e.AdditionalHeaders {

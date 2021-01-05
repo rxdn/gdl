@@ -1,6 +1,6 @@
 package intents
 
-type Intent int
+type Intent uint16
 
 const (
 	Guilds Intent = 1 << iota
@@ -20,12 +20,15 @@ const (
 	DirectMessageTyping
 )
 
-func SumIntents(intents ...Intent) int {
-	var sum int
+var AllIntentsWithoutPrivileged = []Intent{
+	Guilds, GuildBans, GuildEmojis, GuildIntegrations, GuildWebhooks, GuildInvites, GuildVoiceStates, GuildMessages,
+	GuildMessageReactions, GuildMessageTyping, DirectMessages, DirectMessageReactions, DirectMessageTyping,
+}
 
+func SumIntents(intents ...Intent) (sum uint16) {
 	for _, intent := range intents {
-		sum += int(intent)
+		sum += uint16(intent)
 	}
 
-	return sum
+	return
 }
