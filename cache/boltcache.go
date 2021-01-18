@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/rxdn/gdl/objects/channel"

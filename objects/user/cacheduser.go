@@ -2,16 +2,14 @@ package user
 
 import "fmt"
 
-type (
-	CachedUser struct {
-		Username      string `json:"username"`
-		Discriminator uint16 `json:"discriminator"`
-		Avatar        string `json:"avatar"`
-		Bot           bool   `json:"bot"`
-		Flags         uint32 `json:"flags"`
-		PremiumType   int    `json:"premium_type"`
-	}
-)
+type CachedUser struct {
+	Username      string `json:"username"`
+	Discriminator uint16 `json:"discriminator"`
+	Avatar        string `json:"avatar"`
+	Bot           bool   `json:"bot"`
+	Flags         uint32 `json:"flags"`
+	PremiumType   int    `json:"premium_type"`
+}
 
 func (u *CachedUser) ToUser(userId uint64) User {
 	// unmarshal avatar

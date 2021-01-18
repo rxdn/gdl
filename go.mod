@@ -9,6 +9,7 @@ require (
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jmoiron/sqlx v1.2.0 // indirect
+	github.com/json-iterator/go v1.1.10
 	github.com/juju/ratelimit v1.0.1
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/lib/pq v1.3.0 // indirect
