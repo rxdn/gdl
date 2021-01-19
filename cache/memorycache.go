@@ -452,7 +452,7 @@ func (c *MemoryCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 	c.emojiLock.Lock()
 
 	for _, emoji := range emojis {
-		c.emojis[emoji.Id] = emoji.ToCachedEmoji(guildId)
+		c.emojis[uint64(emoji.Id)] = emoji.ToCachedEmoji(guildId)
 
 		// Add to guild object
 		c.guildLock.Lock()
@@ -460,14 +460,14 @@ func (c *MemoryCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 			// Check to see if emoji already exists
 			var emojiExists bool
 			for _, emojiId := range guild.Emojis {
-				if emojiId == emoji.Id {
+				if emojiId == uint64(emoji.Id) {
 					emojiExists = true
 					break
 				}
 			}
 
 			if !emojiExists {
-				guild.Emojis = append(guild.Emojis, emoji.Id)
+				guild.Emojis = append(guild.Emojis, uint64(emoji.Id))
 				c.guilds[guildId] = guild
 			}
 		}

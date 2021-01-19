@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/fatih/structs"
 	"reflect"
+	"strconv"
 )
 
 func Unmarshal(raw []byte, v interface{}) {
-	_ =json.Unmarshal(raw, &v)
+	_ = json.Unmarshal(raw, &v)
 }
 
 func AppendElem(m map[string]map[string]interface{}, key string, elem map[string]interface{}) map[string]map[string]interface{} {
@@ -58,3 +59,26 @@ func CopyNonNil(m map[string]map[string]interface{}, keyName string, obj interfa
 	}
 }
 
+func ReadStringUint16(s []byte) (uint16, error) {
+	if len(s) < 2 || s[0] != '"' || s[len(s) - 1] != '"' {
+		return 0, errMissingQuotation(s)
+	}
+
+	extracted := s[1:len(s)-1]
+	parsed, err := strconv.ParseUint(string(extracted), 10, 16)
+	return uint16(parsed), err
+}
+
+func ReadStringUint64(s []byte) (uint64, error) {
+	if len(s) < 2 || s[0] != '"' || s[len(s) - 1] != '"' {
+		return 0, errMissingQuotation(s)
+	}
+
+	extracted := s[1:len(s)-1]
+	parsed, err := strconv.ParseUint(string(extracted), 10, 64)
+	return parsed, err
+}
+
+func errMissingQuotation(s []byte) error {
+	return fmt.Errorf("string int is missing quotation marks: %s", string(s))
+}

@@ -9,7 +9,7 @@ import (
 type Member struct {
 	User         user.User               `json:"user"`
 	Nick         string                  `json:"nick"`
-	Roles        utils.Uint64StringSlice `json:"roles,string"`
+	Roles        utils.Uint64StringSlice `json:"roles"`
 	JoinedAt     time.Time               `json:"joined_at"`
 	PremiumSince *time.Time              `json:"premium_since"` // when the user started boosting the guild
 	Deaf         bool                    `json:"deaf"`

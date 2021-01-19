@@ -1,6 +1,9 @@
 package emoji
 
-import "github.com/rxdn/gdl/objects/user"
+import (
+	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/user"
+)
 
 type CachedEmoji struct {
 	GuildId       uint64   `json:"-"`
@@ -14,7 +17,7 @@ type CachedEmoji struct {
 
 func (e *CachedEmoji) ToEmoji(emojiId uint64, user user.User) Emoji {
 	return Emoji{
-		Id:            emojiId,
+		Id:            objects.NullableSnowflake(emojiId),
 		Name:          e.Name,
 		Roles:         e.Roles,
 		User:          user,

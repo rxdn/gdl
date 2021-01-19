@@ -23,7 +23,7 @@ type Message struct {
 	Tts                      bool                    `json:"tts"`
 	MentionEveryone          bool                    `json:"mention_everyone"`
 	Mentions                 []MessageMentionedUser  `json:"mentions"` // The user objects in the mentions array will only have the partial member field present in MESSAGE_CREATE and MESSAGE_UPDATE events from text-based guild channels
-	MentionRoles             utils.Uint64StringSlice `json:"mention_roles,string"`
+	MentionRoles             utils.Uint64StringSlice `json:"mention_roles"`
 	VisibleMentionedChannels []ChannelMention        `json:"mention_channels"` // Not all channel mentions in a message will appear in mention_channels. Only textual channels that are visible to everyone in a lurkable guild will ever be included. Only crossposted messages (via Channel Following) currently include mention_channels at all. If no mentions in the message meet these requirements, this field will not be sent.
 	Attachments              []channel.Attachment    `json:"attachments"`
 	Embeds                   []embed.Embed           `json:"embed"`

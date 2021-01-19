@@ -510,7 +510,7 @@ func (c *BoltCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 			}
 
 			if encoded, err := json.Marshal(ewg); err == nil {
-				if err := b.Put(toBytes(emoji.Id), encoded); err != nil {
+				if err := b.Put(toBytes(uint64(emoji.Id)), encoded); err != nil {
 					return err
 				}
 			} else {

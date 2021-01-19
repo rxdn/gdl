@@ -7,7 +7,7 @@ import (
 
 type Presence struct {
 	User         User                    `json:"user"`
-	Roles        utils.Uint64StringSlice `json:"roles,string"`
+	Roles        utils.Uint64StringSlice `json:"roles"`
 	Game         Activity                `json:"name"`
 	GuildId      uint64                  `json:"guild_id,string"`
 	Status       string                  `json:"status"`

@@ -19,7 +19,7 @@ func (u *CachedUser) ToUser(userId uint64) User {
 	return User{
 		Id:            userId,
 		Username:      u.Username,
-		Discriminator: u.Discriminator,
+		Discriminator: Discriminator(u.Discriminator),
 		Avatar:        avatar,
 		Bot:           u.Bot,
 		Flags:         u.Flags,

@@ -3,17 +3,17 @@ package user
 import "fmt"
 
 type User struct {
-	Id            uint64 `json:"id,string"`
-	Username      string `json:"username"`
-	Discriminator uint16 `json:"discriminator,string"`
-	Avatar        Avatar `json:"avatar"`
-	Bot           bool   `json:"bot"`
-	MfaEnabled    bool   `json:"mfa_enabled"`
-	Locale        string `json:"locale"`
-	Verified      bool   `json:"verified"`
-	Email         string `json:"email"`
-	Flags         uint32 `json:"flags"`
-	PremiumType   int    `json:"premium_type"`
+	Id            uint64        `json:"id,string"`
+	Username      string        `json:"username"`
+	Discriminator Discriminator `json:"discriminator"`
+	Avatar        Avatar        `json:"avatar"`
+	Bot           bool          `json:"bot"`
+	MfaEnabled    bool          `json:"mfa_enabled"`
+	Locale        string        `json:"locale"`
+	Verified      bool          `json:"verified"`
+	Email         string        `json:"email"`
+	Flags         uint32        `json:"flags"`
+	PremiumType   int           `json:"premium_type"`
 }
 
 // shortcut, ignores errors
@@ -46,7 +46,7 @@ func (u *User) PadDiscriminator() string {
 func (u *User) ToCachedUser() CachedUser {
 	return CachedUser{
 		Username:      u.Username,
-		Discriminator: u.Discriminator,
+		Discriminator: uint16(u.Discriminator),
 		Avatar:        u.Avatar.String(),
 		Bot:           u.Bot,
 		Flags:         u.Flags,
