@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -33,13 +32,14 @@ func (slice *Uint64StringSlice) UnmarshalJSON(b []byte) error {
 		*slice = values
 		return nil
 	}
+
 	*slice = make([]uint64, len(values))
 	for i, value := range values {
-		value, err := strconv.ParseInt(value, 10, 64)
+		value, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
-		(*slice)[i] = uint64(value)
+		(*slice)[i] = value
 	}
 	return nil
 }

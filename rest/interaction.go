@@ -21,6 +21,7 @@ func GetGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applica
 }
 
 type CreateCommandData struct {
+	Id          uint64                                 `json:"id,omitempty"` // Optional: Use to rename without changing ID
 	Name        string                                 `json:"name"`
 	Description string                                 `json:"description"`
 	Options     []interaction.ApplicationCommandOption `json:"options"`
@@ -49,6 +50,19 @@ func ModifyGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 	}
 
 	err, _ = endpoint.Request(token, data, &command)
+	return
+}
+
+func ModifyGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/applications/%d/commands", applicationId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteModifyGlobalCommands, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &commands)
 	return
 }
 

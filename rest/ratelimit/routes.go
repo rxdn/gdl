@@ -26,19 +26,19 @@ func NewRoute(routeType RouteType, id RouteId, snowflake uint64) Route {
 }
 
 func NewGuildRoute(id RouteId, snowflake uint64) Route {
-	return NewRoute(RouteTypeGuild, id ,snowflake)
+	return NewRoute(RouteTypeGuild, id, snowflake)
 }
 
 func NewChannelRoute(id RouteId, snowflake uint64) Route {
-	return NewRoute(RouteTypeChannel, id ,snowflake)
+	return NewRoute(RouteTypeChannel, id, snowflake)
 }
 
 func NewWebhookRoute(id RouteId, snowflake uint64) Route {
-	return NewRoute(RouteTypeWebhook, id ,snowflake)
+	return NewRoute(RouteTypeWebhook, id, snowflake)
 }
 
 func NewOtherRoute(id RouteId, snowflake uint64) Route {
-	return NewRoute(RouteTypeOther, id ,snowflake)
+	return NewRoute(RouteTypeOther, id, snowflake)
 }
 
 const (
@@ -167,6 +167,7 @@ const (
 	RouteGetGlobalCommands
 	RouteCreateGlobalCommand
 	RouteModifyGlobalCommand
+	RouteModifyGlobalCommands
 	RouteDeleteGlobalCommand
 	RouteGetGuildCommands
 	RouteCreateGuildCommand

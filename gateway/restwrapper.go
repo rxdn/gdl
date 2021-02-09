@@ -535,6 +535,10 @@ func (s *Shard) ModifyGlobalCommand(applicationId, commandId uint64, data rest.C
 	return rest.ModifyGlobalCommand(s.Token, s.ShardManager.RateLimiter, applicationId, commandId, data)
 }
 
+func (s *Shard) ModifyGlobalCommands(applicationId uint64, data []rest.CreateCommandData) ([]interaction.ApplicationCommand, error) {
+	return rest.ModifyGlobalCommands(s.Token, s.ShardManager.RateLimiter, applicationId, data)
+}
+
 func (s *Shard) DeleteGlobalCommand(applicationId, commandId uint64) error {
 	return rest.DeleteGlobalCommand(s.Token, s.ShardManager.RateLimiter, applicationId, commandId)
 }

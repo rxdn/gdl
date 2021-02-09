@@ -1,6 +1,9 @@
 package channel
 
-import "time"
+import (
+	"github.com/rxdn/gdl/objects"
+	"time"
+)
 
 type CachedChannel struct {
 	GuildId              uint64                `json:"-"`
@@ -31,7 +34,7 @@ func (c *CachedChannel) ToChannel(channelId, guildId uint64) Channel {
 		Name:                 c.Name,
 		Topic:                c.Topic,
 		Nsfw:                 c.Nsfw,
-		LastMessageId:        c.LastMessageId,
+		LastMessageId:        objects.NullableSnowflake(c.LastMessageId),
 		Bitrate:              c.Bitrate,
 		UserLimit:            c.UserLimit,
 		RateLimitPerUser:     c.RateLimitPerUser,
@@ -39,7 +42,7 @@ func (c *CachedChannel) ToChannel(channelId, guildId uint64) Channel {
 		Icon:                 c.Icon,
 		OwnerId:              c.OwnerId,
 		ApplicationId:        c.ApplicationId,
-		ParentId:             c.ParentId,
+		ParentId:             objects.NullableSnowflake(c.ParentId),
 		LastPinTimestamp:     c.LastPinTimestamp,
 	}
 }

@@ -1,6 +1,7 @@
 package guild
 
 import (
+	"github.com/rxdn/gdl/objects"
 	"time"
 )
 
@@ -26,6 +27,8 @@ type CachedGuild struct {
 	WidgetEnabled               bool           `json:"widget_enabled"`
 	WidgetChannelId             uint64         `json:"widget_channel_id"`
 	SystemChannelId             uint64         `json:"system_channel_id"`
+	SystemChannelFlags          uint8          `json:"system_channel_flags"`
+	RulesChannelId              uint64         `json:"rules_channel_id,omitempty"`
 	JoinedAt                    time.Time      `json:"joined_at"`
 	Large                       bool           `json:"large"`
 	Unavailable                 *bool          `json:"unavailable"`
@@ -54,17 +57,19 @@ func (g *CachedGuild) ToGuild(guildId uint64) Guild {
 		OwnerId:                     g.OwnerId,
 		Permissions:                 g.Permissions,
 		Region:                      g.Region,
-		AfkChannelId:                g.AfkChannelId,
+		AfkChannelId:                objects.NullableSnowflake(g.AfkChannelId),
 		AfkTimeout:                  g.AfkTimeout,
 		VerificationLevel:           g.VerificationLevel,
 		DefaultMessageNotifications: g.DefaultMessageNotifications,
 		ExplicitContentFilter:       g.ExplicitContentFilter,
 		Features:                    g.Features,
 		MfaLevel:                    g.MfaLevel,
-		ApplicationId:               g.ApplicationId,
+		ApplicationId:               objects.NullableSnowflake(g.ApplicationId),
 		WidgetEnabled:               g.WidgetEnabled,
 		WidgetChannelId:             g.WidgetChannelId,
-		SystemChannelId:             g.SystemChannelId,
+		SystemChannelId:             objects.NullableSnowflake(g.SystemChannelId),
+		SystemChannelFlags:          g.SystemChannelFlags,
+		RulesChannelId:              objects.NullableSnowflake(g.RulesChannelId),
 		JoinedAt:                    g.JoinedAt,
 		Large:                       g.Large,
 		Unavailable:                 g.Unavailable,
@@ -77,7 +82,7 @@ func (g *CachedGuild) ToGuild(guildId uint64) Guild {
 		PremiumTier:                 g.PremiumTier,
 		PremiumSubscriptionCount:    g.PremiumSubscriptionCount,
 		PreferredLocale:             g.PreferredLocale,
-		PublicUpdatesChannelId:      g.PublicUpdatesChannelId,
+		PublicUpdatesChannelId:      objects.NullableSnowflake(g.PublicUpdatesChannelId),
 		MaxVideoChannelUsers:        g.MaxVideoChannelUsers,
 	}
 }
