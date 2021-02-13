@@ -70,7 +70,7 @@ func ReadStringUint16(s []byte) (uint16, error) {
 }
 
 func ReadStringUint64(s []byte) (uint64, error) {
-	lower, upper := 0, len(s)-1
+	lower, upper := 0, len(s)
 
 	if len(s) > 1 && s[lower] == '"' {
 		lower++
