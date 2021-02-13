@@ -28,7 +28,7 @@ type Guild struct {
 	MfaLevel                    int                       `json:"mfa_level"`
 	ApplicationId               objects.NullableSnowflake `json:"application_id"`
 	WidgetEnabled               bool                      `json:"widget_enabled"`
-	WidgetChannelId             uint64                    `json:"widget_channel_id,string"`
+	WidgetChannelId             objects.NullableSnowflake `json:"widget_channel_id"`
 	SystemChannelId             objects.NullableSnowflake `json:"system_channel_id"`
 	SystemChannelFlags          uint8                     `json:"system_channel_flags"`
 	RulesChannelId              objects.NullableSnowflake `json:"rules_channel_id,omitempty"`
@@ -63,19 +63,19 @@ func (g *Guild) ToCachedGuild() (cached CachedGuild) {
 		OwnerId:                     g.OwnerId,
 		Permissions:                 g.Permissions,
 		Region:                      g.Region,
-		AfkChannelId:                uint64(g.AfkChannelId),
+		AfkChannelId:                g.AfkChannelId,
 		AfkTimeout:                  g.AfkTimeout,
 		VerificationLevel:           g.VerificationLevel,
 		DefaultMessageNotifications: g.DefaultMessageNotifications,
 		ExplicitContentFilter:       g.ExplicitContentFilter,
 		Features:                    g.Features,
 		MfaLevel:                    g.MfaLevel,
-		ApplicationId:               uint64(g.ApplicationId),
+		ApplicationId:               g.ApplicationId,
 		WidgetEnabled:               g.WidgetEnabled,
 		WidgetChannelId:             g.WidgetChannelId,
-		SystemChannelId:             uint64(g.SystemChannelId),
+		SystemChannelId:             g.SystemChannelId,
 		SystemChannelFlags:          g.SystemChannelFlags,
-		RulesChannelId:              uint64(g.RulesChannelId),
+		RulesChannelId:              g.RulesChannelId,
 		JoinedAt:                    g.JoinedAt,
 		Large:                       g.Large,
 		Unavailable:                 g.Unavailable,
@@ -88,7 +88,7 @@ func (g *Guild) ToCachedGuild() (cached CachedGuild) {
 		PremiumTier:                 g.PremiumTier,
 		PremiumSubscriptionCount:    g.PremiumSubscriptionCount,
 		PreferredLocale:             g.PreferredLocale,
-		PublicUpdatesChannelId:      uint64(g.PublicUpdatesChannelId),
+		PublicUpdatesChannelId:      g.PublicUpdatesChannelId,
 		MaxVideoChannelUsers:        g.MaxVideoChannelUsers,
 	}
 

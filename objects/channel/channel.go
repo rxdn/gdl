@@ -41,14 +41,14 @@ func (c *Channel) ToCachedChannel() CachedChannel {
 		Name:                 c.Name,
 		Topic:                c.Topic,
 		Nsfw:                 c.Nsfw,
-		LastMessageId:        uint64(c.LastMessageId),
+		LastMessageId:        c.LastMessageId,
 		Bitrate:              c.Bitrate,
 		UserLimit:            c.UserLimit,
 		RateLimitPerUser:     c.RateLimitPerUser,
 		Icon:                 c.Icon,
 		OwnerId:              c.OwnerId,
 		ApplicationId:        c.ApplicationId,
-		ParentId:             uint64(c.ParentId),
+		ParentId:             c.ParentId,
 		LastPinTimestamp:     c.LastPinTimestamp,
 	}
 }

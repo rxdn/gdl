@@ -60,21 +60,27 @@ func CopyNonNil(m map[string]map[string]interface{}, keyName string, obj interfa
 }
 
 func ReadStringUint16(s []byte) (uint16, error) {
-	if len(s) < 2 || s[0] != '"' || s[len(s) - 1] != '"' {
+	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
 		return 0, errMissingQuotation(s)
 	}
 
-	extracted := s[1:len(s)-1]
+	extracted := s[1 : len(s)-1]
 	parsed, err := strconv.ParseUint(string(extracted), 10, 16)
 	return uint16(parsed), err
 }
 
 func ReadStringUint64(s []byte) (uint64, error) {
-	if len(s) < 2 || s[0] != '"' || s[len(s) - 1] != '"' {
-		return 0, errMissingQuotation(s)
+	lower, upper := 0, len(s)-1
+
+	if len(s) > 1 && s[lower] == '"' {
+		lower++
 	}
 
-	extracted := s[1:len(s)-1]
+	if len(s) > 1 && s[upper] == '"' {
+		upper--
+	}
+
+	extracted := s[lower:upper]
 	parsed, err := strconv.ParseUint(string(extracted), 10, 64)
 	return parsed, err
 }
