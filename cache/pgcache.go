@@ -210,6 +210,7 @@ func (c *PgCache) GetGuild(id uint64, withMembers bool) (g guild.Guild, ok bool)
 
 	var cachedGuild guild.CachedGuild
 	if err := json.Unmarshal([]byte(raw), &cachedGuild); err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 
