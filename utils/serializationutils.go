@@ -76,7 +76,7 @@ func ReadStringUint64(s []byte) (uint64, error) {
 		lower++
 	}
 
-	if len(s) > 1 && s[upper] == '"' {
+	if len(s) > 1 && s[upper-1] == '"' {
 		upper--
 	}
 
