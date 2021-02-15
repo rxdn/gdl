@@ -165,11 +165,7 @@ func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	emojis, err := rest.ListGuildEmojis(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCacheEmoji && err == nil {
-		go func() {
-			for _, emoji := range emojis {
-				s.Cache.StoreEmoji(emoji, guildId)
-			}
-		}()
+		go s.Cache.StoreEmojis(emojis, guildId)
 	}
 
 	return emojis, err
@@ -249,11 +245,7 @@ func (s *Shard) GetGuildChannels(guildId uint64) ([]channel.Channel, error) {
 	channels, err := rest.GetGuildChannels(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
-		go func() {
-			for _, channel := range channels {
-				s.Cache.StoreChannel(channel)
-			}
-		}()
+		go s.Cache.StoreChannels(channels)
 	}
 
 	return channels, err
@@ -286,14 +278,19 @@ func (s *Shard) GetGuildMember(guildId, userId uint64) (member.Member, error) {
 	return member, err
 }
 
+func (s *Shard) SearchGuildMembers(guildId uint64, data rest.SearchGuildMembersData) ([]member.Member, error) {
+	members, err := rest.SearchGuildMembers(s.Token, s.ShardManager.RateLimiter, guildId, data)
+	if err == nil {
+		go s.Cache.StoreMembers(members, guildId)
+	}
+
+	return members, err
+}
+
 func (s *Shard) ListGuildMembers(guildId uint64, data rest.ListGuildMembersData) ([]member.Member, error) {
 	members, err := rest.ListGuildMembers(s.Token, s.ShardManager.RateLimiter, guildId, data)
 	if err == nil {
-		go func() {
-			for _, member := range members {
-				s.Cache.StoreMember(member, guildId)
-			}
-		}()
+		go s.Cache.StoreMembers(members, guildId)
 	}
 
 	return members, err
@@ -349,11 +346,7 @@ func (s *Shard) GetGuildRoles(guildId uint64) ([]guild.Role, error) {
 	roles, err := rest.GetGuildRoles(s.Token, s.ShardManager.RateLimiter, guildId)
 
 	if shouldCache && err == nil {
-		go func() {
-			for _, role := range roles {
-				s.Cache.StoreRole(role, guildId)
-			}
-		}()
+		go s.Cache.StoreRoles(roles, guildId)
 	}
 
 	return roles, err

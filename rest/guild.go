@@ -189,6 +189,36 @@ func GetGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 	return member, err
 }
 
+type SearchGuildMembersData struct {
+	Query string // Username / nickname to match against
+	Limit int // 1 - 1000, optional (defaults to 1)
+}
+
+func (d *SearchGuildMembersData) Encode() string {
+	query := url.Values{}
+
+	if d.Limit != 0 {
+		query.Set("limit", strconv.Itoa(d.Limit))
+	}
+
+	query.Set("query", d.Query)
+
+	return query.Encode()
+}
+
+func SearchGuildMembers(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data SearchGuildMembersData) (members []member.Member, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/guilds/%d/members/search?%s", guildId, data.Encode()),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteSearchGuildMembers, guildId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &members)
+	return
+}
+
 // all parameters are optional
 type ListGuildMembersData struct {
 	Limit int    // 1 - 1000

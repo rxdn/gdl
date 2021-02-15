@@ -91,6 +91,7 @@ const (
 	RouteCreateGuildChannel
 	RouteModifyGuildChannelPositions
 	RouteGetGuildMember
+	RouteSearchGuildMembers
 	RouteListGuildMembers
 	RouteAddGuildMember
 	RouteModifyGuildMember
