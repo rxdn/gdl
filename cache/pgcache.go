@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -428,21 +429,24 @@ LEFT JOIN users ON members.user_id=users.user_id
 WHERE "guild_id" = $1 AND members.user_id = $2;
 `
 
-	var memberRaw, userRaw string
+	var memberRaw, userRaw sql.NullString
 	if err := c.QueryRow(context.Background(), query, guildId, userId).Scan(&memberRaw, &userRaw); err != nil {
 		return member.Member{}, false
 	}
 
+	// we need to cache either member or user
+	if !memberRaw.Valid || !userRaw.Valid {
+		return member.Member{}, false
+	}
+
 	var cachedMember member.CachedMember
-	if err := json.Unmarshal([]byte(memberRaw), &cachedMember); err != nil {
+	if err := json.Unmarshal([]byte(memberRaw.String), &cachedMember); err != nil {
 		return member.Member{}, false
 	}
 
 	var cachedUser user.CachedUser
-	if len(userRaw) > 0 {
-		if err := json.Unmarshal([]byte(userRaw), &cachedUser); err != nil {
-			return member.Member{}, false
-		}
+	if err := json.Unmarshal([]byte(userRaw.String), &cachedUser); err != nil {
+		return member.Member{}, false
 	}
 
 	return cachedMember.ToMember(cachedUser.ToUser(userId)), true
