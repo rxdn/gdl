@@ -347,6 +347,26 @@ func (c *MemoryCache) DeleteChannel(channelId uint64) {
 	}
 }
 
+func (c *MemoryCache) DeleteGuildChannels(guildId uint64) {
+	c.guildLock.Lock()
+	defer c.guildLock.Unlock()
+
+	guild, ok := c.guilds[guildId]
+	if !ok {
+		return
+	}
+
+	c.channelLock.Lock()
+	defer c.channelLock.Unlock()
+
+	for channelId := range c.channels {
+		delete(c.channels, channelId)
+	}
+
+	guild.Channels = nil
+	c.guilds[guildId] = guild
+}
+
 func (c *MemoryCache) StoreRole(role guild.Role, guildId uint64) {
 	c.StoreRoles([]guild.Role{role}, guildId)
 }
@@ -442,6 +462,26 @@ func (c *MemoryCache) DeleteRole(roleId uint64) {
 		}
 		c.guildLock.Unlock()
 	}
+}
+
+func (c *MemoryCache) DeleteGuildRoles(guildId uint64) {
+	c.guildLock.Lock()
+	defer c.guildLock.Unlock()
+
+	guild, ok := c.guilds[guildId]
+	if !ok {
+		return
+	}
+
+	c.roleLock.Lock()
+	defer c.roleLock.Unlock()
+
+	for roleId := range c.roles {
+		delete(c.roles, roleId)
+	}
+
+	guild.Roles = nil
+	c.guilds[guildId] = guild
 }
 
 func (c *MemoryCache) StoreEmoji(e emoji.Emoji, guildId uint64) {

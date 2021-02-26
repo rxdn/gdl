@@ -405,6 +405,34 @@ func (c *BoltCache) DeleteChannel(channelId uint64) {
 	})
 }
 
+func (c *BoltCache) DeleteGuildChannels(guildId uint64) {
+	_ = c.Update(func(tx *bolt.Tx) (err error) {
+		b := tx.Bucket([]byte("channels"))
+
+		var channelIds []uint64
+		err = b.ForEach(func(k, encoded []byte) error {
+			channelId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+				return err
+			}
+
+			var cached channelWithGuild
+			if err := json.Unmarshal(encoded, &cached); err == nil && cached.guildId == guildId {
+				channelIds = append(channelIds, channelId)
+			}
+
+			return nil
+		})
+
+		for _, channelId := range channelIds {
+			if err = b.Delete(toBytes(channelId)); err != nil {
+				return
+			}
+		}
+
+		return nil
+	})
+}
+
 type roleWithGuild struct {
 	guild.CachedRole
 	guildId uint64
@@ -485,6 +513,34 @@ func (c *BoltCache) DeleteRole(roleId uint64) {
 	_ = c.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("roles"))
 		_ = b.Delete(toBytes(roleId))
+
+		return nil
+	})
+}
+
+func (c *BoltCache) DeleteGuildRoles(guildId uint64) {
+	_ = c.Update(func(tx *bolt.Tx) (err error) {
+		b := tx.Bucket([]byte("roles"))
+
+		var roleIds []uint64
+		err = b.ForEach(func(k, encoded []byte) error {
+			channelId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+				return err
+			}
+
+			var cached roleWithGuild
+			if err := json.Unmarshal(encoded, &cached); err == nil && cached.guildId == guildId {
+				roleIds = append(roleIds, channelId)
+			}
+
+			return nil
+		})
+
+		for _, roleId := range roleIds {
+			if err = b.Delete(toBytes(roleId)); err != nil {
+				return
+			}
+		}
 
 		return nil
 	})

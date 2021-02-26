@@ -507,6 +507,12 @@ func (c *PgCache) DeleteChannel(channelId uint64) {
 	}
 }
 
+func (c *PgCache) DeleteGuildChannels(guildId uint64) {
+	if c.Options.Channels {
+		_, _ = c.Exec(context.Background(), `DELETE FROM channels WHERE "guild_id" = $1;`, guildId)
+	}
+}
+
 func (c *PgCache) StoreRole(role guild.Role, guildId uint64) {
 	if c.Options.Roles {
 		if encoded, err := json.Marshal(role.ToCachedRole(guildId)); err == nil {
@@ -552,6 +558,12 @@ func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
 func (c *PgCache) DeleteRole(roleId uint64) {
 	if c.Options.Roles {
 		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "role_id" = $1;`, roleId)
+	}
+}
+
+func (c *PgCache) DeleteGuildRoles(guildId uint64) {
+	if c.Options.Channels {
+		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "guild_id" = $1;`, guildId)
 	}
 }
 
