@@ -6,6 +6,7 @@ const (
 	RouteTypeGuild RouteType = iota
 	RouteTypeChannel
 	RouteTypeWebhook
+	RouteTypeApplication
 	RouteTypeOther
 )
 
@@ -35,6 +36,10 @@ func NewChannelRoute(id RouteId, snowflake uint64) Route {
 
 func NewWebhookRoute(id RouteId, snowflake uint64) Route {
 	return NewRoute(RouteTypeWebhook, id, snowflake)
+}
+
+func NewApplicationRoute(id RouteId, snowflake uint64) Route {
+	return NewRoute(RouteTypeApplication, id, snowflake)
 }
 
 func NewOtherRoute(id RouteId, snowflake uint64) Route {
@@ -170,8 +175,17 @@ const (
 	RouteModifyGlobalCommand
 	RouteModifyGlobalCommands
 	RouteDeleteGlobalCommand
+
+	// /applications/:id/guild/...
 	RouteGetGuildCommands
 	RouteCreateGuildCommand
 	RouteModifyGuildCommand
+	RouteModifyGuildCommands
 	RouteDeleteGuildCommand
+
+	// /applications/:id/guild/.../permissions
+	RouteGetCommandPermissions
+	RouteGetBulkCommandPermissions
+	RouteEditCommandPermissions
+	RouteEditBulkCommandPermissions
 )

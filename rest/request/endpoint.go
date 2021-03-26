@@ -144,9 +144,14 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 226 {
+		var parsed ApiV8Error
+		if err := json.Unmarshal(content, &parsed); err != nil {
+			parsed.Message = string(content)
+		}
+
 		err = RestError{
-			ErrorCode: res.StatusCode,
-			Message:   string(content),
+			StatusCode: res.StatusCode,
+			ApiError:   parsed,
 		}
 
 		return err, &ResponseWithContent{

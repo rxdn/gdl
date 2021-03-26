@@ -12,7 +12,7 @@ func GetGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applica
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/applications/%d/commands", applicationId),
-		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetGlobalCommands, applicationId),
+		Route:       ratelimit.NewApplicationRoute(ratelimit.RouteGetGlobalCommands, applicationId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -32,7 +32,7 @@ func CreateGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/applications/%d/commands", applicationId),
-		Route:       ratelimit.NewGuildRoute(ratelimit.RouteCreateGlobalCommand, applicationId),
+		Route:       ratelimit.NewApplicationRoute(ratelimit.RouteCreateGlobalCommand, applicationId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -45,7 +45,7 @@ func ModifyGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/applications/%d/commands/%d", applicationId, commandId),
-		Route:       ratelimit.NewGuildRoute(ratelimit.RouteModifyGlobalCommand, applicationId),
+		Route:       ratelimit.NewApplicationRoute(ratelimit.RouteModifyGlobalCommand, applicationId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -58,7 +58,7 @@ func ModifyGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, appl
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
 		Endpoint:    fmt.Sprintf("/applications/%d/commands", applicationId),
-		Route:       ratelimit.NewGuildRoute(ratelimit.RouteModifyGlobalCommands, applicationId),
+		Route:       ratelimit.NewApplicationRoute(ratelimit.RouteModifyGlobalCommands, applicationId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -71,7 +71,7 @@ func DeleteGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/applications/%d/commands/%d", applicationId, commandId),
-		Route:       ratelimit.NewGuildRoute(ratelimit.RouteDeleteGlobalCommand, applicationId),
+		Route:       ratelimit.NewApplicationRoute(ratelimit.RouteDeleteGlobalCommand, applicationId),
 		RateLimiter: rateLimiter,
 	}
 
@@ -118,6 +118,19 @@ func ModifyGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 	return
 }
 
+func ModifyGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands", applicationId, guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteModifyGuildCommands, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &commands)
+	return
+}
+
 func DeleteGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
@@ -128,5 +141,64 @@ func DeleteGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 	}
 
 	err, _ = endpoint.Request(token, nil, nil)
+	return
+}
+
+type CommandWithPermissionsData struct {
+	Id            uint64                                      `json:"id,string,omitempty"`
+	ApplicationId uint64                                      `json:"application_id,string,omitempty"`
+	GuildId       uint64                                      `json:"guild_id,string,omitempty"`
+	Permissions   []interaction.ApplicationCommandPermissions `json:"permissions"`
+}
+
+func GetCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (command CommandWithPermissionsData, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands/%d/permissions", applicationId, guildId, commandId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetCommandPermissions, guildId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &command)
+	return
+}
+
+func GetBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64) (commands []CommandWithPermissionsData, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands/permissions", applicationId, guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetBulkCommandPermissions, guildId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &commands)
+	return
+}
+
+func EditCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64, data CommandWithPermissionsData) (command CommandWithPermissionsData, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands/%d/permissions", applicationId, guildId, commandId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteEditCommandPermissions, guildId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &command)
+	return
+}
+
+func EditBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CommandWithPermissionsData) (commands []CommandWithPermissionsData, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/applications/%d/guilds/%d/commands/permissions", applicationId, guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteEditBulkCommandPermissions, guildId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &commands)
 	return
 }

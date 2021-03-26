@@ -62,7 +62,7 @@ func (s *Shard) CreateMessage(channelId uint64, content string) (message.Message
 
 func (s *Shard) CreateMessageReply(channelId uint64, content string, reference *message.MessageReference) (message.Message, error) {
 	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Content: content,
+		Content:          content,
 		MessageReference: reference,
 	})
 }
@@ -75,7 +75,7 @@ func (s *Shard) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (messag
 
 func (s *Shard) CreateMessageEmbedReply(channelId uint64, embed *embed.Embed, reference *message.MessageReference) (message.Message, error) {
 	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Embed: embed,
+		Embed:            embed,
 		MessageReference: reference,
 	})
 }
@@ -548,6 +548,26 @@ func (s *Shard) ModifyGuildCommand(applicationId, guildId, commandId uint64, dat
 	return rest.ModifyGuildCommand(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId, data)
 }
 
+func (s *Shard) ModifyGuildCommands(applicationId, guildId uint64, data []rest.CreateCommandData) ([]interaction.ApplicationCommand, error) {
+	return rest.ModifyGuildCommands(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, data)
+}
+
 func (s *Shard) DeleteGuildCommand(applicationId, guildId, commandId uint64) error {
 	return rest.DeleteGuildCommand(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId)
+}
+
+func (s *Shard) GetCommandPermissions(applicationId, guildId, commandId uint64) (rest.CommandWithPermissionsData, error) {
+	return rest.GetCommandPermissions(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId)
+}
+
+func (s *Shard) GetBulkCommandPermissions(applicationId, guildId uint64) ([]rest.CommandWithPermissionsData, error) {
+	return rest.GetBulkCommandPermissions(s.Token, s.ShardManager.RateLimiter, applicationId, guildId)
+}
+
+func (s *Shard) EditCommandPermissions(applicationId, guildId, commandId uint64, data rest.CommandWithPermissionsData) (rest.CommandWithPermissionsData, error) {
+	return rest.EditCommandPermissions(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, commandId, data)
+}
+
+func (s *Shard) EditBulkCommandPermissions(applicationId, guildId uint64, data []rest.CommandWithPermissionsData) ([]rest.CommandWithPermissionsData, error) {
+	return rest.EditBulkCommandPermissions(s.Token, s.ShardManager.RateLimiter, applicationId, guildId, data)
 }
