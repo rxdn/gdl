@@ -97,7 +97,7 @@ func (g *Guild) ToCachedGuild() (cached CachedGuild) {
 	}
 
 	for _, emoji := range g.Emojis {
-		cached.Emojis = append(cached.Emojis, uint64(emoji.Id))
+		cached.Emojis = append(cached.Emojis, emoji.Id.Value)
 	}
 
 	for _, channel := range g.Channels {

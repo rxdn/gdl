@@ -5,7 +5,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/message"
 )
 
-type InteractionApplicationCommandCallbackData struct {
+type ApplicationCommandCallbackData struct {
 	Tts             bool                   `json:"tts"`
 	Content         string                 `json:"content,omitempty"`
 	Embeds          []embed.Embed          `json:"embeds,omitempty"`

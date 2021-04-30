@@ -5,22 +5,42 @@ import (
 	"github.com/rxdn/gdl/utils"
 )
 
-type NullableSnowflake uint64
+type NullableSnowflake struct {
+	IsNull bool
+	Value  uint64
+}
+
+func NewNullableSnowflake(value uint64) NullableSnowflake {
+	return NullableSnowflake{
+		IsNull: false,
+		Value:  value,
+	}
+}
+
+func NewNullSnowflake() NullableSnowflake {
+	return NullableSnowflake{
+		IsNull: true,
+		Value:  0,
+	}
+}
 
 func (i NullableSnowflake) MarshalJson() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%d\"", uint64(i))), nil
+	return []byte(fmt.Sprintf("\"%d\"", i.Value)), nil
 }
 
 func (i *NullableSnowflake) UnmarshalJSON(b []byte) error {
+	*i = NewNullSnowflake()
+
 	if string(b) == "null" {
-		*i = 0
+		i.IsNull = true
 	} else {
 		parsed, err := utils.ReadStringUint64(b)
 		if err != nil {
 			return err
 		}
 
-		*i = NullableSnowflake(parsed)
+		i.IsNull = false
+		i.Value = parsed
 	}
 
 	return nil

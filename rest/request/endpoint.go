@@ -104,6 +104,10 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 
 		buff := bytes.NewBuffer(encoded)
 		req, err = http.NewRequest(string(e.RequestType), url, buff)
+		if err != nil {
+			return err, nil
+		}
+
 		req.Header.Set("Content-Type", contentType)
 	}
 

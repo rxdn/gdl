@@ -17,7 +17,7 @@ type CachedEmoji struct {
 
 func (e *CachedEmoji) ToEmoji(emojiId uint64, user user.User) Emoji {
 	return Emoji{
-		Id:            objects.NullableSnowflake(emojiId),
+		Id:            objects.NewNullableSnowflake(emojiId),
 		Name:          e.Name,
 		Roles:         e.Roles,
 		User:          user,

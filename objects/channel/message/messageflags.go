@@ -10,6 +10,7 @@ const (
 	FlagUrgent
 	_ // 1 << 5 not documented
 	FlagEphemeral
+	FlagLoading
 )
 
 func SumFlags(flags ...MessageFlag) (sum uint) {
