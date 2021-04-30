@@ -1,4 +1,4 @@
-package interaction
+package component
 
 import (
 	"encoding/json"
@@ -35,7 +35,7 @@ func (b Button) MarshalJSON() ([]byte, error) {
 		Type ComponentType `json:"type"`
 		WrappedButton
 	}{
-		Type:   ComponentButton,
+		Type:          ComponentButton,
 		WrappedButton: WrappedButton(b),
 	})
 }

@@ -1,6 +1,9 @@
 package interaction
 
-import "github.com/rxdn/gdl/objects/channel/embed"
+import (
+	"github.com/rxdn/gdl/objects/channel/embed"
+	"github.com/rxdn/gdl/objects/interaction/component"
+)
 
 type Response struct {
 	Type ResponseType `json:"type"`
@@ -71,9 +74,9 @@ type ResponseUpdateMessage struct {
 
 // TODO: Improve this
 type ResponseUpdateMessageData struct {
-	Content    *string      `json:"content,omitempty"`
-	Embed      *embed.Embed `json:"embed,omitempty"`
-	Components []Component  `json:"components,omitempty"`
+	Content    *string               `json:"content,omitempty"`
+	Embed      *embed.Embed          `json:"embed,omitempty"`
+	Components []component.Component `json:"components,omitempty"`
 }
 
 func NewResponseUpdateMessage(data ResponseUpdateMessageData) ResponseUpdateMessage {

@@ -3,6 +3,7 @@ package interaction
 import (
 	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 )
@@ -57,6 +58,6 @@ type ButtonInteraction struct {
 }
 
 type ButtonInteractionData struct {
-	CustomId string        `json:"custom_id"`
-	Type     ComponentType `json:"component_type"`
+	CustomId string                  `json:"custom_id"`
+	Type     component.ComponentType `json:"component_type"`
 }

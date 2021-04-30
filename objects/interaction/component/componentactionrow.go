@@ -1,4 +1,4 @@
-package interaction
+package component
 
 import "encoding/json"
 
@@ -17,7 +17,7 @@ func (a ActionRow) MarshalJSON() ([]byte, error) {
 		Type ComponentType `json:"type"`
 		WrappedActionRow
 	}{
-		Type:   ComponentButton,
+		Type:             ComponentButton,
 		WrappedActionRow: WrappedActionRow(a),
 	})
 }
