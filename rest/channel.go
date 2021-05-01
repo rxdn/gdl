@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
@@ -529,4 +530,94 @@ func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter
 
 	err, _ := endpoint.Request(token, nil, nil)
 	return err
+}
+
+func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (members []channel.ThreadMember, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetThreadMembers, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &members)
+	return
+}
+
+type ThreadsResponse struct {
+	Threads []channel.Channel      `json:"threads"`
+	Members []channel.ThreadMember `json:"members"`
+	HasMore bool                   `json:"has_more"`
+}
+
+func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/active", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetActiveThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+type ListThreadsData struct {
+	Before time.Time
+	Limit  int
+}
+
+func (d *ListThreadsData) Query() string {
+	query := url.Values{}
+
+	if !d.Before.IsZero() {
+		query.Set("before", d.Before.String())
+	}
+
+	if d.Limit > 0 {
+		query.Set("limit", strconv.Itoa(d.Limit))
+	}
+
+	return query.Encode()
+}
+
+func ListPublicArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/archived/public?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPublicThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+func ListPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/archived/private?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPrivateThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+func ListJoinedPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/usrs/@methreads/archived/private?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPrivateThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
 }

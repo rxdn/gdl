@@ -76,6 +76,11 @@ const (
 	RouteGetPinnedMessages
 	RouteAddPinnedChannelMessage
 	RouteDeletePinnedChannelMessage
+	RouteGetThreadMembers
+	RouteGetActiveThreads
+	RouteGetArchivedPrivateSelfThreads
+	RouteGetArchivedPublicThreads
+	RouteGetArchivedPrivateThreads
 	RouteGroupDMAddRecipient
 	RouteGroupDMRemoveRecipient
 

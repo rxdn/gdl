@@ -39,6 +39,7 @@ type Guild struct {
 	VoiceStates                 []VoiceState              `json:"voice_state"`
 	Members                     []member.Member           `json:"members"`
 	Channels                    []channel.Channel         `json:"channels"`
+	Threads                     []channel.Channel         `json:"threads"`
 	MaxPresences                int                       `json:"max_presences"`
 	MaxMembers                  int                       `json:"max_members"`
 	VanityUrlCode               string                    `json:"vanity_url_code"`
@@ -51,6 +52,8 @@ type Guild struct {
 	MaxVideoChannelUsers        int                       `json:"max_video_channel_users"`
 	ApproximateMemberCount      int                       `json:"approximate_member_count"`   // Returned on GET /guild/:id
 	ApproximatePresenceCount    int                       `json:"approximate_presence_count"` // Returned on GET /guild/:id
+	WelcomeScreen               WelcomeScreen             `json:"welcome_screen"`
+	Nsfw                        bool                      `json:"nsfw"`
 }
 
 func (g *Guild) ToCachedGuild() (cached CachedGuild) {
