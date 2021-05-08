@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"fmt"
 	"github.com/rxdn/gdl/utils"
 	"strconv"
 )
