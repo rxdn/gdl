@@ -36,6 +36,7 @@ const (
 	ManageEmojis
 	UseSlashCommands
 	RequestToSpeak
+	_
 	ManageThreads
 	UsePublicThreads
 	UsePrivateThreads
