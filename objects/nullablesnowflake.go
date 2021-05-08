@@ -3,6 +3,7 @@ package objects
 import (
 	"fmt"
 	"github.com/rxdn/gdl/utils"
+	"strconv"
 )
 
 type NullableSnowflake struct {
@@ -25,7 +26,11 @@ func NewNullSnowflake() NullableSnowflake {
 }
 
 func (i NullableSnowflake) MarshalJson() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%d\"", i.Value)), nil
+	if i.IsNull {
+		return []byte("null"), nil
+	} else {
+		return []byte("\"" + strconv.FormatUint(i.Value, 10) + "\""), nil
+	}
 }
 
 func (i *NullableSnowflake) UnmarshalJSON(b []byte) error {
