@@ -11,6 +11,8 @@ const (
 	ManageGuild
 	AddReactions
 	ViewAuditLog
+	PrioritySpeaker
+	Stream
 	ViewChannel // Read messages
 	SendMessages
 	SendTTSMessages
@@ -19,13 +21,14 @@ const (
 	AttachFiles
 	ReadMessageHistory
 	MentionEveryone
+	UseExternalEmojis
+	ViewGuildInsights
 	Connect
 	Speak
 	MuteMembers
 	DeafenMembers
 	MoveMembers
 	UseVAD // Use voice activity
-	PrioritySpeaker
 	ChangeNickname
 	ManageNicknames
 	ManageRoles // Manage permissions
