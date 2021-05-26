@@ -6,6 +6,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/invite"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest/ratelimit"
@@ -164,6 +165,7 @@ type CreateMessageData struct {
 	PayloadJson      string                    `json:"-"` // TODO: Helper method
 	AllowedMentions  message.AllowedMention    `json:"allowed_mentions"`
 	MessageReference *message.MessageReference `json:"message_reference,omitempty"`
+	Components       []component.Component     `json:"components,omitempty"`
 }
 
 func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
