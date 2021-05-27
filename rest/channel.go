@@ -355,9 +355,10 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 }
 
 type EditMessageData struct {
-	Content string       `json:"content,omitempty"`
-	Embed   *embed.Embed `json:"embed,omitempty"`
-	Flags   int          `json:"flags,omitempty"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Content    string                `json:"content,omitempty"`
+	Embed      *embed.Embed          `json:"embed,omitempty"`
+	Flags      int                   `json:"flags,omitempty"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Components []component.Component `json:"components,omitempty"`
 }
 
 func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data EditMessageData) (message.Message, error) {
