@@ -156,6 +156,8 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		err = RestError{
 			StatusCode: res.StatusCode,
 			ApiError:   parsed,
+			Url:        url,
+			Raw:        content,
 		}
 
 		return err, &ResponseWithContent{

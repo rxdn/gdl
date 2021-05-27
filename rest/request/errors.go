@@ -8,6 +8,8 @@ import (
 type RestError struct {
 	StatusCode int
 	ApiError   ApiV8Error
+	Url        string
+	Raw        []byte
 }
 
 type ApiV8Error struct {
