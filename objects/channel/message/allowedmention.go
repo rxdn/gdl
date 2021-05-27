@@ -3,9 +3,9 @@ package message
 import "github.com/rxdn/gdl/utils"
 
 type AllowedMention struct {
-	Parse       []AllowedMentionType      `json:"parse"`
-	Roles       []utils.Uint64StringSlice `json:"roles"`
-	Users       []utils.Uint64StringSlice `json:"users"`
+	Parse       []AllowedMentionType      `json:"parse,omitempty"`
+	Roles       []utils.Uint64StringSlice `json:"roles,omitempty"`
+	Users       []utils.Uint64StringSlice `json:"users,omitempty"`
 	RepliedUser bool                      `json:"replied_user"`
 }
 

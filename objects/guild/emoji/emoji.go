@@ -10,7 +10,7 @@ import (
 type Emoji struct {
 	Id            objects.NullableSnowflake `json:"id"`
 	Name          string                    `json:"name"` // if this is not a custom emote, Name will be the unicode emoji, and Id will be 0
-	Roles         utils.Uint64StringSlice   `json:"roles"`
+	Roles         utils.Uint64StringSlice   `json:"roles,omitempty"`
 	User          user.User                 `json:"user"`
 	RequireColons bool                      `json:"require_colons"`
 	Managed       bool                      `json:"managed"`

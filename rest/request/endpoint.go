@@ -76,7 +76,7 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		// Encode body
 		var encoded []byte
 		if e.ContentType == ApplicationJson {
-			raw, err := json.Marshal(body)
+			raw, err := json.Marshal(&body)
 			if err != nil {
 				return err, nil
 			}

@@ -6,7 +6,7 @@ type ActionRow struct {
 	Components []Component
 }
 
-func (a *ActionRow) Type() ComponentType {
+func (a ActionRow) Type() ComponentType {
 	return ComponentActionRow
 }
 

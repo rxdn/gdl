@@ -24,7 +24,7 @@ func NewNullSnowflake() NullableSnowflake {
 	}
 }
 
-func (i NullableSnowflake) MarshalJson() ([]byte, error) {
+func (i NullableSnowflake) MarshalJSON() ([]byte, error) {
 	if i.IsNull {
 		return []byte("null"), nil
 	} else {

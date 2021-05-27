@@ -11,10 +11,10 @@ type Button struct {
 	Style    ButtonStyle `json:"style"`
 	Emoji    emoji.Emoji `json:"emoji"`
 	Url      *string     `json:"url,omitempty"`
-	Disabled bool        `json:"false"`
+	Disabled bool        `json:"disabled"`
 }
 
-func (b *Button) Type() ComponentType {
+func (b Button) Type() ComponentType {
 	return ComponentButton
 }
 

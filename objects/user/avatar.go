@@ -26,7 +26,7 @@ func (a *Avatar) String() string {
 	return fmt.Sprintf(`%s%s%s`, animatedPrefix, first, second)
 }
 
-func (a *Avatar) MarshalJSON() ([]byte, error) {
+func (a Avatar) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, a.String())), nil
 }
 

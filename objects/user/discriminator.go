@@ -8,7 +8,7 @@ import (
 // Jsoniter does not like leading zeroes on ints
 type Discriminator uint16
 
-func (d Discriminator) MarshalJson() ([]byte, error) {
+func (d Discriminator) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%d\"", uint16(d))), nil
 }
 
