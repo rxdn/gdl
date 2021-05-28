@@ -22,3 +22,11 @@ func (a ActionRow) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func BuildActionRow(components ...Component) Component {
+	return Component{
+		Type:          ComponentActionRow,
+		ComponentData: ActionRow{
+			Components: components,
+		},
+	}
+}

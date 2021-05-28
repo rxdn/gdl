@@ -39,3 +39,10 @@ func (b Button) MarshalJSON() ([]byte, error) {
 		WrappedButton: WrappedButton(b),
 	})
 }
+
+func BuildButton(data Button) Component {
+	return Component{
+		Type:          ComponentButton,
+		ComponentData: data,
+	}
+}
