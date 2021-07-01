@@ -68,51 +68,49 @@ func (e *ApiV8Error) UnmarshalJSON(data []byte) error {
 	}
 
 	errors, ok := raw["errors"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("missing errors field")
-	}
-
-	for fieldName, value := range errors {
-		value, ok := value.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("%s value is not an object", fieldName)
-		}
-
-		errors, ok := value["_errors"].([]interface{})
-		if ok { // Is object error
-			for _, err := range errors {
-				err, ok := err.(map[string]interface{})
-				if !ok {
-					return fmt.Errorf("%s _errors field value is not an object", fieldName)
-				}
-
-				e.Errors = append(e.Errors, deFieldError(fieldName, err))
+	if ok { // Only 400s have this field
+		for fieldName, value := range errors {
+			value, ok := value.(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("%s value is not an object", fieldName)
 			}
-		} else { // Is array error
-			for i, entry := range value {
-				value, ok := entry.(map[string]interface{})
-				if !ok {
-					return fmt.Errorf("%s value is not an object", fieldName)
-				}
 
-				for fieldName, value := range value {
-					value, ok := value.(map[string]interface{})
+			errors, ok := value["_errors"].([]interface{})
+			if ok { // Is object error
+				for _, err := range errors {
+					err, ok := err.(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("%s _errors field value is not an object", fieldName)
+					}
+
+					e.Errors = append(e.Errors, deFieldError(fieldName, err))
+				}
+			} else { // Is array error
+				for i, entry := range value {
+					value, ok := entry.(map[string]interface{})
 					if !ok {
 						return fmt.Errorf("%s value is not an object", fieldName)
 					}
 
-					errors, ok := value["_errors"].([]interface{})
-					if !ok {
-						return fmt.Errorf("%s array entry %s: _errors field is not an array", fieldName, i)
-					}
-
-					for _, err := range errors {
-						err, ok := err.(map[string]interface{})
+					for fieldName, value := range value {
+						value, ok := value.(map[string]interface{})
 						if !ok {
-							return fmt.Errorf("%s _errors field value is not an object", fieldName)
+							return fmt.Errorf("%s value is not an object", fieldName)
 						}
 
-						e.Errors = append(e.Errors, deFieldError(fieldName, err))
+						errors, ok := value["_errors"].([]interface{})
+						if !ok {
+							return fmt.Errorf("%s array entry %s: _errors field is not an array", fieldName, i)
+						}
+
+						for _, err := range errors {
+							err, ok := err.(map[string]interface{})
+							if !ok {
+								return fmt.Errorf("%s _errors field value is not an object", fieldName)
+							}
+
+							e.Errors = append(e.Errors, deFieldError(fieldName, err))
+						}
 					}
 				}
 			}
