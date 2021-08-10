@@ -40,9 +40,11 @@ type ApplicationCommandInteraction struct {
 }
 
 type ApplicationCommandInteractionData struct {
-	Id      uint64                                    `json:"id,string"`
-	Name    string                                    `json:"name"`
-	Options []ApplicationCommandInteractionDataOption `json:"options"`
+	Id       uint64                                    `json:"id,string"`
+	Name     string                                    `json:"name"`
+	Options  []ApplicationCommandInteractionDataOption `json:"options"`
+	TargetId uint64                                    `json:"target_id"`
+	Type     ApplicationCommandType                    `json:"type"`
 }
 
 type ButtonInteraction struct {
