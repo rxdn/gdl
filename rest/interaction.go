@@ -25,6 +25,7 @@ type CreateCommandData struct {
 	Name        string                                 `json:"name"`
 	Description string                                 `json:"description"`
 	Options     []interaction.ApplicationCommandOption `json:"options"`
+	Type        interaction.ApplicationCommandType     `json:"type"`
 }
 
 func CreateGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
