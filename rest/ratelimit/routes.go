@@ -193,4 +193,13 @@ const (
 	RouteGetBulkCommandPermissions
 	RouteEditCommandPermissions
 	RouteEditBulkCommandPermissions
+
+	// /webhooks/:id/:token/...
+	RouteGetOriginalInteractionResponse
+	RouteEditOriginalInteractionResponse
+	RouteDeleteOriginalInteractionResponse
+	RouteCreateFollowupMessage
+	RouteGetFollowupMessage
+	RouteEditFollowupMessage
+	RouteDeleteFollowupMessage
 )

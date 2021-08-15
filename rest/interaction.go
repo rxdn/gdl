@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
@@ -201,5 +202,96 @@ func EditBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter
 	}
 
 	err, _ = endpoint.Request(token, data, &commands)
+	return
+}
+
+func GetOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (msg message.Message, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/@original", applicationId, token),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteGetOriginalInteractionResponse, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", nil, &msg)
+	return
+}
+
+func EditOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookBody) (msg message.Message, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PATCH,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/@original", applicationId, token),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteEditOriginalInteractionResponse, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", data, &msg)
+	return
+}
+
+func DeleteOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.DELETE,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/@original", applicationId, token),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteEditOriginalInteractionResponse, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", nil, nil)
+	return
+}
+
+func CreateFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookBody) (msg message.Message, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.POST,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s", applicationId, token),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteCreateFollowupMessage, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", data, &msg)
+	return
+}
+
+func GetFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (msg message.Message, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/%d", applicationId, token, messageId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteGetFollowupMessage, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", nil, &msg)
+	return
+}
+
+func EditFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64, data WebhookBody) (msg message.Message, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PATCH,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/%d", applicationId, token, messageId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteEditFollowupMessage, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", data, &msg)
+	return
+}
+
+func DeleteFollowupMessages(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.DELETE,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/%d", applicationId, token, messageId),
+		Route:       ratelimit.NewWebhookRoute(ratelimit.RouteDeleteFollowupMessage, applicationId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request("", nil, nil)
 	return
 }
