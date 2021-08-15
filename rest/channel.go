@@ -160,7 +160,7 @@ type CreateMessageData struct {
 	Nonce            string                    `json:"nonce,omitempty"`
 	Tts              bool                      `json:"tts,omitempty"`
 	File             *File                     `json:"-"`
-	Embed            *embed.Embed              `json:"embed,omitempty"`
+	Embeds           []*embed.Embed            `json:"embeds,omitempty"`
 	Flags            uint                      `json:"flags,omitempty"`
 	PayloadJson      string                    `json:"-"` // TODO: Helper method
 	AllowedMentions  message.AllowedMention    `json:"allowed_mentions"`
