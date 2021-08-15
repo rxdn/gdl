@@ -6,6 +6,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 	"io"
@@ -160,6 +161,7 @@ type WebhookBody struct {
 	Embeds          []*embed.Embed         `json:"embeds,omitempty"`
 	PayloadJson     string                 `json:"payload_json"`
 	AllowedMentions message.AllowedMention `json:"allowed_mentions,omitempty"`
+	Components      []component.Component  `json:"components,omitempty"`
 }
 
 func (d WebhookBody) EncodeMultipartFormData() ([]byte, string, error) {
