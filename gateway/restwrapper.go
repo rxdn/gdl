@@ -68,15 +68,15 @@ func (s *Shard) CreateMessageReply(channelId uint64, content string, reference *
 	})
 }
 
-func (s *Shard) CreateMessageEmbed(channelId uint64, embed *embed.Embed) (message.Message, error) {
+func (s *Shard) CreateMessageEmbed(channelId uint64, embed ...*embed.Embed) (message.Message, error) {
 	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Embed: embed,
+		Embeds: embed,
 	})
 }
 
-func (s *Shard) CreateMessageEmbedReply(channelId uint64, embed *embed.Embed, reference *message.MessageReference) (message.Message, error) {
+func (s *Shard) CreateMessageEmbedReply(channelId uint64, e *embed.Embed, reference *message.MessageReference) (message.Message, error) {
 	return s.CreateMessageComplex(channelId, rest.CreateMessageData{
-		Embed:            embed,
+		Embeds:           []*embed.Embed{e},
 		MessageReference: reference,
 	})
 }
