@@ -76,8 +76,8 @@ func (d *CurrentUserGuildsData) Query() string {
 		query.Set("after", strconv.FormatUint(d.After, 10))
 	}
 
-	if d.Limit > 100 || d.Limit < 1 {
-		d.Limit = 100
+	if d.Limit > 200 || d.Limit < 1 {
+		d.Limit = 200
 	}
 	query.Set("limit", strconv.Itoa(d.Limit))
 

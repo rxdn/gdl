@@ -26,6 +26,12 @@ type Channel struct {
 	ApplicationId        uint64                    `json:"application_id,string"`
 	ParentId             objects.NullableSnowflake `json:"parent_id,omitempty"`
 	LastPinTimestamp     time.Time                 `json:"last_pin_timestamp"`
+	RtcRegion            *string                   `json:"rtc_region"`
+	VideoQualityMode     VideoQualityMode          `json:"video_quality_mode"`
+	MessageCount         uint8                     `json:"message_count"`
+	MemberCount          uint8                     `json:"member_count"`
+	ThreadMetadata       *ThreadMetadata           `json:"thread_metadata,omitempty"`
+	Member               ThreadMember              `json:"member"`
 }
 
 func (c *Channel) Mention() string {

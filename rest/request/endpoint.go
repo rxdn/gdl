@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const BASE_URL = "https://discord.com/api/v8"
+const BASE_URL = "https://discord.com/api/v9"
 
 type Endpoint struct {
 	RequestType       RequestType
@@ -76,7 +76,7 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		// Encode body
 		var encoded []byte
 		if e.ContentType == ApplicationJson {
-			raw, err := json.Marshal(body)
+			raw, err := json.Marshal(&body)
 			if err != nil {
 				return err, nil
 			}
@@ -104,6 +104,10 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 
 		buff := bytes.NewBuffer(encoded)
 		req, err = http.NewRequest(string(e.RequestType), url, buff)
+		if err != nil {
+			return err, nil
+		}
+
 		req.Header.Set("Content-Type", contentType)
 	}
 
@@ -152,6 +156,8 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 		err = RestError{
 			StatusCode: res.StatusCode,
 			ApiError:   parsed,
+			Url:        url,
+			Raw:        content,
 		}
 
 		return err, &ResponseWithContent{

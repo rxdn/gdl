@@ -18,5 +18,11 @@ const (
 	MessageTypeChannelFollowAdd
 	MessageTypeGuildDiscoveryDisqualified
 	MessageTypeGuildDiscoveryRequalified
-	MessageTypeReply MessageType = 19
+	MessageTypeGuildDiscoveryGracePeriodInitialWarning
+	MessageTypeGuildDiscoveryGracePeriodFinalWarning
+	MessageTypeThreadCreated
+	MessageTypeReply
+	MessageTypeApplicationCommand
+	MessageTypeThreadStarterMessage
+	MessageTypeGuildInviteReminder
 )

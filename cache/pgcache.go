@@ -206,7 +206,12 @@ func (c *PgCache) GetGuild(id uint64, withMembers bool) (g guild.Guild, ok bool)
 	var raw string
 	err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&raw)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return g, false
+		}
+
 		fmt.Println(err.Error())
+		return
 	}
 
 	var cachedGuild guild.CachedGuild

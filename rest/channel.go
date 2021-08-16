@@ -6,6 +6,7 @@ import (
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/invite"
 	"github.com/rxdn/gdl/objects/user"
 	"github.com/rxdn/gdl/rest/ratelimit"
@@ -17,6 +18,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
@@ -158,11 +160,12 @@ type CreateMessageData struct {
 	Nonce            string                    `json:"nonce,omitempty"`
 	Tts              bool                      `json:"tts,omitempty"`
 	File             *File                     `json:"-"`
-	Embed            *embed.Embed              `json:"embed,omitempty"`
+	Embeds           []*embed.Embed            `json:"embeds,omitempty"`
 	Flags            uint                      `json:"flags,omitempty"`
 	PayloadJson      string                    `json:"-"` // TODO: Helper method
 	AllowedMentions  message.AllowedMention    `json:"allowed_mentions"`
 	MessageReference *message.MessageReference `json:"message_reference,omitempty"`
+	Components       []component.Component     `json:"components,omitempty"`
 }
 
 func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
@@ -352,9 +355,10 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 }
 
 type EditMessageData struct {
-	Content string       `json:"content,omitempty"`
-	Embed   *embed.Embed `json:"embed,omitempty"`
-	Flags   int          `json:"flags,omitempty"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Content    string                `json:"content,omitempty"`
+	Embed      *embed.Embed          `json:"embed,omitempty"`
+	Flags      int                   `json:"flags,omitempty"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Components []component.Component `json:"components,omitempty"`
 }
 
 func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data EditMessageData) (message.Message, error) {
@@ -529,4 +533,94 @@ func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter
 
 	err, _ := endpoint.Request(token, nil, nil)
 	return err
+}
+
+func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (members []channel.ThreadMember, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetThreadMembers, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &members)
+	return
+}
+
+type ThreadsResponse struct {
+	Threads []channel.Channel      `json:"threads"`
+	Members []channel.ThreadMember `json:"members"`
+	HasMore bool                   `json:"has_more"`
+}
+
+func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/active", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetActiveThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+type ListThreadsData struct {
+	Before time.Time
+	Limit  int
+}
+
+func (d *ListThreadsData) Query() string {
+	query := url.Values{}
+
+	if !d.Before.IsZero() {
+		query.Set("before", d.Before.String())
+	}
+
+	if d.Limit > 0 {
+		query.Set("limit", strconv.Itoa(d.Limit))
+	}
+
+	return query.Encode()
+}
+
+func ListPublicArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/archived/public?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPublicThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+func ListPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads/archived/private?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPrivateThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
+}
+
+func ListJoinedPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/usrs/@methreads/archived/private?%s", channelId, data.Query()),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetArchivedPrivateThreads, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &threads)
+	return
 }

@@ -20,7 +20,7 @@ type CachedChannel struct {
 	Icon                 string                    `json:"icon"`
 	OwnerId              uint64                    `json:"owner_id,string"`
 	ApplicationId        uint64                    `json:"application_id"`
-	ParentId             objects.NullableSnowflake `json:"parent_id,string,omitempty"`
+	ParentId             objects.NullableSnowflake `json:"parent_id,omitempty"`
 	LastPinTimestamp     time.Time                 `json:"last_pin_timestamp"`
 }
 
