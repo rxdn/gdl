@@ -6,12 +6,12 @@ import (
 )
 
 type Button struct {
-	Label    string      `json:"label"`
-	CustomId string      `json:"custom_id"`
-	Style    ButtonStyle `json:"style"`
-	Emoji    emoji.Emoji `json:"emoji"`
-	Url      *string     `json:"url,omitempty"`
-	Disabled bool        `json:"disabled"`
+	Label    string       `json:"label"`
+	CustomId string       `json:"custom_id"`
+	Style    ButtonStyle  `json:"style"`
+	Emoji    *emoji.Emoji `json:"emoji,omitempty"`
+	Url      *string      `json:"url,omitempty"`
+	Disabled bool         `json:"disabled"`
 }
 
 func (b Button) Type() ComponentType {
