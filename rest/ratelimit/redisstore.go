@@ -1,21 +1,27 @@
 package ratelimit
 
 import (
+	"context"
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"strconv"
 	"time"
 )
 
 type RedisStore struct {
 	*redis.Client
-	keyPrefix string
+	keyPrefix      string
+	ContextBuilder func() context.Context
 }
 
 func NewRedisStore(client *redis.Client, keyPrefix string) *RedisStore {
 	return &RedisStore{
 		Client:    client,
 		keyPrefix: keyPrefix,
+		ContextBuilder: func() context.Context {
+			ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+			return ctx
+		},
 	}
 }
 
@@ -27,7 +33,7 @@ func (s *RedisStore) getTTLAndDecrease(route Route) (time.Duration, error) {
 
 	key := fmt.Sprintf("%s:route:%s", s.keyPrefix, hash)
 
-	remainingStr, err := s.Get(key).Result()
+	remainingStr, err := s.Get(s.ContextBuilder(), key).Result()
 	if err != nil {
 		if err == redis.Nil { // if the key isn't found, then we can't be ratelimited yet
 			return 0, nil
@@ -42,12 +48,12 @@ func (s *RedisStore) getTTLAndDecrease(route Route) (time.Duration, error) {
 	}
 
 	// If it errors, the key doesn't exist
-	s.Decr(key)
+	s.Decr(s.ContextBuilder(), key)
 
 	if remaining > 0 {
 		return 0, nil
 	} else { // if we're out of requests, we need to check the TTL of the key
-		return s.PTTL(key).Result()
+		return s.PTTL(s.ContextBuilder(), key).Result()
 	}
 }
 
@@ -58,17 +64,17 @@ func (s *RedisStore) UpdateRateLimit(route Route, remaining int, resetAfter time
 	}
 
 	key := fmt.Sprintf("%s:route:%s", s.keyPrefix, hash)
-	return s.Set(key, remaining, resetAfter).Err()
+	return s.Set(context.Background(), key, remaining, resetAfter).Err()
 }
 
 func (s *RedisStore) UpdateGlobalRateLimit(resetAfter time.Duration) {
 	key := fmt.Sprintf("%s:global", s.keyPrefix)
-	s.Set(key, true, resetAfter)
+	s.Set(context.Background(), key, true, resetAfter)
 }
 
 func (s *RedisStore) getGlobalTTL() (time.Duration, error) {
 	key := fmt.Sprintf("%s:global", s.keyPrefix)
-	return s.PTTL(key).Result()
+	return s.PTTL(s.ContextBuilder(), key).Result()
 }
 
 func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
@@ -78,13 +84,13 @@ func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
 
 	for !set {
 		var err error
-		set, err = s.SetNX(key, 1, IdentifyWait).Result()
+		set, err = s.SetNX(s.ContextBuilder(), key, 1, IdentifyWait).Result()
 		if err != nil {
 			return err
 		}
 
 		if !set {
-			cooldown, err := s.PTTL(key).Result()
+			cooldown, err := s.PTTL(s.ContextBuilder(), key).Result()
 			if err != nil && err != redis.Nil { // if err == redis.Nil, cooldown must've expired since running SET
 				return err
 			}
@@ -99,7 +105,7 @@ func (s *RedisStore) identifyWait(shardId int, largeShardingBuckets int) error {
 func (s *RedisStore) getBucket(routeId RouteId) (string, error) {
 	key := fmt.Sprintf("%s:buckets:%d", s.keyPrefix, routeId)
 
-	bucket, err := s.Get(key).Result()
+	bucket, err := s.Get(s.ContextBuilder(), key).Result()
 	if err == redis.Nil {
 		err = nil
 	}
@@ -109,5 +115,5 @@ func (s *RedisStore) getBucket(routeId RouteId) (string, error) {
 
 func (s *RedisStore) setBucket(routeId RouteId, bucket string) error {
 	key := fmt.Sprintf("%s:buckets:%d", s.keyPrefix, routeId)
-	return s.Set(key, bucket, 0).Err()
+	return s.Set(s.ContextBuilder(), key, bucket, 0).Err()
 }
