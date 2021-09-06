@@ -74,9 +74,9 @@ type ResponseUpdateMessage struct {
 
 // TODO: Improve this
 type ResponseUpdateMessageData struct {
-	Content    *string               `json:"content,omitempty"`
-	Embeds     []*embed.Embed        `json:"embeds,omitempty"`
-	Components []component.Component `json:"components,omitempty"`
+	Content    *string               `json:"content"`
+	Embeds     []*embed.Embed        `json:"embeds"`
+	Components []component.Component `json:"components"`
 }
 
 func NewResponseUpdateMessage(data ResponseUpdateMessageData) ResponseUpdateMessage {
