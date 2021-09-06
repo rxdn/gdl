@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"fmt"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
@@ -234,6 +235,7 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 		}
 
 	}
+
 	if wait {
 		var message message.Message
 		err, _ := endpoint.Request("", data, &message)
@@ -242,4 +244,39 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 		err, _ := endpoint.Request("", data, nil)
 		return nil, err
 	}
+}
+
+type WebhookEditBody struct {
+	Content         string                 `json:"content"`
+	Embeds          []*embed.Embed         `json:"embeds"`
+	File            *File                  `json:"file"`
+	PayloadJson     string                 `json:"payload_json"`
+	AllowedMentions message.AllowedMention `json:"allowed_mentions"`
+	Attachments     []channel.Attachment   `json:"attachments"`
+	Components      []component.Component  `json:"components"`
+}
+
+func EditWebhookMessage(webhookToken string, rateLimiter *ratelimit.Ratelimiter, webhookId, messageId uint64, data WebhookEditBody) (msg message.Message, err error) {
+	var endpoint request.Endpoint
+
+	if data.File == nil {
+		endpoint = request.Endpoint{
+			RequestType: request.POST,
+			ContentType: request.ApplicationJson,
+			Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/%d", webhookId, webhookToken, messageId),
+			Route:       ratelimit.NewWebhookRoute(ratelimit.RouteEditWebhookMessage, webhookId),
+			RateLimiter: rateLimiter,
+		}
+	} else {
+		endpoint = request.Endpoint{
+			RequestType: request.POST,
+			ContentType: request.MultipartFormData,
+			Endpoint:    fmt.Sprintf("/webhooks/%d/%s/messages/%d", webhookId, webhookToken, messageId),
+			Route:       ratelimit.NewWebhookRoute(ratelimit.RouteEditWebhookMessage, webhookId),
+			RateLimiter: rateLimiter,
+		}
+	}
+
+	err, _ = endpoint.Request("", data, &msg)
+	return
 }

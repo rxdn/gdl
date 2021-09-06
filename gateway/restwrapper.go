@@ -568,6 +568,10 @@ func (s *Shard) ExecuteWebhook(webhookId uint64, webhookToken string, wait bool,
 	return rest.ExecuteWebhook(webhookToken, s.ShardManager.RateLimiter, webhookId, wait, data)
 }
 
+func (s *Shard) EditWebhookMessage(webhookId uint64, webhookToken string, messageId uint64, data rest.WebhookEditBody) (message.Message, error) {
+	return rest.EditWebhookMessage(webhookToken, s.ShardManager.RateLimiter, webhookId, messageId, data)
+}
+
 func (s *Shard) GetGuildAuditLog(guildId uint64, data rest.GetGuildAuditLogData) (auditlog.AuditLog, error) {
 	return rest.GetGuildAuditLog(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }

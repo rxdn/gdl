@@ -173,6 +173,7 @@ const (
 	RouteDeleteWebhook
 	RouteDeleteWebhookWithToken
 	RouteExecuteWebhook
+	RouteEditWebhookMessage
 
 	// /applications/:id/...
 	RouteGetGlobalCommands
