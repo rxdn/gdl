@@ -218,7 +218,7 @@ func GetOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelim
 	return
 }
 
-func EditOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookBody) (msg message.Message, err error) {
+func EditOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookEditBody) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
