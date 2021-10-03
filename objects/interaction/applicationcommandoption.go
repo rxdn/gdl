@@ -1,5 +1,7 @@
 package interaction
 
+import "github.com/rxdn/gdl/objects/channel"
+
 type ApplicationCommandInteractionDataOption struct {
 	Name    string                                    `json:"name"`
 	Value   interface{}                               `json:"value,omitempty"`
@@ -7,13 +9,14 @@ type ApplicationCommandInteractionDataOption struct {
 }
 
 type ApplicationCommandOption struct {
-	Type        ApplicationCommandOptionType     `json:"type"`
-	Name        string                           `json:"name"`
-	Description string                           `json:"description"`
-	Default     bool                             `json:"default"`
-	Required    bool                             `json:"required"`
-	Choices     []ApplicationCommandOptionChoice `json:"choices,omitempty"`
-	Options     []ApplicationCommandOption       `json:"options,omitempty"`
+	Type         ApplicationCommandOptionType     `json:"type"`
+	Name         string                           `json:"name"`
+	Description  string                           `json:"description"`
+	Default      bool                             `json:"default"`
+	Required     bool                             `json:"required"`
+	Choices      []ApplicationCommandOptionChoice `json:"choices,omitempty"`
+	Options      []ApplicationCommandOption       `json:"options,omitempty"`
+	ChannelTypes []channel.ChannelType            `json:"channel_types,omitempty"`
 }
 
 type ApplicationCommandOptionType uint8
