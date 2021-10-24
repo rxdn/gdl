@@ -6,15 +6,15 @@ import (
 )
 
 type MessageComponentInteractionData struct {
-	MessageComponentInteractionBaseData
+	ComponentType component.ComponentType `json:"component_type"`
 	IMessageComponentInteractionData
 }
 
-func (d MessageComponentInteractionData) AsButton() ButtonInteractionData  {
+func (d MessageComponentInteractionData) AsButton() ButtonInteractionData {
 	return d.IMessageComponentInteractionData.(ButtonInteractionData)
 }
 
-func (d MessageComponentInteractionData) AsSelectMenu() SelectMenuInteractionData  {
+func (d MessageComponentInteractionData) AsSelectMenu() SelectMenuInteractionData {
 	return d.IMessageComponentInteractionData.(SelectMenuInteractionData)
 }
 
