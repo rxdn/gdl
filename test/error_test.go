@@ -16,7 +16,6 @@ func TestObjectError(t *testing.T) {
 	MustMatch(t, "message", parsed.Message, "Invalid Form Body")
 	MustMatch(t, "errors: length", len(parsed.Errors), 1)
 
-
 	err := parsed.Errors[0]
 	MustMatch(t, "code", err.Code, "BASE_TYPE_REQUIRED")
 	MustMatch(t, "message", err.Message, "This field is required")

@@ -3,7 +3,6 @@ package interaction
 import (
 	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/message"
-	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 )
@@ -47,37 +46,14 @@ type ApplicationCommandInteractionData struct {
 	Type     ApplicationCommandType                    `json:"type"`
 }
 
-type ButtonInteraction struct {
-	Id            uint64                    `json:"id,string"`
-	ApplicationId uint64                    `json:"application_id,string"`
-	Data          ButtonInteractionData     `json:"data"`
-	GuildId       objects.NullableSnowflake `json:"guild_id"`
-	ChannelId     uint64                    `json:"channel_id,string"`
-	Message       message.Message           `json:"message"`
-	Member        *member.Member            `json:"member"`
-	User          *user.User                `json:"user"`
-	Token         string                    `json:"token"`
-}
-
-type ButtonInteractionData struct {
-	CustomId string                  `json:"custom_id"`
-	Type     component.ComponentType `json:"component_type"`
-}
-
-type SelectMenuInteraction struct {
-	Id            uint64                    `json:"id,string"`
-	ApplicationId uint64                    `json:"application_id,string"`
-	Data          SelectMenuInteractionData `json:"data"`
-	GuildId       objects.NullableSnowflake `json:"guild_id"`
-	ChannelId     uint64                    `json:"channel_id,string"`
-	Message       message.Message           `json:"message"`
-	Member        *member.Member            `json:"member"`
-	User          *user.User                `json:"user"`
-	Token         string                    `json:"token"`
-}
-
-type SelectMenuInteractionData struct {
-	CustomId string                  `json:"custom_id"`
-	Values   []string                `json:"values"`
-	Type     component.ComponentType `json:"component_type"`
+type MessageComponentInteraction struct {
+	Id            uint64                          `json:"id,string"`
+	ApplicationId uint64                          `json:"application_id,string"`
+	Data          MessageComponentInteractionData `json:"data"`
+	GuildId       objects.NullableSnowflake       `json:"guild_id"`
+	ChannelId     uint64                          `json:"channel_id,string"`
+	Message       message.Message                 `json:"message"`
+	Member        *member.Member                  `json:"member"`
+	User          *user.User                      `json:"user"`
+	Token         string                          `json:"token"`
 }
