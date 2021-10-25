@@ -10,4 +10,5 @@ const (
 	ResponseTypeACKWithSource
 	ResponseTypeDeferredMessageUpdate
 	ResponseTypeUpdateMessage
+	ResponseTypeApplicationCommandAutoCompleteResult
 )

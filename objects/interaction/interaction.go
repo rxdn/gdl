@@ -18,6 +18,7 @@ const (
 	InteractionTypePing InteractionType = iota + 1
 	InteractionTypeApplicationCommand
 	InteractionTypeMessageComponent
+	InteractionTypeApplicationCommandAutoComplete
 )
 
 type PingInteraction struct {
@@ -56,4 +57,22 @@ type MessageComponentInteraction struct {
 	Member        *member.Member                  `json:"member"`
 	User          *user.User                      `json:"user"`
 	Token         string                          `json:"token"`
+}
+
+type ApplicationCommandAutoCompleteInteraction struct {
+	Id            uint64                                        `json:"id,string"`
+	ApplicationId uint64                                        `json:"application_id,string"`
+	Data          ApplicationCommandAutoCompleteInteractionData `json:"data"`
+	GuildId       objects.NullableSnowflake                     `json:"guild_id"`
+	ChannelId     uint64                                        `json:"channel_id,string"`
+	Member        *member.Member                                `json:"member"`
+	User          *user.User                                    `json:"user"`
+	Token         string                                        `json:"token"`
+}
+
+type ApplicationCommandAutoCompleteInteractionData struct {
+	Id      uint64                                    `json:"id,string"`
+	Name    string                                    `json:"name"`
+	Options []ApplicationCommandInteractionDataOption `json:"options"`
+	Type    ApplicationCommandType                    `json:"type"`
 }

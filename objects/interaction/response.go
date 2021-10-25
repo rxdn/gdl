@@ -87,3 +87,23 @@ func NewResponseUpdateMessage(data ResponseUpdateMessageData) ResponseUpdateMess
 		Data: data,
 	}
 }
+
+type ApplicationCommandAutoCompleteResultResponse struct {
+	Response
+	Data struct {
+		Choices []ApplicationCommandOptionChoice `json:"choices"`
+	} `json:"data"`
+}
+
+func NewApplicationCommandAutoCompleteResultResponse(choices []ApplicationCommandOptionChoice) ApplicationCommandAutoCompleteResultResponse {
+	return ApplicationCommandAutoCompleteResultResponse{
+		Response: Response{
+			Type: ResponseTypeApplicationCommandAutoCompleteResult,
+		},
+		Data: struct {
+			Choices []ApplicationCommandOptionChoice `json:"choices"`
+		}{
+			Choices: choices,
+		},
+	}
+}
