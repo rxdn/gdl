@@ -77,6 +77,8 @@ const (
 	RouteAddPinnedChannelMessage
 	RouteDeletePinnedChannelMessage
 	RouteGetThreadMembers
+	RouteStartThreadWithMessage
+	RouteStartThreadWithoutMessage
 	RouteGetActiveThreads
 	RouteGetArchivedPrivateSelfThreads
 	RouteGetArchivedPublicThreads

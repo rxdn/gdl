@@ -548,6 +548,44 @@ func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	return
 }
 
+type StartThreadWithMessageData struct {
+	Name                string `json:"name"`
+	AutoArchiveDuration uint16 `json:"auto_archive_duration"`
+}
+
+func StartThreadWithMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data StartThreadWithMessageData) (ch channel.Channel, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.POST,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/channels/%d/messages/%d/threads", channelId, messageId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteStartThreadWithMessage, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &ch)
+	return
+}
+
+type StartThreadWithoutMessageData struct {
+	Name                string              `json:"name"`
+	AutoArchiveDuration uint16              `json:"auto_archive_duration"`
+	Type                channel.ChannelType `json:"type"`
+	Invitable           bool                `json:"invitable"`
+}
+
+func StartThreadWithoutMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data StartThreadWithoutMessageData) (ch channel.Channel, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.POST,
+		ContentType: request.ApplicationJson,
+		Endpoint:    fmt.Sprintf("/channels/%d/threads", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteStartThreadWithoutMessage, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, data, &ch)
+	return
+}
+
 type ThreadsResponse struct {
 	Threads []channel.Channel      `json:"threads"`
 	Members []channel.ThreadMember `json:"members"`

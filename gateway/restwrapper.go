@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"errors"
 	"github.com/rxdn/gdl/objects/auditlog"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -173,39 +172,33 @@ func (s *Shard) ListJoinedPrivateArchivedThreads(channelId uint64, data rest.Lis
 	return rest.ListPrivateArchivedThreads(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 
-func (s *Shard) CreateThread(guildId, channelId uint64, threadType channel.ChannelType, name string) (channel.Channel, error) {
-	data := rest.CreateChannelData{
-		Name:     name,
-		Type:     threadType,
-		ParentId: channelId,
-	}
-
-	return s.CreateGuildChannel(guildId, data)
+func (s *Shard) StartThreadWithMessage(channelId, messageId uint64, data rest.StartThreadWithMessageData) (channel.Channel, error) {
+	return rest.StartThreadWithMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId, data)
 }
 
-func (s *Shard) CreateThreadFromChannel(guildId uint64, ch channel.Channel, private bool, name string) (channel.Channel, error) {
-	data := rest.CreateChannelData{
-		Name:     name,
-		ParentId: ch.Id,
+func (s *Shard) StartThreadWithoutMessage(channelId, messageId uint64, data rest.StartThreadWithoutMessageData) (channel.Channel, error) {
+	return rest.StartThreadWithoutMessage(s.Token, s.ShardManager.RateLimiter, channelId, data)
+}
+
+func (s *Shard) CreatePublicThread(channelId uint64, name string, autoArchiveDuration uint16) (channel.Channel, error) {
+	data := rest.StartThreadWithoutMessageData{
+		Name:                name,
+		AutoArchiveDuration: autoArchiveDuration,
+		Type:                channel.ChannelTypeGuildPublicThread,
 	}
 
-	if ch.Type == channel.ChannelTypeGuildNews {
-		if private {
-			return channel.Channel{}, errors.New("guild news channel threads cannot be private")
-		}
+	return rest.StartThreadWithoutMessage(s.Token, s.ShardManager.RateLimiter, channelId, data)
+}
 
-		data.Type = channel.ChannelTypeGuildNewsThread
-	} else if ch.Type == channel.ChannelTypeGuildText {
-		if private {
-			data.Type = channel.ChannelTypeGuildPrivateThread
-		} else {
-			data.Type = channel.ChannelTypeGuildPublicThread
-		}
-	} else {
-		return channel.Channel{}, errors.New("threads can only be created in text channels and news channels")
+func (s *Shard) CreatePrivateThread(channelId uint64, name string, autoArchiveDuration uint16, invitable bool) (channel.Channel, error) {
+	data := rest.StartThreadWithoutMessageData{
+		Name:                name,
+		AutoArchiveDuration: autoArchiveDuration,
+		Type:                channel.ChannelTypeGuildPrivateThread,
+		Invitable:           invitable,
 	}
 
-	return s.CreateGuildChannel(guildId, data)
+	return rest.StartThreadWithoutMessage(s.Token, s.ShardManager.RateLimiter, channelId, data)
 }
 
 func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
