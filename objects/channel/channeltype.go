@@ -10,7 +10,7 @@ const (
 	ChannelTypeGuildCategory
 	ChannelTypeGuildNews
 	ChannelTypeGuildStore
-	ChannelTypeGuildNewsThread ChannelType = iota + 10
+	ChannelTypeGuildNewsThread ChannelType = iota + 3
 	ChannelTypeGuildPublicThread
 	ChannelTypeGuildPrivateThread
 	ChannelTypeGuildStageVoice
