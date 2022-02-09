@@ -3,6 +3,7 @@ package interaction
 import (
 	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
 )
@@ -19,6 +20,7 @@ const (
 	InteractionTypeApplicationCommand
 	InteractionTypeMessageComponent
 	InteractionTypeApplicationCommandAutoComplete
+	InteractionTypeModalSubmit
 )
 
 type PingInteraction struct {
@@ -75,4 +77,31 @@ type ApplicationCommandAutoCompleteInteractionData struct {
 	Name    string                                    `json:"name"`
 	Options []ApplicationCommandInteractionDataOption `json:"options"`
 	Type    ApplicationCommandType                    `json:"type"`
+}
+
+type ModalSubmitInteraction struct {
+	Id            uint64                     `json:"id,string"`
+	ApplicationId uint64                     `json:"application_id,string"`
+	Data          ModalSubmitInteractionData `json:"data"`
+	GuildId       objects.NullableSnowflake  `json:"guild_id"`
+	ChannelId     uint64                     `json:"channel_id,string"`
+	Member        *member.Member             `json:"member"`
+	User          *user.User                 `json:"user"`
+	Token         string                     `json:"token"`
+}
+
+type ModalSubmitInteractionData struct {
+	CustomId   string                                `json:"custom_id"`
+	Components []ModalSubmitInteractionActionRowData `json:"components"`
+}
+
+type ModalSubmitInteractionActionRowData struct {
+	Type       component.ComponentType               `json:"type"`
+	Components []ModalSubmitInteractionComponentData `json:"components"`
+}
+
+type ModalSubmitInteractionComponentData struct {
+	Type     component.ComponentType `json:"type"`
+	CustomId string                  `json:"custom_id"`
+	Value    string                  `json:"value"`
 }

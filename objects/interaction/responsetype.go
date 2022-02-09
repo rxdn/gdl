@@ -11,4 +11,5 @@ const (
 	ResponseTypeDeferredMessageUpdate
 	ResponseTypeUpdateMessage
 	ResponseTypeApplicationCommandAutoCompleteResult
+	ResponseTypeModal
 )

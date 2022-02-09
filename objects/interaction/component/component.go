@@ -12,6 +12,7 @@ const (
 	ComponentActionRow ComponentType = iota + 1
 	ComponentButton
 	ComponentSelectMenu
+	ComponentInputText
 )
 
 type Component struct {
@@ -54,6 +55,8 @@ func encode(c ComponentData) (json.RawMessage, error) {
 		return json.Marshal(v)
 	case SelectMenu:
 		return json.Marshal(v)
+	case InputText:
+		return json.Marshal(v)
 	default:
 		fmt.Println(v)
 		return nil, ErrUnknownType
@@ -85,6 +88,10 @@ func (c *Component) UnmarshalJSON(data []byte) error {
 		c.ComponentData = parsed
 	case ComponentSelectMenu:
 		var parsed SelectMenu
+		err = json.Unmarshal(data, &parsed)
+		c.ComponentData = parsed
+	case ComponentInputText:
+		var parsed InputText
 		err = json.Unmarshal(data, &parsed)
 		c.ComponentData = parsed
 	default:
