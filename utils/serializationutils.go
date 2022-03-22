@@ -2,14 +2,8 @@ package utils
 
 import (
 	"fmt"
-	"github.com/fatih/structs"
-	"reflect"
 	"strconv"
 )
-
-func Unmarshal(raw []byte, v interface{}) {
-	_ = json.Unmarshal(raw, &v)
-}
 
 func AppendElem(m map[string]map[string]interface{}, key string, elem map[string]interface{}) map[string]map[string]interface{} {
 	for k, v := range elem {
@@ -28,15 +22,10 @@ func Append(m, elem map[string]map[string]interface{}) map[string]map[string]int
 	return m
 }
 
-func Contains(s interface{}, elem interface{}) bool {
-	arrV := reflect.ValueOf(s)
-
-	if arrV.Kind() == reflect.Slice {
-		for i := 0; i < arrV.Len(); i++ {
-
-			if arrV.Index(i).Interface() == elem {
-				return true
-			}
+func Contains[T comparable](slice []T, target T) bool {
+	for _, el := range slice {
+		if el == target {
+			return true
 		}
 	}
 
@@ -46,16 +35,6 @@ func Contains(s interface{}, elem interface{}) bool {
 func Initialise(m map[string]map[string]interface{}, key string) {
 	if m[key] == nil {
 		m[key] = make(map[string]interface{})
-	}
-}
-
-func CopyNonNil(m map[string]map[string]interface{}, keyName string, obj interface{}) {
-	Initialise(m, keyName)
-
-	for k, v := range structs.Map(obj) {
-		if !IsZero(reflect.ValueOf(v)) {
-			m[keyName][k] = v
-		}
 	}
 }
 
