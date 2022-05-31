@@ -11,6 +11,8 @@ type InputText struct {
 	Placeholder *string        `json:"placeholder,omitempty"`
 	MinLength   *uint32        `json:"min_length,omitempty"`
 	MaxLength   *uint32        `json:"max_length,omitempty"`
+	Required    *bool          `json:"required,omitempty"`
+	Value       *string        `json:"value,omitempty"`
 }
 
 type TextStyleTypes uint8
