@@ -356,7 +356,7 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 
 type EditMessageData struct {
 	Content    string                `json:"content"`
-	Embed      *embed.Embed          `json:"embed"`
+	Embeds     []*embed.Embed        `json:"embeds"`
 	Flags      int                   `json:"flags"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 	Components []component.Component `json:"components"`
 }
