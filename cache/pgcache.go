@@ -560,6 +560,24 @@ func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
 	return cached.ToRole(id), true
 }
 
+func (c *PgCache) GetRoleInGuild(id, guildId uint64) (guild.Role, bool) {
+	if !c.Options.Roles {
+		return guild.Role{}, false
+	}
+
+	var raw string
+	if err := c.QueryRow(context.Background(), `SELECT "data" FROM roles WHERE "role_id" = $1 AND "guild_id" = $2;`, id, guildId).Scan(&raw); err != nil {
+		return guild.Role{}, false
+	}
+
+	var cached guild.CachedRole
+	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
+		return guild.Role{}, false
+	}
+
+	return cached.ToRole(id), true
+}
+
 func (c *PgCache) DeleteRole(roleId uint64) {
 	if c.Options.Roles {
 		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "role_id" = $1;`, roleId)
