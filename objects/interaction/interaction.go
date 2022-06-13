@@ -44,9 +44,10 @@ type ApplicationCommandInteraction struct {
 type ApplicationCommandInteractionData struct {
 	Id       uint64                                    `json:"id,string"`
 	Name     string                                    `json:"name"`
+	Type     ApplicationCommandType                    `json:"type"`
+	Resolved ResolvedData                              `json:"resolved"`
 	Options  []ApplicationCommandInteractionDataOption `json:"options"`
 	TargetId uint64                                    `json:"target_id,string"`
-	Type     ApplicationCommandType                    `json:"type"`
 }
 
 type MessageComponentInteraction struct {
