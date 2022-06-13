@@ -32,9 +32,12 @@ const (
 	OptionTypeUser
 	OptionTypeChannel
 	OptionTypeRole
+	OptionTypeMentionable
+	OptionTypeNumber
+	OptionTypeAttachment
 )
 
 type ApplicationCommandOptionChoice struct {
 	Name  string      `json:"name"`
-	Value interface{} `json:"value"` // string or int
+	Value interface{} `json:"value"` // string, int or double
 }
