@@ -18,6 +18,7 @@ const (
 	DirectMessages
 	DirectMessageReactions
 	DirectMessageTyping
+	MessageContent
 )
 
 var AllIntentsWithoutPrivileged = []Intent{

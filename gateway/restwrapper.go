@@ -156,8 +156,8 @@ func (s *Shard) ListThreadMembers(channelId uint64) ([]channel.ThreadMember, err
 	return rest.ListThreadMembers(s.Token, s.ShardManager.RateLimiter, channelId)
 }
 
-func (s *Shard) ListActiveThreads(channelId uint64) (rest.ThreadsResponse, error) {
-	return rest.ListActiveThreads(s.Token, s.ShardManager.RateLimiter, channelId)
+func (s *Shard) ListActiveThreads(guildId uint64) (rest.ThreadsResponse, error) {
+	return rest.ListActiveThreads(s.Token, s.ShardManager.RateLimiter, guildId)
 }
 
 func (s *Shard) ListPublicArchivedThreads(channelId uint64, data rest.ListThreadsData) (rest.ThreadsResponse, error) {
@@ -365,8 +365,8 @@ func (s *Shard) RemoveGuildMember(guildId, userId uint64) error {
 	return rest.RemoveGuildMember(s.Token, s.ShardManager.RateLimiter, guildId, userId)
 }
 
-func (s *Shard) GetGuildBans(guildId uint64) ([]guild.Ban, error) {
-	return rest.GetGuildBans(s.Token, s.ShardManager.RateLimiter, guildId)
+func (s *Shard) GetGuildBans(guildId uint64, data rest.GetGuildBansData) ([]guild.Ban, error) {
+	return rest.GetGuildBans(s.Token, s.ShardManager.RateLimiter, guildId, data)
 }
 
 func (s *Shard) GetGuildBan(guildId, userId uint64) (guild.Ban, error) {

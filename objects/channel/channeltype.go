@@ -14,4 +14,6 @@ const (
 	ChannelTypeGuildPublicThread
 	ChannelTypeGuildPrivateThread
 	ChannelTypeGuildStageVoice
+	ChannelTypeGuildDirectory
+	ChannelTypeGuildForum
 )

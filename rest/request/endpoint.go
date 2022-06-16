@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-const BASE_URL = "https://discord.com/api/v9"
+const (
+	BASE_URL             = "https://discord.com/api/v10"
+	AuditLogReasonHeader = "X-Audit-Log-Reason"
+)
 
 type Endpoint struct {
 	RequestType       RequestType

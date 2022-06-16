@@ -191,7 +191,7 @@ func GetGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 
 type SearchGuildMembersData struct {
 	Query string // Username / nickname to match against
-	Limit int // 1 - 1000, optional (defaults to 1)
+	Limit int    // 1 - 1000, optional (defaults to 1)
 }
 
 func (d *SearchGuildMembersData) Encode() string {
@@ -330,11 +330,35 @@ func RemoveGuildMember(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 	return err
 }
 
-func GetGuildBans(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) ([]guild.Ban, error) {
+type GetGuildBansData struct {
+	Limit  int // 1 - 1000
+	Before uint64
+	After  uint64
+}
+
+func (d *GetGuildBansData) Query() string {
+	query := url.Values{}
+
+	if d.Limit != 0 {
+		query.Set("limit", strconv.Itoa(d.Limit))
+	}
+
+	if d.Before != 0 {
+		query.Set("before", strconv.FormatUint(d.Before, 10))
+	}
+
+	if d.After != 0 {
+		query.Set("after", strconv.FormatUint(d.After, 10))
+	}
+
+	return query.Encode()
+}
+
+func GetGuildBans(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data GetGuildBansData) ([]guild.Ban, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/guilds/%d/bans", guildId),
+		Endpoint:    fmt.Sprintf("/guilds/%d/bans?%s", guildId, data.Query()),
 		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetGuildBans, guildId),
 		RateLimiter: rateLimiter,
 	}
@@ -360,7 +384,7 @@ func GetGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, user
 
 type CreateGuildBanData struct {
 	DeleteMessageDays int    `json:"delete_message_days,omitempty"` // 1 - 7
-	Reason            string `json:"reason,omitempty"`
+	Reason            string `json:"-"`
 }
 
 func CreateGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, userId uint64, data CreateGuildBanData) error {
@@ -370,6 +394,9 @@ func CreateGuildBan(token string, rateLimiter *ratelimit.Ratelimiter, guildId, u
 		Endpoint:    fmt.Sprintf("/guilds/%d/bans/%d", guildId, userId),
 		Route:       ratelimit.NewGuildRoute(ratelimit.RouteCreateGuildBan, guildId),
 		RateLimiter: rateLimiter,
+		AdditionalHeaders: map[string]string{
+			request.AuditLogReasonHeader: data.Reason,
+		},
 	}
 
 	err, _ := endpoint.Request(token, data, nil)

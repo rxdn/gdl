@@ -592,12 +592,12 @@ type ThreadsResponse struct {
 	HasMore bool                   `json:"has_more"`
 }
 
-func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (threads ThreadsResponse, err error) {
+func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) (threads ThreadsResponse, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/channels/%d/threads/active", channelId),
-		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetActiveThreads, channelId),
+		Endpoint:    fmt.Sprintf("/guilds/%d/threads/active", guildId),
+		Route:       ratelimit.NewGuildRoute(ratelimit.RouteGetActiveThreads, guildId),
 		RateLimiter: rateLimiter,
 	}
 
