@@ -2,6 +2,53 @@ package events
 
 import "reflect"
 
+type Event interface {
+	Ready |
+	Resumed |
+	Reconnect |
+	InvalidSession |
+	ChannelCreate |
+	ChannelUpdate |
+	ChannelDelete |
+	ChannelPinsUpdate |
+	GuildCreate |
+	GuildUpdate |
+	GuildDelete |
+	GuildBanAdd |
+	GuildBanRemove |
+	GuildEmojisUpdate |
+	GuildIntegrationsUpdate |
+	GuildMemberAdd |
+	GuildMemberRemove |
+	GuildMemberUpdate |
+	GuildMembersChunk |
+	GuildRoleCreate |
+	GuildRoleUpdate |
+	GuildRoleDelete |
+	InviteCreate |
+	InviteDelete |
+	MessageCreate |
+	MessageUpdate |
+	MessageDelete |
+	MessageDeleteBulk |
+	MessageReactionAdd |
+	MessageReactionRemove |
+	MessageReactionRemoveAll |
+	MessageReactionRemoveEmoji |
+	PresenceUpdate |
+	ThreadCreate |
+	ThreadUpdate |
+	ThreadDelete |
+	ThreadListSync |
+	ThreadMembersUpdate |
+	ThreadMemberUpdate |
+	TypingStart |
+	UserUpdate |
+	VoiceServerUpdate |
+	VoiceStateUpdate |
+	WebhooksUpdate
+}
+
 var EventTypes = map[EventType]reflect.Type{
 	READY:                         reflect.TypeOf(Ready{}),
 	RESUMED:                       reflect.TypeOf(Resumed{}),
