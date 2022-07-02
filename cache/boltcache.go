@@ -25,8 +25,8 @@ type BoltCache struct {
 
 type BoltOptions struct {
 	ClearOnRestart bool
-	Path string
-	FileMode os.FileMode
+	Path           string
+	FileMode       os.FileMode
 	*bolt.Options
 }
 
@@ -178,7 +178,8 @@ func (c *BoltCache) GetGuilds() []guild.Guild {
 		b := tx.Bucket([]byte("guilds"))
 
 		return b.ForEach(func(k, encoded []byte) error {
-			guildId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			guildId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return nil
 			}
 
@@ -197,7 +198,7 @@ func (c *BoltCache) GetGuilds() []guild.Guild {
 func (c *BoltCache) DeleteGuild(guildId uint64) {
 	_ = c.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("guilds"))
-		 _ = b.Delete(toBytes(guildId))
+		_ = b.Delete(toBytes(guildId))
 
 		return nil
 	})
@@ -218,6 +219,22 @@ func (c *BoltCache) GetGuildCount() int {
 	})
 
 	return count
+}
+
+func (c *BoltCache) GetGuildOwner(guildId uint64) (uint64, bool) {
+	var cached guild.CachedGuild
+
+	_ = c.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("guilds"))
+		encoded := b.Get(toBytes(guildId))
+		if encoded == nil {
+			return nil
+		}
+
+		return json.Unmarshal(encoded, &cached)
+	})
+
+	return cached.OwnerId, cached.Id != 0
 }
 
 func (c *BoltCache) StoreMember(m member.Member, guildId uint64) {
@@ -261,12 +278,11 @@ func (c *BoltCache) GetMember(guildId, userId uint64) (member.Member, bool) {
 
 	u, userFound := c.GetUser(userId)
 	if !userFound {
-		u = user.User{Id:userId}
+		u = user.User{Id: userId}
 	}
 
 	return cached.ToMember(u), found
 }
-
 
 func (c *BoltCache) GetGuildMembers(guildId uint64, withUserData bool) []member.Member {
 	var members []member.Member
@@ -281,11 +297,13 @@ func (c *BoltCache) GetGuildMembers(guildId uint64, withUserData bool) []member.
 			}
 
 			// Hacky but w/e
-			cachedUserId, err := strconv.ParseUint(split[0], 10, 64); if err != nil {
+			cachedUserId, err := strconv.ParseUint(split[0], 10, 64)
+			if err != nil {
 				return nil
 			}
 
-			cachedGuildId, err := strconv.ParseUint(split[1], 10, 64); if err != nil {
+			cachedGuildId, err := strconv.ParseUint(split[1], 10, 64)
+			if err != nil {
 				return nil
 			}
 
@@ -380,7 +398,8 @@ func (c *BoltCache) GetGuildChannels(guildId uint64) []channel.Channel {
 		b := tx.Bucket([]byte("channels"))
 
 		return b.ForEach(func(k, encoded []byte) error {
-			channelId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			channelId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return nil
 			}
 
@@ -411,7 +430,8 @@ func (c *BoltCache) DeleteGuildChannels(guildId uint64) {
 
 		var channelIds []uint64
 		err = b.ForEach(func(k, encoded []byte) error {
-			channelId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			channelId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return err
 			}
 
@@ -493,7 +513,8 @@ func (c *BoltCache) GetGuildRoles(guildId uint64) []guild.Role {
 		b := tx.Bucket([]byte("roles"))
 
 		return b.ForEach(func(k, encoded []byte) error {
-			roleId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			roleId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return nil
 			}
 
@@ -524,7 +545,8 @@ func (c *BoltCache) DeleteGuildRoles(guildId uint64) {
 
 		var roleIds []uint64
 		err = b.ForEach(func(k, encoded []byte) error {
-			channelId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			channelId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return err
 			}
 
@@ -562,7 +584,7 @@ func (c *BoltCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 		for _, emoji := range emojis {
 			ewg := emojiWithGuild{
 				CachedEmoji: emoji.ToCachedEmoji(guildId),
-				guildId:    guildId,
+				guildId:     guildId,
 			}
 
 			if encoded, err := json.Marshal(ewg); err == nil {
@@ -609,7 +631,8 @@ func (c *BoltCache) GetGuildEmojis(guildId uint64) []emoji.Emoji {
 		b := tx.Bucket([]byte("emojis"))
 
 		return b.ForEach(func(k, encoded []byte) error {
-			emojiId, err := strconv.ParseUint(string(k), 10, 64); if err != nil {
+			emojiId, err := strconv.ParseUint(string(k), 10, 64)
+			if err != nil {
 				return nil
 			}
 
@@ -703,11 +726,13 @@ func (c *BoltCache) GetGuildVoiceStates(guildId uint64) []guild.VoiceState {
 			}
 
 			// Hacky but w/e
-			stateUserId, err := strconv.ParseUint(split[0], 10, 64); if err != nil {
+			stateUserId, err := strconv.ParseUint(split[0], 10, 64)
+			if err != nil {
 				return nil
 			}
 
-			stateGuildId, err := strconv.ParseUint(split[1], 10, 64); if err != nil {
+			stateGuildId, err := strconv.ParseUint(split[1], 10, 64)
+			if err != nil {
 				return nil
 			}
 

@@ -21,6 +21,7 @@ type Cache interface {
 	GetGuilds() []guild.Guild // Note: Guilds will not have Channels, Roles, Members etc to reduce cache lookup time
 	DeleteGuild(id uint64)
 	GetGuildCount() int
+	GetGuildOwner(guildId uint64) (uint64, bool) // Utility function
 
 	StoreMember(member member.Member, guildId uint64)
 	StoreMembers(members []member.Member, guildId uint64)

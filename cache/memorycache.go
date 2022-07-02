@@ -179,6 +179,18 @@ func (c *MemoryCache) GetGuildCount() (count int) {
 	return
 }
 
+func (c *MemoryCache) GetGuildOwner(guildId uint64) (uint64, bool) {
+	c.guildLock.RLock()
+	guild, ok := c.guilds[guildId]
+	c.guildLock.RUnlock()
+
+	if !ok {
+		return 0, false
+	}
+
+	return guild.OwnerId, true
+}
+
 func (c *MemoryCache) StoreMember(m member.Member, guildId uint64) {
 	c.StoreMembers([]member.Member{m}, guildId)
 }

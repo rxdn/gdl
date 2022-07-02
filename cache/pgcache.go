@@ -12,6 +12,7 @@ import (
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
+	"strconv"
 	"sync"
 )
 
@@ -397,6 +398,22 @@ func (c *PgCache) GetGuildCount() int {
 	var count int
 	_ = c.QueryRow(context.Background(), "SELECT COUNT(*) FROM guilds;").Scan(&count)
 	return count
+}
+
+func (c *PgCache) GetGuildOwner(guildId uint64) (uint64, bool) {
+	query := `SELECT data->'owner_id' FROM guilds WHERE "guild_id" = $1;`
+
+	var ownerId string
+	if err := c.QueryRow(context.Background(), query, guildId).Scan(&ownerId); err != nil { // Includes pgx.ErrNoRows
+		return 0, false
+	}
+
+	parsed, err := strconv.ParseUint(ownerId, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+
+	return parsed, true
 }
 
 func (c *PgCache) StoreMember(m member.Member, guildId uint64) {
