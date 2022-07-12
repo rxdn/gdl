@@ -14,7 +14,7 @@ type Member struct {
 	PremiumSince *time.Time              `json:"premium_since"` // when the user started boosting the guild
 	Deaf         bool                    `json:"deaf"`
 	Mute         bool                    `json:"mute"`
-	Permissions  string                  `json:"permissions"`
+	Permissions  uint64                  `json:"permissions,string"`
 }
 
 func (m *Member) HasRole(roleId uint64) bool {
