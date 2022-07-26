@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	jsoniter "github.com/json-iterator/go"
@@ -103,6 +104,37 @@ func (c *PgCache) GetUser(id uint64) (u user.User, ok bool) {
 	}
 
 	return cached.ToUser(id), true
+}
+
+func (c *PgCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
+	idArray := &pgtype.Int8Array{}
+	if err := idArray.Set(ids); err != nil {
+		return nil, err
+	}
+
+	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM users WHERE "user_id" = ANY($1);`, idArray)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	users := make(map[uint64]user.User)
+	for rows.Next() {
+		var id uint64
+		var raw string
+		if err := rows.Scan(&id, &raw); err != nil {
+			return nil, err
+		}
+
+		var cached user.CachedUser
+		if err := json.Unmarshal([]byte(raw), &cached); err != nil {
+			return nil, err
+		}
+
+		users[id] = cached.ToUser(id)
+	}
+
+	return users, nil
 }
 
 // TODO: The "data" field just has null values. Find the cause and solution.
@@ -575,6 +607,43 @@ func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
 	}
 
 	return cached.ToRole(id), true
+}
+
+func (c *PgCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
+	if !c.Options.Roles {
+		return nil, nil
+	}
+
+	idArray := &pgtype.Int8Array{}
+	if err := idArray.Set(ids); err != nil {
+		return nil, err
+	}
+
+	query := `SELECT "role_id", "data" FROM roles WHERE "role_id" = ANY($1) AND "guild_id" = $2;`
+	rows, err := c.Query(context.Background(), query, idArray, guildId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	roles := make(map[uint64]guild.Role)
+	for rows.Next() {
+		var id uint64
+		var raw string
+
+		if err := rows.Scan(&id, &raw); err != nil {
+			return nil, err
+		}
+
+		var cached guild.CachedRole
+		if err := json.Unmarshal([]byte(raw), &cached); err != nil {
+			return nil, err
+		}
+
+		roles[id] = cached.ToRole(id)
+	}
+
+	return roles, nil
 }
 
 func (c *PgCache) GetRoleInGuild(id, guildId uint64) (guild.Role, bool) {

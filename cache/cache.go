@@ -14,6 +14,7 @@ type Cache interface {
 	StoreUser(user user.User)
 	StoreUsers(user []user.User)
 	GetUser(id uint64) (user.User, bool)
+	GetUsers(ids []uint64) (map[uint64]user.User, error)
 
 	StoreGuild(guild guild.Guild)
 	StoreGuilds(guilds []guild.Guild)
@@ -39,6 +40,7 @@ type Cache interface {
 	StoreRole(role guild.Role, guildId uint64)
 	StoreRoles(roles []guild.Role, guildId uint64)
 	GetRole(id uint64) (guild.Role, bool)
+	GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error)
 	GetGuildRoles(guildId uint64) []guild.Role
 	DeleteRole(roleId uint64)
 	DeleteGuildRoles(guildId uint64)

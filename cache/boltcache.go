@@ -110,6 +110,36 @@ func (c *BoltCache) GetUser(userId uint64) (user.User, bool) {
 	return u.ToUser(userId), found
 }
 
+func (c *BoltCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
+	users := make(map[uint64]user.User)
+	err := c.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("users"))
+
+		for _, id := range ids {
+			encoded := b.Get(toBytes(id))
+
+			if encoded == nil {
+				continue
+			}
+
+			var cached user.CachedUser
+			if err := json.Unmarshal(encoded, &cached); err != nil {
+				return err
+			}
+
+			users[id] = cached.ToUser(id)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (c *BoltCache) StoreGuild(g guild.Guild) {
 	c.StoreGuilds([]guild.Guild{g})
 }
@@ -504,6 +534,39 @@ func (c *BoltCache) GetRole(roleId uint64) (guild.Role, bool) {
 
 	ch := cached.ToRole(roleId)
 	return ch, found
+}
+
+func (c *BoltCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
+	roles := make(map[uint64]guild.Role)
+	err := c.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("roles"))
+
+		for _, id := range ids {
+			encoded := b.Get(toBytes(id))
+			if encoded == nil {
+				continue
+			}
+
+			var cached roleWithGuild
+			if err := json.Unmarshal(encoded, &cached); err != nil {
+				return err
+			}
+
+			if cached.guildId != guildId {
+				continue
+			}
+
+			roles[id] = cached.ToRole(id)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
 }
 
 func (c *BoltCache) GetGuildRoles(guildId uint64) []guild.Role {

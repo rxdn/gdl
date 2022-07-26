@@ -89,6 +89,21 @@ func (c *MemoryCache) GetUser(userId uint64) (u user.User, found bool) {
 	}
 }
 
+func (c *MemoryCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
+	c.userLock.RLock()
+	defer c.userLock.RUnlock()
+
+	users := make(map[uint64]user.User)
+	for _, id := range ids {
+		cached, found := c.users[id]
+		if found {
+			users[id] = cached.ToUser(id)
+		}
+	}
+
+	return users, nil
+}
+
 func (c *MemoryCache) StoreGuild(g guild.Guild) {
 	c.StoreGuilds([]guild.Guild{g})
 }
@@ -423,6 +438,22 @@ func (c *MemoryCache) GetRole(roleId uint64) (role guild.Role, found bool) {
 	role = cachedRole.ToRole(roleId)
 
 	return
+}
+
+func (c *MemoryCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
+	c.roleLock.RLock()
+	defer c.roleLock.RUnlock()
+
+	roles := make(map[uint64]guild.Role)
+	for _, id := range ids {
+		if cachedRole, found := c.roles[id]; found {
+			if cachedRole.GuildId == guildId {
+				roles[id] = cachedRole.ToRole(id)
+			}
+		}
+	}
+
+	return roles, nil
 }
 
 func (c *MemoryCache) GetGuildRoles(guildId uint64) (roles []guild.Role) {
