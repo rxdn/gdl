@@ -76,7 +76,12 @@ const (
 	RouteGetPinnedMessages
 	RouteAddPinnedChannelMessage
 	RouteDeletePinnedChannelMessage
-	RouteGetThreadMembers
+	RouteJoinThread
+	RouteAddThreadMember
+	RouteLeaveThread
+	RouteRemoveThreadMember
+	RouteListThreadMembers
+	RouteGetThreadMember
 	RouteStartThreadWithMessage
 	RouteStartThreadWithoutMessage
 	RouteGetActiveThreads

@@ -152,6 +152,26 @@ func (s *Shard) DeletePinnedChannelMessage(channelId, messageId uint64) error {
 	return rest.DeletePinnedChannelMessage(s.Token, s.ShardManager.RateLimiter, channelId, messageId)
 }
 
+func (s *Shard) JoinThread(channelId uint64) error {
+	return rest.JoinThread(s.Token, s.ShardManager.RateLimiter, channelId)
+}
+
+func (s *Shard) AddThreadMember(channelId, userId uint64) error {
+	return rest.AddThreadMember(s.Token, s.ShardManager.RateLimiter, channelId, userId)
+}
+
+func (s *Shard) LeaveThread(channelId uint64) error {
+	return rest.LeaveThread(s.Token, s.ShardManager.RateLimiter, channelId)
+}
+
+func (s *Shard) RemoveThreadMember(channelId, userId uint64) error {
+	return rest.RemoveThreadMember(s.Token, s.ShardManager.RateLimiter, channelId, userId)
+}
+
+func (s *Shard) GetThreadMember(channelId, userId uint64) (channel.ThreadMember, error) {
+	return rest.GetThreadMember(s.Token, s.ShardManager.RateLimiter, channelId, userId)
+}
+
 func (s *Shard) ListThreadMembers(channelId uint64) ([]channel.ThreadMember, error) {
 	return rest.ListThreadMembers(s.Token, s.ShardManager.RateLimiter, channelId)
 }

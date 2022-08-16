@@ -535,12 +535,77 @@ func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter
 	return err
 }
 
+func JoinThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/@me", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteJoinThread, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, nil)
+	return
+}
+
+func AddThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.PUT,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/@%d", channelId, userId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteAddThreadMember, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, nil)
+	return
+}
+
+func LeaveThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.DELETE,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/@me", channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteLeaveThread, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, nil)
+	return
+}
+
+func RemoveThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.DELETE,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/%d", channelId, userId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteRemoveThreadMember, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, nil)
+	return
+}
+
+func GetThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (member channel.ThreadMember, err error) {
+	endpoint := request.Endpoint{
+		RequestType: request.GET,
+		ContentType: request.Nil,
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/%d", channelId, userId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetThreadMember, channelId),
+		RateLimiter: rateLimiter,
+	}
+
+	err, _ = endpoint.Request(token, nil, &member)
+	return
+}
+
 func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (members []channel.ThreadMember, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
 		Endpoint:    fmt.Sprintf("/channels/%d/thread-members", channelId),
-		Route:       ratelimit.NewChannelRoute(ratelimit.RouteGetThreadMembers, channelId),
+		Route:       ratelimit.NewChannelRoute(ratelimit.RouteListThreadMembers, channelId),
 		RateLimiter: rateLimiter,
 	}
 
