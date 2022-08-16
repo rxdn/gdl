@@ -552,7 +552,7 @@ func AddThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
-		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/@%d", channelId, userId),
+		Endpoint:    fmt.Sprintf("/channels/%d/thread-members/%d", channelId, userId),
 		Route:       ratelimit.NewChannelRoute(ratelimit.RouteAddThreadMember, channelId),
 		RateLimiter: rateLimiter,
 	}
