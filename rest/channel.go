@@ -48,6 +48,14 @@ type ModifyChannelData struct {
 	UserLimit            int                           `json:"user_limit,omitempty"`
 	PermissionOverwrites []channel.PermissionOverwrite `json:"permission_overwrites,omitempty"`
 	ParentId             uint64                        `json:"parent_id,string,omitempty"`
+	*ThreadMetadataModifyData
+}
+
+type ThreadMetadataModifyData struct {
+	Archived            *bool   `json:"archived,omitempty"`
+	AutoArchiveDuration *uint16 `json:"auto_archive_duration,omitempty"`
+	Locked              *bool   `json:"locked,omitempty"`
+	Invitable           *bool   `json:"invitable,omitempty"`
 }
 
 func ModifyChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
@@ -357,7 +365,7 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 type EditMessageData struct {
 	Content    string                `json:"content"`
 	Embeds     []*embed.Embed        `json:"embeds"`
-	Flags      int                   `json:"flags"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
+	Flags      uint                  `json:"flags"` // https://discord.com/developers/docs/resources/channel#message-object-message-flags TODO: Helper function
 	Components []component.Component `json:"components"`
 }
 

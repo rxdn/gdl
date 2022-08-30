@@ -3,11 +3,12 @@ package channel
 import "time"
 
 type ThreadMetadata struct {
-	Archived            bool      `json:"archived"`
-	ArchiverId          uint64    `json:"archiver_id,string"`
-	AutoArchiveDuration uint16    `json:"auto_archive_duration"`
-	ArchiveTimestamp    time.Time `json:"archive_timestamp"`
-	Locked              bool      `json:"locked"`
+	Archived            bool       `json:"archived"`
+	AutoArchiveDuration uint16     `json:"auto_archive_duration"`
+	ArchiveTimestamp    time.Time  `json:"archive_timestamp"`
+	Locked              bool       `json:"locked"`
+	Invitable           *bool      `json:"invitable,omitempty"`
+	CreateTimestamp     *time.Time `json:"create_timestamp,omitempty"`
 }
 
 type ThreadMember struct {
