@@ -13,6 +13,17 @@ type Interaction struct {
 	Type    InteractionType `json:"type"`
 }
 
+type InteractionMetadata struct {
+	Interaction
+	Id            uint64                    `json:"id,string"`
+	ApplicationId uint64                    `json:"application_id,string"`
+	GuildId       objects.NullableSnowflake `json:"guild_id"`
+	ChannelId     uint64                    `json:"channel_id,string"`
+	Member        *member.Member            `json:"member"`
+	User          *user.User                `json:"user"`
+	Token         string                    `json:"token"`
+}
+
 type InteractionType uint8
 
 const (
@@ -30,15 +41,8 @@ type PingInteraction struct {
 // If GuildId is not null, Member will be present and User will not.
 // If GuildId is null, Member will not be present, and User will.
 type ApplicationCommandInteraction struct {
-	Interaction
-	Id            uint64                             `json:"id,string"`
-	ApplicationId uint64                             `json:"application_id,string"`
-	Data          *ApplicationCommandInteractionData `json:"data"`
-	GuildId       objects.NullableSnowflake          `json:"guild_id"`
-	ChannelId     uint64                             `json:"channel_id,string"`
-	Member        *member.Member                     `json:"member"`
-	User          *user.User                         `json:"user"`
-	Token         string                             `json:"token"`
+	InteractionMetadata
+	Data *ApplicationCommandInteractionData `json:"data"`
 }
 
 type ApplicationCommandInteractionData struct {
@@ -51,26 +55,14 @@ type ApplicationCommandInteractionData struct {
 }
 
 type MessageComponentInteraction struct {
-	Id            uint64                          `json:"id,string"`
-	ApplicationId uint64                          `json:"application_id,string"`
-	Data          MessageComponentInteractionData `json:"data"`
-	GuildId       objects.NullableSnowflake       `json:"guild_id"`
-	ChannelId     uint64                          `json:"channel_id,string"`
-	Message       message.Message                 `json:"message"`
-	Member        *member.Member                  `json:"member"`
-	User          *user.User                      `json:"user"`
-	Token         string                          `json:"token"`
+	InteractionMetadata
+	Data    MessageComponentInteractionData `json:"data"`
+	Message message.Message                 `json:"message"`
 }
 
 type ApplicationCommandAutoCompleteInteraction struct {
-	Id            uint64                                        `json:"id,string"`
-	ApplicationId uint64                                        `json:"application_id,string"`
-	Data          ApplicationCommandAutoCompleteInteractionData `json:"data"`
-	GuildId       objects.NullableSnowflake                     `json:"guild_id"`
-	ChannelId     uint64                                        `json:"channel_id,string"`
-	Member        *member.Member                                `json:"member"`
-	User          *user.User                                    `json:"user"`
-	Token         string                                        `json:"token"`
+	InteractionMetadata
+	Data ApplicationCommandAutoCompleteInteractionData `json:"data"`
 }
 
 type ApplicationCommandAutoCompleteInteractionData struct {
@@ -81,14 +73,8 @@ type ApplicationCommandAutoCompleteInteractionData struct {
 }
 
 type ModalSubmitInteraction struct {
-	Id            uint64                     `json:"id,string"`
-	ApplicationId uint64                     `json:"application_id,string"`
-	Data          ModalSubmitInteractionData `json:"data"`
-	GuildId       objects.NullableSnowflake  `json:"guild_id"`
-	ChannelId     uint64                     `json:"channel_id,string"`
-	Member        *member.Member             `json:"member"`
-	User          *user.User                 `json:"user"`
-	Token         string                     `json:"token"`
+	InteractionMetadata
+	Data ModalSubmitInteractionData `json:"data"`
 }
 
 type ModalSubmitInteractionData struct {
