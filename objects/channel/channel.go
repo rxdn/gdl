@@ -28,8 +28,8 @@ type Channel struct {
 	LastPinTimestamp     time.Time                 `json:"last_pin_timestamp"`
 	RtcRegion            *string                   `json:"rtc_region"`
 	VideoQualityMode     VideoQualityMode          `json:"video_quality_mode"`
-	MessageCount         uint8                     `json:"message_count"`
-	MemberCount          uint8                     `json:"member_count"`
+	MessageCount         uint64                    `json:"message_count"`
+	MemberCount          uint64                    `json:"member_count"`
 	ThreadMetadata       *ThreadMetadata           `json:"thread_metadata,omitempty"`
 	Member               ThreadMember              `json:"member"`
 }
