@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -12,12 +11,8 @@ import (
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 	"github.com/rxdn/gdl/utils"
-	"io"
-	"mime/multipart"
-	"net/textproto"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -157,76 +152,26 @@ func GetChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	return message, nil
 }
 
-type File struct {
-	Name        string
-	ContentType string
-	Reader      io.Reader
-}
-
 type CreateMessageData struct {
 	Content          string                    `json:"content"`
 	Nonce            string                    `json:"nonce,omitempty"`
 	Tts              bool                      `json:"tts,omitempty"`
-	File             *File                     `json:"-"`
 	Embeds           []*embed.Embed            `json:"embeds,omitempty"`
 	Flags            uint                      `json:"flags,omitempty"`
-	PayloadJson      string                    `json:"-"` // TODO: Helper method
 	AllowedMentions  message.AllowedMention    `json:"allowed_mentions"`
 	MessageReference *message.MessageReference `json:"message_reference,omitempty"`
 	Components       []component.Component     `json:"components,omitempty"`
+	StickerIds       []uint64                  `json:"sticker_ids,omitempty"`
+	Attachments      []request.Attachment      `json:"attachments,omitempty"`
 }
 
-func (d CreateMessageData) EncodeMultipartFormData() ([]byte, string, error) {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	if d.File != nil {
-		fileName := d.File.Name
-		fileName = strings.Replace(fileName, "\\", "\\\\", -1)
-		fileName = strings.Replace(fileName, "\"", "\\\"", -1)
-
-		h := make(textproto.MIMEHeader)
-		h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, fileName))
-		h.Set("Content-Type", d.File.ContentType)
-
-		part, err := writer.CreatePart(h)
-		if err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-
-		if _, err := io.Copy(part, d.File.Reader); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if d.Content != "" {
-		if err := writer.WriteField("content", d.Content); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if err := writer.WriteField("tts", strconv.FormatBool(d.Tts)); err != nil {
-		return body.Bytes(), writer.Boundary(), err
-	}
-
-	if d.Nonce != "" {
-		if err := writer.WriteField("nonce", d.Nonce); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if d.PayloadJson != "" {
-		if err := writer.WriteField("payload_json", d.PayloadJson); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	return []byte(string(body.Bytes()) + "\r\n--" + writer.Boundary() + "--"), writer.Boundary(), nil
+func (d CreateMessageData) GetAttachments() []request.Attachment {
+	return d.Attachments
 }
 
 func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateMessageData) (message.Message, error) {
 	var endpoint request.Endpoint
-	if data.File == nil {
+	if len(data.Attachments) == 0 {
 		endpoint = request.Endpoint{
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,

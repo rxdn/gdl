@@ -11,7 +11,3 @@ const (
 	ImageGif                  ContentType = "image/gif"
 	Nil                       ContentType = ""
 )
-
-type MultipartData interface {
-	EncodeMultipartFormData() ([]byte, string, error)
-}

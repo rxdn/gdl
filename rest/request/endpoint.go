@@ -56,7 +56,7 @@ var Client = http.Client{
 	Timeout: time.Second * 3,
 }
 
-func (e *Endpoint) Request(token string, body interface{}, response interface{}) (error, *ResponseWithContent) {
+func (e *Endpoint) Request(token string, body any, response any) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
 
 	// Ratelimit
@@ -91,13 +91,13 @@ func (e *Endpoint) Request(token string, body interface{}, response interface{})
 			}
 			encoded = []byte(str)
 		} else if e.ContentType == MultipartFormData {
-			data, ok := body.(MultipartData)
+			data, ok := body.(MultipartPayload)
 			if !ok {
 				return errors.New("Content-Type MultipartFormData specified but EncodeMultipartFormData was missing"), nil
 			}
 
 			var boundary string
-			encoded, boundary, err = data.EncodeMultipartFormData()
+			encoded, boundary, err = EncodeMultipartFormData(data)
 			if err != nil {
 				return err, nil
 			}

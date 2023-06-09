@@ -1,20 +1,13 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
-	"io"
-	"mime/multipart"
-	"net/textproto"
-	"strconv"
-	"strings"
 )
 
 type WebhookData struct {
@@ -157,67 +150,23 @@ type WebhookBody struct {
 	Username        string                 `json:"username,omitempty"`
 	AvatarUrl       string                 `json:"avatar_url,omitempty"`
 	Tts             bool                   `json:"tts"`
-	File            *File                  `json:"file,omitempty"`
 	Flags           uint                   `json:"flags,omitempty"`
 	Embeds          []*embed.Embed         `json:"embeds,omitempty"`
-	PayloadJson     string                 `json:"payload_json"`
 	AllowedMentions message.AllowedMention `json:"allowed_mentions,omitempty"`
 	Components      []component.Component  `json:"components,omitempty"`
+	Attachments     []request.Attachment   `json:"attachments,omitempty"`
+	ThreadName      string                 `json:"thread_name,omitempty"`
 }
 
-func (d WebhookBody) EncodeMultipartFormData() ([]byte, string, error) {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	if d.File != nil {
-		fileName := d.File.Name
-		fileName = strings.Replace(fileName, "\\", "\\\\", -1)
-		fileName = strings.Replace(fileName, "\"", "\\\"", -1)
-
-		h := make(textproto.MIMEHeader)
-		h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, fileName))
-		h.Set("Content-Type", d.File.ContentType)
-
-		part, err := writer.CreatePart(h)
-		if err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-
-		if _, err := io.Copy(part, d.File.Reader); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if d.Username != "" {
-		if err := writer.WriteField("username", d.Username); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if d.AvatarUrl != "" {
-		if err := writer.WriteField("avatar_url", d.AvatarUrl); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	if err := writer.WriteField("tts", strconv.FormatBool(d.Tts)); err != nil {
-		return body.Bytes(), writer.Boundary(), err
-	}
-
-	if d.PayloadJson != "" {
-		if err := writer.WriteField("payload_json", d.PayloadJson); err != nil {
-			return body.Bytes(), writer.Boundary(), err
-		}
-	}
-
-	return []byte(string(body.Bytes()) + "\r\n--" + writer.Boundary() + "--"), writer.Boundary(), nil
+func (d WebhookBody) GetAttachments() []request.Attachment {
+	return d.Attachments
 }
 
 // if wait=true, a message object will be returned
 func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, webhookId uint64, wait bool, data WebhookBody) (*message.Message, error) {
 	var endpoint request.Endpoint
 
-	if data.File == nil {
+	if len(data.Attachments) == 0 {
 		endpoint = request.Endpoint{
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
@@ -249,17 +198,19 @@ func ExecuteWebhook(webhookToken string, rateLimiter *ratelimit.Ratelimiter, web
 type WebhookEditBody struct {
 	Content         string                 `json:"content"`
 	Embeds          []*embed.Embed         `json:"embeds"`
-	File            *File                  `json:"file"`
-	PayloadJson     string                 `json:"payload_json"`
 	AllowedMentions message.AllowedMention `json:"allowed_mentions"`
-	Attachments     []channel.Attachment   `json:"attachments"`
 	Components      []component.Component  `json:"components"`
+	Attachments     []request.Attachment   `json:"attachments"`
+}
+
+func (d WebhookEditBody) GetAttachments() []request.Attachment {
+	return d.Attachments
 }
 
 func EditWebhookMessage(webhookToken string, rateLimiter *ratelimit.Ratelimiter, webhookId, messageId uint64, data WebhookEditBody) (msg message.Message, err error) {
 	var endpoint request.Endpoint
 
-	if data.File == nil {
+	if len(data.Attachments) == 0 {
 		endpoint = request.Endpoint{
 			RequestType: request.POST,
 			ContentType: request.ApplicationJson,
