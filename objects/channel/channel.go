@@ -58,3 +58,18 @@ func (c *Channel) ToCachedChannel() CachedChannel {
 		LastPinTimestamp:     c.LastPinTimestamp,
 	}
 }
+
+func (c *Channel) ToPartialChannel() PartialChannel {
+	return PartialChannel{
+		Id:               c.Id,
+		Type:             c.Type,
+		GuildId:          c.GuildId,
+		Position:         c.Position,
+		Name:             c.Name,
+		Topic:            c.Topic,
+		Nsfw:             c.Nsfw,
+		LastMessageId:    c.LastMessageId,
+		ParentId:         c.ParentId,
+		LastPinTimestamp: c.LastPinTimestamp,
+	}
+}
