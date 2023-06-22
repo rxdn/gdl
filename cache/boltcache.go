@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/rxdn/gdl/objects/channel"
@@ -29,6 +30,8 @@ type BoltOptions struct {
 	FileMode       os.FileMode
 	*bolt.Options
 }
+
+var errNotCached = errors.New("not cached")
 
 func NewBoltCache(cacheOptions CacheOptions, boltOptions BoltOptions) BoltCache {
 	if boltOptions.ClearOnRestart {
@@ -172,33 +175,25 @@ func (c *BoltCache) StoreGuilds(guilds []guild.Guild) {
 	}
 }
 
-func (c *BoltCache) GetGuild(guildId uint64, withMembers bool) (guild.Guild, bool) {
+func (c *BoltCache) GetGuild(guildId uint64) (guild.Guild, bool) {
 	var cached guild.CachedGuild
-	var found bool
 
-	_ = c.View(func(tx *bolt.Tx) error {
+	err := c.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("guilds"))
 		encoded := b.Get(toBytes(guildId))
 
 		if encoded == nil {
-			return nil
+			return errNotCached
 		}
 
 		return json.Unmarshal(encoded, &cached)
 	})
 
-	g := cached.ToGuild(guildId)
-	g.Channels = c.GetGuildChannels(guildId)
-	g.Roles = c.GetGuildRoles(guildId)
-
-	if withMembers {
-		g.Members = c.GetGuildMembers(guildId, false)
+	if err != nil {
+		return guild.Guild{}, false
 	}
 
-	g.Emojis = c.GetGuildEmojis(guildId)
-	g.VoiceStates = c.GetGuildVoiceStates(guildId)
-
-	return g, found
+	return cached.ToGuild(guildId), true
 }
 
 func (c *BoltCache) GetGuilds() []guild.Guild {

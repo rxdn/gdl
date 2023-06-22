@@ -141,28 +141,16 @@ func (c *MemoryCache) StoreGuilds(guilds []guild.Guild) {
 	}
 }
 
-func (c *MemoryCache) GetGuild(guildId uint64, withMembers bool) (g guild.Guild, found bool) {
-	var cached guild.CachedGuild
-
+func (c *MemoryCache) GetGuild(guildId uint64) (guild.Guild, bool) {
 	c.guildLock.RLock()
-	cached, found = c.guilds[guildId]
+	cached, found := c.guilds[guildId]
 	c.guildLock.RUnlock()
 
 	if found {
-		g = cached.ToGuild(guildId)
-
-		// re-add fields
-		if withMembers {
-			g.Members = c.GetGuildMembers(guildId, false)
-		}
-
-		g.Channels = c.GetGuildChannels(guildId)
-		g.Roles = c.GetGuildRoles(guildId)
-		g.Emojis = c.GetGuildEmojis(guildId)
-		g.VoiceStates = c.GetGuildVoiceStates(guildId)
+		return cached.ToGuild(guildId), true
+	} else {
+		return guild.Guild{}, false
 	}
-
-	return
 }
 
 // You should never use this
