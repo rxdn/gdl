@@ -226,7 +226,7 @@ func (s *Shard) ListGuildEmojis(guildId uint64) ([]emoji.Emoji, error) {
 	shouldCacheGuild := s.Cache.GetOptions().Guilds
 
 	if shouldCacheEmoji && shouldCacheGuild {
-		if guild, found := s.Cache.GetGuild(guildId, false); found {
+		if guild, found := s.Cache.GetGuild(guildId); found {
 			return guild.Emojis, nil
 		}
 	}
@@ -274,7 +274,7 @@ func (s *Shard) GetGuild(guildId uint64) (guild.Guild, error) {
 	shouldCache := s.Cache.GetOptions().Guilds
 
 	if shouldCache {
-		if cachedGuild, found := s.Cache.GetGuild(guildId, false); found {
+		if cachedGuild, found := s.Cache.GetGuild(guildId); found {
 			return cachedGuild, nil
 		}
 	}
