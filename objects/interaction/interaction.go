@@ -2,6 +2,7 @@ package interaction
 
 import (
 	"github.com/rxdn/gdl/objects"
+	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
@@ -15,13 +16,17 @@ type Interaction struct {
 
 type InteractionMetadata struct {
 	Interaction
-	Id            uint64                    `json:"id,string"`
-	ApplicationId uint64                    `json:"application_id,string"`
-	GuildId       objects.NullableSnowflake `json:"guild_id"`
-	ChannelId     uint64                    `json:"channel_id,string"`
-	Member        *member.Member            `json:"member"`
-	User          *user.User                `json:"user"`
-	Token         string                    `json:"token"`
+	Id             uint64                    `json:"id,string"`
+	ApplicationId  uint64                    `json:"application_id,string"`
+	GuildId        objects.NullableSnowflake `json:"guild_id"`
+	ChannelId      uint64                    `json:"channel_id,string"`
+	Channel        channel.PartialChannel    `json:"channel"`
+	Member         *member.Member            `json:"member"`
+	User           *user.User                `json:"user"`
+	Token          string                    `json:"token"`
+	AppPermissions uint64                    `json:"app_permissions,string"`
+	Locale         string                    `json:"locale"`
+	GuildLocale    string                    `json:"guild_locale"`
 }
 
 type InteractionType uint8
