@@ -33,28 +33,36 @@ var json = jsoniter.Config{
 }.Froze()
 
 func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
-	// create schema
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS guilds("guild_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("guild_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS channels("channel_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("channel_id", "guild_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS users("user_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("user_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS members("guild_id" int8 NOT NULL, "user_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS roles("role_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("role_id", "guild_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS emojis("emoji_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("emoji_id", "guild_id"));`)
-	pgMustRun(db, `CREATE TABLE IF NOT EXISTS voice_states("guild_id" int8 NOT NULL, "user_id" INT8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`) // we may not have a cached user
-
-	// create indexes
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS channels_guild_id ON channels("guild_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS members_guild_id ON members("guild_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS member_user_id ON members("user_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS roles_guild_id ON roles("guild_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS emojis_guild_id ON emojis("guild_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_guild_id ON voice_states("guild_id");`)
-	pgMustRun(db, `CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_user_id ON voice_states("user_id");`)
-
 	return PgCache{
 		Pool:    db,
 		Options: options,
 	}
+}
+
+func (c *PgCache) CreateSchema(ctx context.Context) error {
+	batch := &pgx.Batch{}
+
+	// create schema
+	batch.Queue(`CREATE TABLE IF NOT EXISTS guilds("guild_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("guild_id"));`)
+
+	batch.Queue(`CREATE TABLE IF NOT EXISTS channels("channel_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("channel_id", "guild_id"));`)
+	batch.Queue(`CREATE TABLE IF NOT EXISTS users("user_id" int8 NOT NULL UNIQUE, "data" jsonb NOT NULL, PRIMARY KEY("user_id"));`)
+	batch.Queue(`CREATE TABLE IF NOT EXISTS members("guild_id" int8 NOT NULL, "user_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`)
+	batch.Queue(`CREATE TABLE IF NOT EXISTS roles("role_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("role_id", "guild_id"));`)
+	batch.Queue(`CREATE TABLE IF NOT EXISTS emojis("emoji_id" int8 NOT NULL UNIQUE, "guild_id" int8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("emoji_id", "guild_id"));`)
+	batch.Queue(`CREATE TABLE IF NOT EXISTS voice_states("guild_id" int8 NOT NULL, "user_id" INT8 NOT NULL, "data" jsonb NOT NULL, PRIMARY KEY("guild_id", "user_id"));`) // we may not have a cached user
+
+	// create indexes
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS channels_guild_id ON channels("guild_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS members_guild_id ON members("guild_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS member_user_id ON members("user_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS roles_guild_id ON roles("guild_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS emojis_guild_id ON emojis("guild_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_guild_id ON voice_states("guild_id");`)
+	batch.Queue(`CREATE INDEX CONCURRENTLY IF NOT EXISTS voice_states_user_id ON voice_states("user_id");`)
+
+	_, err := c.SendBatch(ctx, batch).Exec()
+	return err
 }
 
 func pgMustRun(db *pgxpool.Pool, query string) {
