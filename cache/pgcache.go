@@ -70,7 +70,7 @@ func (c *PgCache) GetOptions() CacheOptions {
 func (c *PgCache) StoreUser(user user.User) {
 	if c.Options.Users {
 		if encoded, err := json.Marshal(user.ToCachedUser()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO users("user_id", "data") VALUES($1, $2) ON CONFLICT("user_id") DO UPDATE SET "data" = $2;`, user.Id, string(encoded))
+			_, _ = c.Exec(context.Background(), `INSERT INTO users("user_id", "data", last_seen) VALUES($1, $2, NOW()) ON CONFLICT("user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, user.Id, string(encoded))
 		}
 	}
 }
@@ -79,9 +79,10 @@ func (c *PgCache) StoreUsers(users []user.User) {
 	if c.Options.Users {
 		batch := &pgx.Batch{}
 
+		query := `INSERT INTO users("user_id", "data", "last_seen") VALUES($1, $2, NOW()) ON CONFLICT("user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`
 		for _, u := range users {
 			if encoded, err := json.Marshal(u.ToCachedUser()); err == nil {
-				batch.Queue(`INSERT INTO users("user_id", "data") VALUES($1, $2) ON CONFLICT("user_id") DO UPDATE SET "data" = $2;`, u.Id, string(encoded))
+				batch.Queue(query, u.Id, string(encoded))
 			}
 		}
 
@@ -440,7 +441,7 @@ func (c *PgCache) GetGuildOwner(guildId uint64) (uint64, bool) {
 func (c *PgCache) StoreMember(m member.Member, guildId uint64) {
 	if c.Options.Members {
 		if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO members("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, guildId, m.User.Id, string(encoded))
+			_, _ = c.Exec(context.Background(), `INSERT INTO members("guild_id", "user_id", "data", "last_seen") VALUES($1, $2, $3, NOW()) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, guildId, m.User.Id, string(encoded))
 		}
 	}
 }
@@ -451,7 +452,7 @@ func (c *PgCache) StoreMembers(members []member.Member, guildId uint64) {
 
 		for _, m := range members {
 			if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
-				batch.Queue(`INSERT INTO members("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, guildId, m.User.Id, string(encoded))
+				batch.Queue(`INSERT INTO members("guild_id", "user_id", "data", "last_seen") VALUES($1, $2, $3, NOW()) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, guildId, m.User.Id, string(encoded))
 			}
 		}
 
