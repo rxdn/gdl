@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"github.com/rxdn/gdl/gateway/payloads/events"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/sirupsen/logrus"
@@ -33,52 +34,49 @@ func readyListener(s *Shard, e *events.Ready) {
 
 	s.sessionId = e.SessionId
 
-	s.Cache.StoreSelf(e.User)
-
-	// Don't store guilds twice
-	//s.Cache.StoreGuilds(e.Guilds)
+	s.Cache.StoreSelf(context.Background(), e.User)
 }
 
 func channelCreateListener(s *Shard, e *events.ChannelCreate) {
-	s.Cache.StoreChannel(e.Channel)
+	s.Cache.StoreChannel(context.Background(), e.Channel)
 }
 
 func channelUpdateListener(s *Shard, e *events.ChannelUpdate) {
-	s.Cache.StoreChannel(e.Channel)
+	s.Cache.StoreChannel(context.Background(), e.Channel)
 }
 
 func channelDeleteListener(s *Shard, e *events.ChannelDelete) {
-	s.Cache.DeleteChannel(e.Channel.Id)
+	s.Cache.DeleteChannel(context.Background(), e.Channel.Id)
 }
 
 func guildCreateListener(s *Shard, e *events.GuildCreate) {
-	s.Cache.StoreGuild(e.Guild)
+	s.Cache.StoreGuild(context.Background(), e.Guild)
 }
 
 func guildUpdateListener(s *Shard, e *events.GuildUpdate) {
-	s.Cache.StoreGuild(e.Guild)
+	s.Cache.StoreGuild(context.Background(), e.Guild)
 }
 
 func guildDeleteListener(s *Shard, e *events.GuildDelete) {
-	s.Cache.DeleteGuild(e.Id)
+	s.Cache.DeleteGuild(context.Background(), e.Id)
 }
 
 func guildEmojisUpdateListeners(s *Shard, e *events.GuildEmojisUpdate) {
 	for _, emoji := range e.Emojis {
-		s.Cache.StoreEmoji(emoji, e.GuildId)
+		s.Cache.StoreEmoji(context.Background(), emoji, e.GuildId)
 	}
 }
 
 func guildMemberAddListener(s *Shard, e *events.GuildMemberAdd) {
-	s.Cache.StoreMember(e.Member, e.GuildId)
+	s.Cache.StoreMember(context.Background(), e.Member, e.GuildId)
 }
 
 func guildMemberRemoveListener(s *Shard, e *events.GuildMemberRemove) {
-	s.Cache.DeleteMember(e.User.Id, e.GuildId)
+	s.Cache.DeleteMember(context.Background(), e.User.Id, e.GuildId)
 }
 
 func guildMemberUpdateListener(s *Shard, e *events.GuildMemberUpdate) {
-	s.Cache.StoreMember(member.Member{
+	s.Cache.StoreMember(context.Background(), member.Member{
 		User:         e.User,
 		Nick:         e.Nick,
 		Roles:        e.Roles,
@@ -88,26 +86,26 @@ func guildMemberUpdateListener(s *Shard, e *events.GuildMemberUpdate) {
 
 func guildMembersChunkListener(s *Shard, e *events.GuildMembersChunk) {
 	for _, member := range e.Members {
-		s.Cache.StoreMember(member, e.GuildId)
+		s.Cache.StoreMember(context.Background(), member, e.GuildId)
 	}
 }
 
 func guildRoleCreateListener(s *Shard, e *events.GuildRoleCreate) {
-	s.Cache.StoreRole(e.Role, e.GuildId)
+	s.Cache.StoreRole(context.Background(), e.Role, e.GuildId)
 }
 
 func guildRoleUpdateListener(s *Shard, e *events.GuildRoleUpdate) {
-	s.Cache.StoreRole(e.Role, e.GuildId)
+	s.Cache.StoreRole(context.Background(), e.Role, e.GuildId)
 }
 
 func guildRoleDeleteListener(s *Shard, e *events.GuildRoleDelete) {
-	s.Cache.DeleteRole(e.RoleId)
+	s.Cache.DeleteRole(context.Background(), e.RoleId)
 }
 
 func userUpdateListener(s *Shard, e *events.UserUpdate) {
-	s.Cache.StoreUser(e.User)
+	s.Cache.StoreUser(context.Background(), e.User)
 }
 
 func voiceStateUpdateListener(s *Shard, e *events.VoiceStateUpdate) {
-	s.Cache.StoreVoiceState(e.VoiceState)
+	s.Cache.StoreVoiceState(context.Background(), e.VoiceState)
 }

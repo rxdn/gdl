@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel/message"
 	"github.com/rxdn/gdl/objects/interaction"
@@ -8,7 +9,7 @@ import (
 	"github.com/rxdn/gdl/rest/request"
 )
 
-func GetGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (commands []interaction.ApplicationCommand, err error) {
+func GetGlobalCommands(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (commands []interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -17,7 +18,7 @@ func GetGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applica
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &commands)
+	err, _ = endpoint.Request(ctx, token, nil, &commands)
 	return
 }
 
@@ -29,7 +30,7 @@ type CreateCommandData struct {
 	Type        interaction.ApplicationCommandType     `json:"type"`
 }
 
-func CreateGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
+func CreateGlobalCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -38,11 +39,11 @@ func CreateGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &command)
+	err, _ = endpoint.Request(ctx, token, data, &command)
 	return
 }
 
-func ModifyGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, commandId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
+func ModifyGlobalCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, commandId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -51,11 +52,11 @@ func ModifyGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &command)
+	err, _ = endpoint.Request(ctx, token, data, &command)
 	return
 }
 
-func ModifyGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
+func ModifyGlobalCommands(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -64,11 +65,11 @@ func ModifyGlobalCommands(token string, rateLimiter *ratelimit.Ratelimiter, appl
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &commands)
+	err, _ = endpoint.Request(ctx, token, data, &commands)
 	return
 }
 
-func DeleteGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, commandId uint64) (err error) {
+func DeleteGlobalCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, commandId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -77,11 +78,11 @@ func DeleteGlobalCommand(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
-func GetGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64) (commands []interaction.ApplicationCommand, err error) {
+func GetGuildCommands(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64) (commands []interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -90,11 +91,11 @@ func GetGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicat
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &commands)
+	err, _ = endpoint.Request(ctx, token, nil, &commands)
 	return
 }
 
-func CreateGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
+func CreateGuildCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -103,11 +104,11 @@ func CreateGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &command)
+	err, _ = endpoint.Request(ctx, token, data, &command)
 	return
 }
 
-func ModifyGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
+func ModifyGuildCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64, data CreateCommandData) (command interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -116,11 +117,11 @@ func ModifyGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &command)
+	err, _ = endpoint.Request(ctx, token, data, &command)
 	return
 }
 
-func ModifyGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
+func ModifyGuildCommands(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CreateCommandData) (commands []interaction.ApplicationCommand, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -129,11 +130,11 @@ func ModifyGuildCommands(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &commands)
+	err, _ = endpoint.Request(ctx, token, data, &commands)
 	return
 }
 
-func DeleteGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (err error) {
+func DeleteGuildCommand(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -142,7 +143,7 @@ func DeleteGuildCommand(token string, rateLimiter *ratelimit.Ratelimiter, applic
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
@@ -153,7 +154,7 @@ type CommandWithPermissionsData struct {
 	Permissions   []interaction.ApplicationCommandPermissions `json:"permissions"`
 }
 
-func GetCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (command CommandWithPermissionsData, err error) {
+func GetCommandPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64) (command CommandWithPermissionsData, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -162,11 +163,11 @@ func GetCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, app
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &command)
+	err, _ = endpoint.Request(ctx, token, nil, &command)
 	return
 }
 
-func GetBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64) (commands []CommandWithPermissionsData, err error) {
+func GetBulkCommandPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64) (commands []CommandWithPermissionsData, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -175,11 +176,11 @@ func GetBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter,
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &commands)
+	err, _ = endpoint.Request(ctx, token, nil, &commands)
 	return
 }
 
-func EditCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64, data CommandWithPermissionsData) (command CommandWithPermissionsData, err error) {
+func EditCommandPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId, commandId uint64, data CommandWithPermissionsData) (command CommandWithPermissionsData, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -188,11 +189,11 @@ func EditCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, ap
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &command)
+	err, _ = endpoint.Request(ctx, token, data, &command)
 	return
 }
 
-func EditBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CommandWithPermissionsData) (commands []CommandWithPermissionsData, err error) {
+func EditBulkCommandPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, guildId uint64, data []CommandWithPermissionsData) (commands []CommandWithPermissionsData, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -201,11 +202,11 @@ func EditBulkCommandPermissions(token string, rateLimiter *ratelimit.Ratelimiter
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &commands)
+	err, _ = endpoint.Request(ctx, token, data, &commands)
 	return
 }
 
-func GetOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (msg message.Message, err error) {
+func GetOriginalInteractionResponse(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -214,11 +215,11 @@ func GetOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelim
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", nil, &msg)
+	err, _ = endpoint.Request(ctx, "", nil, &msg)
 	return
 }
 
-func EditOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookEditBody) (msg message.Message, err error) {
+func EditOriginalInteractionResponse(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookEditBody) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -227,11 +228,11 @@ func EditOriginalInteractionResponse(token string, rateLimiter *ratelimit.Rateli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", data, &msg)
+	err, _ = endpoint.Request(ctx, "", data, &msg)
 	return
 }
 
-func DeleteOriginalInteractionResponse(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (err error) {
+func DeleteOriginalInteractionResponse(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -240,11 +241,11 @@ func DeleteOriginalInteractionResponse(token string, rateLimiter *ratelimit.Rate
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", nil, nil)
+	err, _ = endpoint.Request(ctx, "", nil, nil)
 	return
 }
 
-func CreateFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookBody) (msg message.Message, err error) {
+func CreateFollowupMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId uint64, data WebhookBody) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -253,11 +254,11 @@ func CreateFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, app
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", data, &msg)
+	err, _ = endpoint.Request(ctx, "", data, &msg)
 	return
 }
 
-func GetFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (msg message.Message, err error) {
+func GetFollowupMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -266,11 +267,11 @@ func GetFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applic
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", nil, &msg)
+	err, _ = endpoint.Request(ctx, "", nil, &msg)
 	return
 }
 
-func EditFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64, data WebhookBody) (msg message.Message, err error) {
+func EditFollowupMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64, data WebhookBody) (msg message.Message, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -279,11 +280,11 @@ func EditFollowupMessage(token string, rateLimiter *ratelimit.Ratelimiter, appli
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", data, &msg)
+	err, _ = endpoint.Request(ctx, "", data, &msg)
 	return
 }
 
-func DeleteFollowupMessages(token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (err error) {
+func DeleteFollowupMessages(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, applicationId, messageId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -292,6 +293,6 @@ func DeleteFollowupMessages(token string, rateLimiter *ratelimit.Ratelimiter, ap
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request("", nil, nil)
+	err, _ = endpoint.Request(ctx, "", nil, nil)
 	return
 }

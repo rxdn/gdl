@@ -15,6 +15,7 @@ import (
 	"sync"
 )
 
+// BoltCache Deprecated
 type BoltCache struct {
 	*bolt.DB
 	options CacheOptions

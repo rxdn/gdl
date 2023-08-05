@@ -1,0 +1,1 @@
+SELECT "role_id", "data" FROM roles WHERE "role_id" = ANY($1) AND "guild_id" = $2;

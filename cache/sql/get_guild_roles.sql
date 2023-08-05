@@ -1,0 +1,1 @@
+SELECT "role_id", "data" FROM roles WHERE "guild_id" = $1;

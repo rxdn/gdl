@@ -1,0 +1,1 @@
+SELECT "channel_id", "data" FROM channels WHERE "guild_id" = $1;

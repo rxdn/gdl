@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	_ "embed"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -13,13 +13,14 @@ import (
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
+	"github.com/rxdn/gdl/utils"
 	"strconv"
 	"sync"
 )
 
 type PgCache struct {
 	*pgxpool.Pool
-	Options CacheOptions
+	options CacheOptions
 
 	// TODO: Should we store self in the DB? Seems kinda redundant
 	selfLock sync.RWMutex
@@ -35,9 +36,84 @@ var json = jsoniter.Config{
 func NewPgCache(db *pgxpool.Pool, options CacheOptions) PgCache {
 	return PgCache{
 		Pool:    db,
-		Options: options,
+		options: options,
 	}
 }
+
+var (
+	//go:embed sql/insert_user.sql
+	queryInsertUser string
+	//go:embed sql/get_user.sql
+	queryGetUser string
+	//go:embed sql/get_users.sql
+	queryGetUsers string
+
+	//go:embed sql/insert_guild.sql
+	queryInsertGuild string
+	//go:embed sql/get_guild.sql
+	queryGetGuild string
+	//go:embed sql/get_guild_count.sql
+	queryGetGuildCount string
+	//go:embed sql/get_guild_owner.sql
+	queryGetGuildOwner string
+	//go:embed sql/delete_guild.sql
+	queryDeleteGuild string
+
+	//go:embed sql/get_channel.sql
+	queryGetChannel string
+	//go:embed sql/get_guild_channels.sql
+	queryGetGuildChannels string
+	//go:embed sql/insert_channel.sql
+	queryInsertChannel string
+	//go:embed sql/delete_channel.sql
+	queryDeleteChannel string
+	//go:embed sql/delete_guild_channels.sql
+	queryDeleteGuildChannels string
+
+	//go:embed sql/get_role.sql
+	queryGetRole string
+	//go:embed sql/get_roles.sql
+	queryGetRoles string
+	//go:embed sql/get_guild_role.sql
+	queryGetGuildRole string
+	//go:embed sql/get_guild_roles.sql
+	queryGetGuildRoles string
+	//go:embed sql/insert_role.sql
+	queryInsertRole string
+	//go:embed sql/delete_role.sql
+	queryDeleteRole string
+	//go:embed sql/delete_guild_roles.sql
+	queryDeleteGuildRoles string
+
+	//go:embed sql/get_member.sql
+	queryGetMember string
+	//go:embed sql/get_guild_members.sql
+	queryGetGuildMembers string
+	//go:embed sql/get_guild_members_with_users.sql
+	queryGetGuildMembersWithUsers string
+	//go:embed sql/insert_member.sql
+	queryInsertMember string
+	//go:embed sql/delete_member.sql
+	queryDeleteMember string
+
+	//go:embed sql/get_emoji.sql
+	queryGetEmoji string
+	//go:embed sql/get_guild_emojis.sql
+	queryGetGuildEmojis string
+	//go:embed sql/insert_emoji.sql
+	queryInsertEmoji string
+	//go:embed sql/delete_emoji.sql
+	queryDeleteEmoji string
+
+	//go:embed sql/get_voice_state.sql
+	queryGetVoiceState string
+	//go:embed sql/get_guild_voice_states.sql
+	queryGetGuildVoiceStates string
+	//go:embed sql/insert_voice_state.sql
+	queryInsertVoiceState string
+	//go:embed sql/delete_voice_state.sql
+	queryDeleteVoiceState string
+)
 
 func (c *PgCache) CreateSchema(ctx context.Context) error {
 	batch := &pgx.Batch{}
@@ -65,63 +141,70 @@ func (c *PgCache) CreateSchema(ctx context.Context) error {
 	return err
 }
 
-func pgMustRun(db *pgxpool.Pool, query string) {
-	if _, err := db.Exec(context.Background(), query); err != nil {
-		panic(err)
+func (c *PgCache) Options() CacheOptions {
+	return c.options
+}
+
+func (c *PgCache) StoreUser(ctx context.Context, user user.User) error {
+	if !c.options.Users {
+		return nil
 	}
+
+	encoded, err := json.Marshal(user.ToCachedUser())
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Exec(ctx, queryInsertUser, user.Id, string(encoded))
+	return err
 }
 
-func (c *PgCache) GetOptions() CacheOptions {
-	return c.Options
-}
+func (c *PgCache) StoreUsers(ctx context.Context, users []user.User) error {
+	if !c.options.Users {
+		return nil
+	}
 
-func (c *PgCache) StoreUser(user user.User) {
-	if c.Options.Users {
-		if encoded, err := json.Marshal(user.ToCachedUser()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO users("user_id", "data", last_seen) VALUES($1, $2, NOW()) ON CONFLICT("user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, user.Id, string(encoded))
+	batch := &pgx.Batch{}
+
+	for _, u := range users {
+		encoded, err := json.Marshal(u.ToCachedUser())
+		if err != nil {
+			return err
 		}
+
+		batch.Queue(queryInsertUser, u.Id, string(encoded))
 	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }
 
-func (c *PgCache) StoreUsers(users []user.User) {
-	if c.Options.Users {
-		batch := &pgx.Batch{}
-
-		query := `INSERT INTO users("user_id", "data", "last_seen") VALUES($1, $2, NOW()) ON CONFLICT("user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`
-		for _, u := range users {
-			if encoded, err := json.Marshal(u.ToCachedUser()); err == nil {
-				batch.Queue(query, u.Id, string(encoded))
-			}
-		}
-
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-
-		_, _ = br.Exec()
-	}
-}
-
-func (c *PgCache) GetUser(id uint64) (u user.User, ok bool) {
+func (c *PgCache) GetUser(ctx context.Context, id uint64) (user.User, error) {
 	var raw string
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM users WHERE "user_id" = $1;`, id).Scan(&raw); err != nil {
-		return
+	if err := c.QueryRow(ctx, queryGetUser, id).Scan(&raw); err == pgx.ErrNoRows {
+		return user.User{}, ErrNotFound
+	} else if err != nil {
+		return user.User{}, err
 	}
 
 	var cached user.CachedUser
 	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-		return
+		return user.User{}, err
 	}
 
-	return cached.ToUser(id), true
+	return cached.ToUser(id), nil
 }
 
-func (c *PgCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
+func (c *PgCache) GetUsers(ctx context.Context, ids []uint64) (map[uint64]user.User, error) {
 	idArray := &pgtype.Int8Array{}
 	if err := idArray.Set(ids); err != nil {
 		return nil, err
 	}
 
-	rows, err := c.Query(context.Background(), `SELECT "user_id", "data" FROM users WHERE "user_id" = ANY($1);`, idArray)
+	rows, err := c.Query(ctx, queryGetUsers, idArray)
 	if err != nil {
 		return nil, err
 	}
@@ -146,470 +229,507 @@ func (c *PgCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
 	return users, nil
 }
 
-// TODO: The "data" field just has null values. Find the cause and solution.
-func (c *PgCache) StoreGuilds(guilds []guild.Guild) {
-	if c.Options.Guilds {
-		// store guilds
-		batch := &pgx.Batch{}
+func (c *PgCache) StoreGuilds(ctx context.Context, guilds []guild.Guild) error {
+	if !c.options.Guilds {
+		return nil
+	}
 
-		for _, guild := range guilds {
-			// append guild
-			if encoded, err := json.Marshal(guild.ToCachedGuild()); err == nil {
-				batch.Queue(`INSERT INTO guilds("guild_id", "data") VALUES($1, $2) ON CONFLICT("guild_id") DO UPDATE SET "data" = $2;`, guild.Id, string(encoded))
-			}
+	// store guilds
+	batch := &pgx.Batch{}
 
-			// append channels
-			if c.Options.Channels {
-				for _, channel := range guild.Channels {
-					if encoded, err := json.Marshal(channel.ToCachedChannel()); err == nil {
-						batch.Queue(`INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, channel.Id, channel.GuildId, string(encoded))
-					}
+	for _, guild := range guilds {
+		// append guild
+		encoded, err := json.Marshal(guild.ToCachedGuild())
+		if err != nil {
+			return err
+		}
+
+		batch.Queue(`INSERT INTO guilds("guild_id", "data") VALUES($1, $2) ON CONFLICT("guild_id") DO UPDATE SET "data" = $2;`, guild.Id, string(encoded))
+
+		// append channels
+		if c.options.Channels {
+			for _, channel := range guild.Channels {
+				encoded, err := json.Marshal(channel.ToCachedChannel())
+				if err != nil {
+					return err
 				}
-			}
 
-			// append roles
-			if c.Options.Roles {
-				for _, role := range guild.Roles {
-					if encoded, err := json.Marshal(role.ToCachedRole(guild.Id)); err == nil {
-						batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guild.Id, string(encoded))
-					}
-				}
-			}
-
-			// append members
-			if c.Options.Members {
-				for _, member := range guild.Members {
-					if encoded, err := json.Marshal(member.ToCachedMember()); err == nil {
-						batch.Queue(`INSERT INTO members("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, guild.Id, member.User.Id, string(encoded))
-					}
-				}
-			}
-
-			// append users
-			if c.Options.Users {
-				for _, member := range guild.Members {
-					if encoded, err := json.Marshal(member.User.ToCachedUser()); err == nil {
-						batch.Queue(`INSERT INTO users("user_id", "data") VALUES($1, $2) ON CONFLICT("user_id") DO UPDATE SET "data" = $2;`, member.User.Id, string(encoded))
-					}
-				}
-			}
-
-			// append emojis
-			if c.Options.Emojis {
-				for _, emoji := range guild.Emojis {
-					if encoded, err := json.Marshal(emoji.ToCachedEmoji(guild.Id)); err == nil {
-						batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guild.Id, string(encoded))
-					}
-				}
-			}
-
-			// append voice states
-			if c.Options.VoiceStates {
-				for _, state := range guild.VoiceStates {
-					if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
-						batch.Queue(`INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
-					}
-				}
+				batch.Queue(`INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, channel.Id, channel.GuildId, string(encoded))
 			}
 		}
 
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
+		// append roles
+		if c.options.Roles {
+			for _, role := range guild.Roles {
+				encoded, err := json.Marshal(role.ToCachedRole(guild.Id))
+				if err != nil {
+					return err
+				}
+
+				batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guild.Id, string(encoded))
+			}
+		}
+
+		// append emojis
+		if c.options.Emojis {
+			for _, emoji := range guild.Emojis {
+				encoded, err := json.Marshal(emoji.ToCachedEmoji(guild.Id))
+				if err != nil {
+					return err
+				}
+
+				batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guild.Id, string(encoded))
+			}
+		}
+
+		// append voice states
+		if c.options.VoiceStates {
+			for _, state := range guild.VoiceStates {
+				encoded, err := json.Marshal(state.ToCachedVoiceState())
+				if err != nil {
+					return err
+				}
+
+				batch.Queue(`INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
+			}
+		}
 	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }
 
-func (c *PgCache) StoreGuild(g guild.Guild) {
-	if c.Options.Guilds {
-		if encoded, err := json.Marshal(g.ToCachedGuild()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO guilds("guild_id", "data") VALUES($1, $2) ON CONFLICT("guild_id") DO UPDATE SET "data" = $2;`, g.Id, string(encoded))
+func (c *PgCache) StoreGuild(ctx context.Context, g guild.Guild) error {
+	if c.options.Guilds {
+		encoded, err := json.Marshal(g.ToCachedGuild())
+		if err != nil {
+			return err
+		}
+
+		if _, err := c.Exec(context.Background(), queryInsertGuild, g.Id, string(encoded)); err != nil {
+			return err
 		}
 	}
+
 	for i, channel := range g.Channels {
 		channel.GuildId = g.Id
 		g.Channels[i] = channel
 	}
 
-	c.StoreChannels(g.Channels)
-	c.StoreRoles(g.Roles, g.Id)
-	c.StoreMembers(g.Members, g.Id)
-	c.StoreEmojis(g.Emojis, g.Id)
-	c.StoreVoiceStates(g.VoiceStates)
-
-	var users []user.User
-	for _, m := range g.Members {
-		users = append(users, m.User)
+	if err := c.StoreChannels(ctx, g.Channels); err != nil {
+		return err
 	}
-	c.StoreUsers(users)
+
+	if err := c.StoreRoles(ctx, g.Roles, g.Id); err != nil {
+		return err
+	}
+
+	if err := c.StoreEmojis(ctx, g.Emojis, g.Id); err != nil {
+		return err
+	}
+
+	if err := c.StoreVoiceStates(ctx, g.VoiceStates); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (c *PgCache) GetGuild(id uint64) (g guild.Guild, ok bool) {
+func (c *PgCache) GetGuild(ctx context.Context, id uint64) (guild.Guild, error) {
 	var raw string
-	err := c.QueryRow(context.Background(), `SELECT "data" FROM guilds WHERE "guild_id" = $1;`, id).Scan(&raw)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return g, false
-		}
-
-		fmt.Println(err.Error())
-		return
+	err := c.QueryRow(context.Background(), queryGetGuild, id).Scan(&raw)
+	if err == pgx.ErrNoRows {
+		return guild.Guild{}, ErrNotFound
+	} else if err != nil {
+		return guild.Guild{}, err
 	}
 
 	var cachedGuild guild.CachedGuild
 	if err := json.Unmarshal([]byte(raw), &cachedGuild); err != nil {
-		fmt.Println(err.Error())
-		return
+		return guild.Guild{}, err
 	}
 
-	g = cachedGuild.ToGuild(id)
-
-	return g, true
+	return cachedGuild.ToGuild(id), nil
 }
 
-func (c *PgCache) GetGuildChannels(guildId uint64) (channels []channel.Channel) {
-	if !c.Options.Channels {
-		return
+func (c *PgCache) GetGuildChannels(ctx context.Context, guildId uint64) ([]channel.Channel, error) {
+	if !c.options.Channels {
+		return nil, nil
 	}
 
-	rows, err := c.Query(context.Background(), `SELECT "channel_id", "data" FROM channels WHERE "guild_id" = $1;`, guildId)
+	rows, err := c.Query(ctx, queryGetGuildChannels, guildId)
 	defer rows.Close()
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	var channels []channel.Channel
 	for rows.Next() {
 		var channelId uint64
 		var raw string
 
 		if err := rows.Scan(&channelId, &raw); err != nil {
-			continue
+			return nil, err
 		}
 
 		var cached channel.CachedChannel
 		if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-			return
+			return nil, err
 		}
 
 		channels = append(channels, cached.ToChannel(channelId, guildId))
 	}
 
-	return
+	return channels, nil
 }
 
-func (c *PgCache) GetGuildRoles(guildId uint64) (roles []guild.Role) {
-	if !c.Options.Roles {
-		return
+func (c *PgCache) GetGuildRoles(ctx context.Context, guildId uint64) ([]guild.Role, error) {
+	if !c.options.Roles {
+		return nil, nil
 	}
 
-	rows, err := c.Query(context.Background(), `SELECT "role_id", "data" FROM roles WHERE "guild_id" = $1;`, guildId)
-	defer rows.Close()
+	rows, err := c.Query(ctx, queryGetGuildRoles, guildId)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	defer rows.Close()
+
+	var roles []guild.Role
 	for rows.Next() {
 		var roleId uint64
 		var raw string
 
 		if err := rows.Scan(&roleId, &raw); err != nil {
-			continue
+			return nil, err
 		}
 
 		var cached guild.CachedRole
 		if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-			return
+			return nil, err
 		}
 
 		roles = append(roles, cached.ToRole(roleId))
 	}
 
-	return
+	return roles, nil
 }
 
-func (c *PgCache) GetGuildMembers(guildId uint64, withUserData bool) (members []member.Member) {
-	if !c.Options.Members {
-		return
+func (c *PgCache) GetGuildMembers(ctx context.Context, guildId uint64, withUserData bool) ([]member.Member, error) {
+	if !c.options.Members {
+		return nil, nil
 	}
 
 	var query string
 	if withUserData {
-		query = `
-SELECT "members.user_id", "members.data", "users.data"
-FROM members
-LEFT JOIN users ON "members.user_id"="users.user_id"
-WHERE "guild_id" = $1;
-`
+		query = queryGetGuildMembersWithUsers
 	} else {
-		query = `SELECT "user_id", "data" FROM members WHERE "guild_id" = $1;`
+		query = queryGetGuildMembers
 	}
 
-	rows, err := c.Query(context.Background(), query, guildId)
-	defer rows.Close()
+	rows, err := c.Query(ctx, query, guildId)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	defer rows.Close()
+
+	var members []member.Member
 	for rows.Next() {
 		var userId uint64
 		var memberRaw, userRaw string
 
-		var err error
 		if withUserData {
-			err = rows.Scan(&userId, &memberRaw, &userRaw)
+			if err := rows.Scan(&userId, &memberRaw, &userRaw); err != nil {
+				return nil, err
+			}
 		} else {
-			err = rows.Scan(&userId, &memberRaw)
-		}
-
-		if err != nil {
-			continue
+			if err := rows.Scan(&userId, &memberRaw); err != nil {
+				return nil, err
+			}
 		}
 
 		var cachedMember member.CachedMember
 		if err := json.Unmarshal([]byte(memberRaw), &cachedMember); err != nil {
-			return
+			return nil, err
 		}
 
 		var cachedUser user.CachedUser
 		if withUserData && userRaw != "" {
 			if err := json.Unmarshal([]byte(userRaw), &cachedUser); err != nil {
-				return
+				return nil, err
 			}
 		}
 
-		member := cachedMember.ToMember(cachedUser.ToUser(userId))
-		members = append(members, member)
+		members = append(members, cachedMember.ToMember(cachedUser.ToUser(userId)))
 	}
 
-	return
+	return members, nil
 }
 
-func (c *PgCache) GetGuildEmojis(guildId uint64) (emojis []emoji.Emoji) {
-	if !c.Options.Emojis {
-		return
+func (c *PgCache) GetGuildEmojis(ctx context.Context, guildId uint64) ([]emoji.Emoji, error) {
+	if !c.options.Emojis {
+		return nil, nil
 	}
 
-	rows, err := c.Query(context.Background(), `SELECT "emoji_id", "data" FROM emojis WHERE "guild_id" = $1;`, guildId)
-	defer rows.Close()
+	rows, err := c.Query(ctx, queryGetGuildEmojis, guildId)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	defer rows.Close()
+
+	var emojis []emoji.Emoji
 	for rows.Next() {
 		var emojiId uint64
 		var raw string
-
 		if err := rows.Scan(&emojiId, &raw); err != nil {
-			continue
+			return nil, err
 		}
 
 		var cached emoji.CachedEmoji
 		if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-			return
+			return nil, err
 		}
 
 		emojis = append(emojis, cached.ToEmoji(emojiId, user.User{}))
 	}
 
-	return
+	return emojis, nil
 }
 
-// TODO: FIX
-func (c *PgCache) GetGuilds() []guild.Guild {
-	return nil
+func (c *PgCache) DeleteGuild(ctx context.Context, id uint64) error {
+	_, err := c.Exec(ctx, queryDeleteGuild, id)
+	return err
 }
 
-func (c *PgCache) DeleteGuild(id uint64) {
-	if c.Options.Guilds {
-		_, _ = c.Exec(context.Background(), `DELETE FROM guilds WHERE "guild_id" = $1;`, id)
-	}
-}
-
-func (c *PgCache) GetGuildCount() int {
+func (c *PgCache) GetGuildCount(ctx context.Context) (int, error) {
 	var count int
-	_ = c.QueryRow(context.Background(), "SELECT COUNT(*) FROM guilds;").Scan(&count)
-	return count
+	if err := c.QueryRow(ctx, queryGetGuildCount).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
-func (c *PgCache) GetGuildOwner(guildId uint64) (uint64, bool) {
-	query := `SELECT data->'owner_id' FROM guilds WHERE "guild_id" = $1;`
-
+func (c *PgCache) GetGuildOwner(ctx context.Context, guildId uint64) (uint64, error) {
 	var ownerId string
-	if err := c.QueryRow(context.Background(), query, guildId).Scan(&ownerId); err != nil { // Includes pgx.ErrNoRows
-		return 0, false
+	if err := c.QueryRow(ctx, queryGetGuildOwner, guildId).Scan(&ownerId); err == pgx.ErrNoRows {
+		return 0, ErrNotFound
+	} else if err != nil {
+		return 0, err
 	}
 
 	parsed, err := strconv.ParseUint(ownerId, 10, 64)
 	if err != nil {
-		return 0, false
+		return 0, err
 	}
 
-	return parsed, true
+	return parsed, nil
 }
 
-func (c *PgCache) StoreMember(m member.Member, guildId uint64) {
-	if c.Options.Members {
-		if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO members("guild_id", "user_id", "data", "last_seen") VALUES($1, $2, $3, NOW()) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, guildId, m.User.Id, string(encoded))
+func (c *PgCache) StoreMember(ctx context.Context, m member.Member, guildId uint64) error {
+	if !c.options.Members {
+		return nil
+	}
+
+	encoded, err := json.Marshal(m.ToCachedMember())
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Exec(ctx, queryInsertMember, guildId, m.User.Id, string(encoded))
+	return err
+}
+
+func (c *PgCache) StoreMembers(ctx context.Context, members []member.Member, guildId uint64) error {
+	if c.options.Members {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+
+	for _, m := range members {
+		encoded, err := json.Marshal(m.ToCachedMember())
+		if err != nil {
+			return err
 		}
+
+		batch.Queue(queryInsertMember, guildId, m.User.Id, string(encoded))
 	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }
 
-func (c *PgCache) StoreMembers(members []member.Member, guildId uint64) {
-	if c.Options.Members {
-		batch := &pgx.Batch{}
-
-		for _, m := range members {
-			if encoded, err := json.Marshal(m.ToCachedMember()); err == nil {
-				batch.Queue(`INSERT INTO members("guild_id", "user_id", "data", "last_seen") VALUES($1, $2, $3, NOW()) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = excluded.data, "last_seen" = excluded.last_seen;`, guildId, m.User.Id, string(encoded))
-			}
-		}
-
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
+func (c *PgCache) GetMember(ctx context.Context, guildId, userId uint64) (member.Member, error) {
+	if !c.options.Members {
+		return member.Member{}, ErrNotFound
 	}
-}
-
-func (c *PgCache) GetMember(guildId, userId uint64) (member.Member, bool) {
-	if !c.Options.Members {
-		return member.Member{}, false
-	}
-
-	query := `
-SELECT members.data, users.data FROM members
-LEFT JOIN users ON members.user_id=users.user_id
-WHERE "guild_id" = $1 AND members.user_id = $2;
-`
 
 	var memberRaw, userRaw sql.NullString
-	if err := c.QueryRow(context.Background(), query, guildId, userId).Scan(&memberRaw, &userRaw); err != nil {
-		return member.Member{}, false
+	if err := c.QueryRow(ctx, queryGetMember, guildId, userId).Scan(&memberRaw, &userRaw); err == pgx.ErrNoRows {
+		return member.Member{}, ErrNotFound
+	} else if err != nil {
+		return member.Member{}, err
 	}
 
-	// we need to cache either member or user
-	if !memberRaw.Valid || !userRaw.Valid {
-		return member.Member{}, false
+	if !memberRaw.Valid {
+		return member.Member{}, ErrNotFound
 	}
 
 	var cachedMember member.CachedMember
 	if err := json.Unmarshal([]byte(memberRaw.String), &cachedMember); err != nil {
-		return member.Member{}, false
+		return member.Member{}, err
 	}
 
 	var cachedUser user.CachedUser
-	if err := json.Unmarshal([]byte(userRaw.String), &cachedUser); err != nil {
-		return member.Member{}, false
-	}
-
-	return cachedMember.ToMember(cachedUser.ToUser(userId)), true
-}
-
-func (c *PgCache) DeleteMember(userId, guildId uint64) {
-	if c.Options.Members {
-		_, _ = c.Exec(context.Background(), `DELETE FROM members WHERE "guild_id" = $1 AND "user_id" = $2;`, guildId, userId)
-	}
-}
-
-func (c *PgCache) StoreChannel(ch channel.Channel) {
-	if c.Options.Channels {
-		if encoded, err := json.Marshal(ch.ToCachedChannel()); err == nil {
-			_, err = c.Exec(context.Background(), `INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, ch.Id, ch.GuildId, string(encoded))
+	if userRaw.Valid {
+		if err := json.Unmarshal([]byte(userRaw.String), &cachedUser); err != nil {
+			return member.Member{}, err
 		}
 	}
+
+	return cachedMember.ToMember(cachedUser.ToUser(userId)), nil
 }
 
-func (c *PgCache) StoreChannels(channels []channel.Channel) {
-	if c.Options.Channels {
-		batch := &pgx.Batch{}
+func (c *PgCache) DeleteMember(ctx context.Context, userId, guildId uint64) error {
+	_, err := c.Exec(ctx, queryDeleteMember, guildId, userId)
+	return err
+}
 
-		for _, ch := range channels {
-			if encoded, err := json.Marshal(ch.ToCachedChannel()); err == nil {
-				batch.Queue(`INSERT INTO channels("channel_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("channel_id") DO UPDATE SET "data" = $3;`, ch.Id, ch.GuildId, string(encoded))
-			}
+func (c *PgCache) StoreChannel(ctx context.Context, ch channel.Channel) error {
+	if !c.options.Channels {
+		return nil
+	}
+
+	encoded, err := json.Marshal(ch.ToCachedChannel())
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Exec(ctx, queryInsertChannel, ch.Id, ch.GuildId, string(encoded))
+	return err
+}
+
+func (c *PgCache) StoreChannels(ctx context.Context, channels []channel.Channel) error {
+	if !c.options.Channels {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+
+	for _, ch := range channels {
+		encoded, err := json.Marshal(ch.ToCachedChannel())
+		if err != nil {
+			return err
 		}
 
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
+		batch.Queue(queryInsertChannel, ch.Id, ch.GuildId, string(encoded))
 	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }
 
-func (c *PgCache) GetChannel(channelId uint64) (channel.Channel, bool) {
-	if !c.Options.Channels {
-		return channel.Channel{}, false
+func (c *PgCache) GetChannel(ctx context.Context, channelId uint64) (channel.Channel, error) {
+	if !c.options.Channels {
+		return channel.Channel{}, ErrNotFound
 	}
 
 	var guildId uint64
 	var raw string
-	if err := c.QueryRow(context.Background(), `SELECT "guild_id", "data" FROM channels WHERE "channel_id" = $1;`, channelId).Scan(&guildId, &raw); err != nil {
-		return channel.Channel{}, false
+	if err := c.QueryRow(ctx, queryGetChannel, channelId).Scan(&guildId, &raw); err == pgx.ErrNoRows {
+		return channel.Channel{}, ErrNotFound
+	} else if err != nil {
+		return channel.Channel{}, err
 	}
 
 	var cached channel.CachedChannel
 	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-		return channel.Channel{}, false
+		return channel.Channel{}, err
 	}
 
-	return cached.ToChannel(channelId, guildId), true
+	return cached.ToChannel(channelId, guildId), nil
 }
 
-func (c *PgCache) DeleteChannel(channelId uint64) {
-	if c.Options.Channels {
-		_, _ = c.Exec(context.Background(), `DELETE FROM channels WHERE "channel_id" = $1;`, channelId)
+func (c *PgCache) DeleteChannel(ctx context.Context, channelId uint64) error {
+	return utils.Second(c.Exec(ctx, queryDeleteChannel, channelId))
+}
+
+func (c *PgCache) DeleteGuildChannels(ctx context.Context, guildId uint64) error {
+	return utils.Second(c.Exec(ctx, queryDeleteGuildChannels, guildId))
+}
+
+func (c *PgCache) StoreRole(ctx context.Context, role guild.Role, guildId uint64) error {
+	if !c.options.Roles {
+		return nil
 	}
-}
 
-func (c *PgCache) DeleteGuildChannels(guildId uint64) {
-	if c.Options.Channels {
-		_, _ = c.Exec(context.Background(), `DELETE FROM channels WHERE "guild_id" = $1;`, guildId)
+	encoded, err := json.Marshal(role.ToCachedRole(guildId))
+	if err != nil {
+		return err
 	}
+
+	_, err = c.Exec(ctx, queryInsertRole, role.Id, guildId, string(encoded))
+	return err
 }
 
-func (c *PgCache) StoreRole(role guild.Role, guildId uint64) {
-	if c.Options.Roles {
-		if encoded, err := json.Marshal(role.ToCachedRole(guildId)); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guildId, string(encoded))
+func (c *PgCache) StoreRoles(ctx context.Context, roles []guild.Role, guildId uint64) error {
+	if !c.options.Roles {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+
+	for _, role := range roles {
+		encoded, err := json.Marshal(role.ToCachedRole(guildId))
+		if err != nil {
+			return err
 		}
+
+		batch.Queue(queryInsertRole, role.Id, guildId, string(encoded))
 	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }
 
-func (c *PgCache) StoreRoles(roles []guild.Role, guildId uint64) {
-	if c.Options.Roles {
-		batch := &pgx.Batch{}
-
-		for _, role := range roles {
-			if encoded, err := json.Marshal(role.ToCachedRole(guildId)); err == nil {
-				batch.Queue(`INSERT INTO roles("role_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("role_id", "guild_id") DO UPDATE SET "data" = $3;`, role.Id, guildId, string(encoded))
-			}
-		}
-
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
-	}
-}
-
-func (c *PgCache) GetRole(id uint64) (guild.Role, bool) {
-	if !c.Options.Roles {
-		return guild.Role{}, false
+func (c *PgCache) GetRole(ctx context.Context, id uint64) (guild.Role, error) {
+	if !c.options.Roles {
+		return guild.Role{}, ErrNotFound
 	}
 
 	var raw string
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM roles WHERE "role_id" = $1;`, id).Scan(&raw); err != nil {
-		return guild.Role{}, false
+	if err := c.QueryRow(ctx, queryGetRole, id).Scan(&raw); err == pgx.ErrNoRows {
+		return guild.Role{}, ErrNotFound
+	} else if err != nil {
+		return guild.Role{}, err
 	}
 
 	var cached guild.CachedRole
 	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-		return guild.Role{}, false
+		return guild.Role{}, err
 	}
 
-	return cached.ToRole(id), true
+	return cached.ToRole(id), nil
 }
 
-func (c *PgCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
-	if !c.Options.Roles {
-		return nil, nil
+func (c *PgCache) GetRoles(ctx context.Context, guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
+	if !c.options.Roles {
+		return nil, ErrNotFound
 	}
 
 	idArray := &pgtype.Int8Array{}
@@ -617,18 +737,17 @@ func (c *PgCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role,
 		return nil, err
 	}
 
-	query := `SELECT "role_id", "data" FROM roles WHERE "role_id" = ANY($1) AND "guild_id" = $2;`
-	rows, err := c.Query(context.Background(), query, idArray, guildId)
+	rows, err := c.Query(ctx, queryGetRoles, idArray, guildId)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
+
 	roles := make(map[uint64]guild.Role)
 	for rows.Next() {
 		var id uint64
 		var raw string
-
 		if err := rows.Scan(&id, &raw); err != nil {
 			return nil, err
 		}
@@ -644,216 +763,243 @@ func (c *PgCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role,
 	return roles, nil
 }
 
-func (c *PgCache) GetRoleInGuild(id, guildId uint64) (guild.Role, bool) {
-	if !c.Options.Roles {
-		return guild.Role{}, false
+func (c *PgCache) GetGuildRole(ctx context.Context, id, guildId uint64) (guild.Role, error) {
+	if !c.options.Roles {
+		return guild.Role{}, ErrNotFound
 	}
 
 	var raw string
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM roles WHERE "role_id" = $1 AND "guild_id" = $2;`, id, guildId).Scan(&raw); err != nil {
-		return guild.Role{}, false
+	if err := c.QueryRow(ctx, queryGetGuildRole, id, guildId).Scan(&raw); err == pgx.ErrNoRows {
+		return guild.Role{}, ErrNotFound
+	} else if err != nil {
+		return guild.Role{}, err
 	}
 
 	var cached guild.CachedRole
 	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-		return guild.Role{}, false
+		return guild.Role{}, err
 	}
 
-	return cached.ToRole(id), true
+	return cached.ToRole(id), nil
 }
 
-func (c *PgCache) DeleteRole(roleId uint64) {
-	if c.Options.Roles {
-		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "role_id" = $1;`, roleId)
+func (c *PgCache) DeleteRole(ctx context.Context, roleId uint64) error {
+	_, err := c.Exec(ctx, queryDeleteRole, roleId)
+	return err
+}
+
+func (c *PgCache) DeleteGuildRoles(ctx context.Context, guildId uint64) error {
+	_, err := c.Exec(ctx, queryDeleteGuildRoles, guildId)
+	return err
+}
+
+func (c *PgCache) StoreEmoji(ctx context.Context, emoji emoji.Emoji, guildId uint64) error {
+	if !c.options.Emojis {
+		return nil
 	}
-}
 
-func (c *PgCache) DeleteGuildRoles(guildId uint64) {
-	if c.Options.Channels {
-		_, _ = c.Exec(context.Background(), `DELETE FROM roles WHERE "guild_id" = $1;`, guildId)
+	encoded, err := json.Marshal(emoji.ToCachedEmoji(guildId))
+	if err != nil {
+		return err
 	}
+
+	_, err = c.Exec(ctx, queryInsertEmoji, emoji.Id, guildId, string(encoded))
+	return err
 }
 
-func (c *PgCache) StoreEmoji(emoji emoji.Emoji, guildId uint64) {
-	if c.Options.Emojis {
-		if encoded, err := json.Marshal(emoji.ToCachedEmoji(guildId)); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, emoji.Id, guildId, string(encoded))
-		}
+func (c *PgCache) StoreEmojis(ctx context.Context, emojis []emoji.Emoji, guildId uint64) error {
+	if !c.options.Emojis {
+		return nil
 	}
-}
 
-func (c *PgCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
-	if c.Options.Emojis {
-		batch := &pgx.Batch{}
-
-		for _, e := range emojis {
-			if encoded, err := json.Marshal(e.ToCachedEmoji(guildId)); err == nil {
-				batch.Queue(`INSERT INTO emojis("emoji_id", "guild_id", "data") VALUES($1, $2, $3) ON CONFLICT("emoji_id") DO UPDATE SET "data" = $3;`, e.Id, guildId, string(encoded))
-			}
-		}
-
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
+	conversionFunc := func(item emoji.Emoji) emoji.CachedEmoji {
+		return item.ToCachedEmoji(guildId)
 	}
+
+	return batchStore(ctx, c, queryInsertEmoji, emojis, conversionFunc, func(item emoji.Emoji, encoded string) []interface{} {
+		return []interface{}{item.Id, guildId, encoded}
+	})
 }
 
-func (c *PgCache) GetEmoji(id uint64) (emoji.Emoji, bool) {
-	if !c.Options.Emojis {
-		return emoji.Emoji{}, false
+func (c *PgCache) GetEmoji(ctx context.Context, id uint64) (emoji.Emoji, error) {
+	if !c.options.Emojis {
+		return emoji.Emoji{}, ErrNotFound
 	}
 
 	var raw string
-	if err := c.QueryRow(context.Background(), `SELECT "data" FROM emojis WHERE "emoji_id" = $1;`, id).Scan(&raw); err != nil {
-		return emoji.Emoji{}, false
+	if err := c.QueryRow(ctx, queryGetEmoji, id).Scan(&raw); err == pgx.ErrNoRows {
+		return emoji.Emoji{}, ErrNotFound
+	} else if err != nil {
+		return emoji.Emoji{}, err
 	}
 
 	var cached emoji.CachedEmoji
 	if err := json.Unmarshal([]byte(raw), &cached); err != nil {
-		return emoji.Emoji{}, false
+		return emoji.Emoji{}, err
 	}
 
-	return cached.ToEmoji(id, user.User{}), true
+	return cached.ToEmoji(id, user.User{}), nil
 }
 
-func (c *PgCache) DeleteEmoji(emojiId uint64) {
-	if c.Options.Emojis {
-		_, _ = c.Exec(context.Background(), `DELETE FROM emojis WHERE "emoji_id" = $1;`, emojiId)
-	}
+func (c *PgCache) DeleteEmoji(ctx context.Context, emojiId uint64) error {
+	_, err := c.Exec(ctx, queryDeleteEmoji, emojiId)
+	return err
 }
 
-func (c *PgCache) StoreVoiceState(state guild.VoiceState) {
-	if c.Options.VoiceStates {
-		if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
-			_, _ = c.Exec(context.Background(), `INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
-		}
+func (c *PgCache) StoreVoiceState(ctx context.Context, state guild.VoiceState) error {
+	if !c.options.VoiceStates {
+		return nil
 	}
+
+	encoded, err := json.Marshal(state.ToCachedVoiceState())
+	if err != nil {
+		return err
+	}
+
+	_, err = c.Exec(ctx, queryInsertVoiceState, state.GuildId, state.UserId, string(encoded))
+	return err
 }
 
-func (c *PgCache) StoreVoiceStates(states []guild.VoiceState) {
-	if c.Options.VoiceStates {
-		batch := &pgx.Batch{}
-
-		for _, state := range states {
-			if encoded, err := json.Marshal(state.ToCachedVoiceState()); err == nil {
-				batch.Queue(`INSERT INTO voice_states("guild_id", "user_id", "data") VALUES($1, $2, $3) ON CONFLICT("guild_id", "user_id") DO UPDATE SET "data" = $3;`, state.GuildId, state.UserId, string(encoded))
-			}
-		}
-
-		br := c.SendBatch(context.Background(), batch)
-		defer br.Close()
-		_, _ = br.Exec()
+func (c *PgCache) StoreVoiceStates(ctx context.Context, states []guild.VoiceState) error {
+	if !c.options.VoiceStates {
+		return nil
 	}
+
+	conversionFunc := func(state guild.VoiceState) guild.CachedVoiceState {
+		return state.ToCachedVoiceState()
+	}
+
+	return batchStore(ctx, c, queryInsertVoiceState, states, conversionFunc, func(state guild.VoiceState, encoded string) []interface{} {
+		return []interface{}{state.GuildId, state.UserId, encoded}
+	})
 }
 
-func (c *PgCache) GetVoiceState(userId, guildId uint64) (guild.VoiceState, bool) {
-	if !c.Options.VoiceStates {
-		return guild.VoiceState{}, false
+func (c *PgCache) GetVoiceState(ctx context.Context, userId, guildId uint64) (guild.VoiceState, error) {
+	if !c.options.VoiceStates {
+		return guild.VoiceState{}, ErrNotFound
 	}
-
-	query := `
-SELECT voice_states.data, members.data, users.data
-FROM voice_states
-LEFT JOIN members ON members.user_id=voice_states.user_id
-LEFT JOIN users ON users.user_id=voice_states.user_id
-WHERE voice_states.guild_id = $1 AND voice_states.user_id=$2;
-`
 
 	var voiceStateRaw, memberRaw, userRaw string
-	if err := c.QueryRow(context.Background(), query, guildId, userId).Scan(&voiceStateRaw, &memberRaw, &userRaw); err != nil {
-		return guild.VoiceState{}, false
+	if err := c.QueryRow(ctx, queryGetVoiceState, guildId, userId).Scan(&voiceStateRaw, &memberRaw, &userRaw); err == pgx.ErrNoRows {
+		return guild.VoiceState{}, ErrNotFound
+	} else if err != nil {
+		return guild.VoiceState{}, err
 	}
 
 	var cachedVoiceState guild.CachedVoiceState
 	if err := json.Unmarshal([]byte(voiceStateRaw), &cachedVoiceState); err != nil {
-		return guild.VoiceState{}, false
+		return guild.VoiceState{}, err
 	}
 
 	var cachedMember member.CachedMember
 	if len(memberRaw) > 0 {
 		if err := json.Unmarshal([]byte(memberRaw), &cachedMember); err != nil {
-			return guild.VoiceState{}, false
+			return guild.VoiceState{}, err
 		}
 	}
 
 	var cachedUser user.CachedUser
 	if len(memberRaw) > 0 {
 		if err := json.Unmarshal([]byte(userRaw), &cachedUser); err != nil {
-			return guild.VoiceState{}, false
+			return guild.VoiceState{}, err
 		}
 	}
 
-	return cachedVoiceState.ToVoiceState(guildId, cachedMember.ToMember(cachedUser.ToUser(userId))), true
+	return cachedVoiceState.ToVoiceState(guildId, cachedMember.ToMember(cachedUser.ToUser(userId))), nil
 }
 
-func (c *PgCache) GetGuildVoiceStates(guildId uint64) (states []guild.VoiceState) {
-	if !c.Options.VoiceStates {
-		return
+func (c *PgCache) GetGuildVoiceStates(ctx context.Context, guildId uint64) ([]guild.VoiceState, error) {
+	if !c.options.VoiceStates {
+		return nil, nil
 	}
 
-	query := `
-SELECT voice_states.user_id, voice_states.data, members.data, users.data
-FROM voice_states
-LEFT JOIN members ON members.user_id=voice_states.user_id
-LEFT JOIN users ON users.user_id=voice_states.user_id
-WHERE voice_states.guild_id = $1;
-`
-
-	rows, err := c.Query(context.Background(), query, guildId)
-	defer rows.Close()
+	rows, err := c.Query(ctx, queryGetGuildVoiceStates, guildId)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	defer rows.Close()
+
+	var states []guild.VoiceState
 	for rows.Next() {
 		var userId uint64
 		var voiceStateRaw, memberRaw, userRaw string
 
 		if err := rows.Scan(&userId, &voiceStateRaw, &memberRaw, &userRaw); err != nil {
-			continue
+			return nil, err
 		}
 
 		var cachedVoiceState guild.CachedVoiceState
 		if err := json.Unmarshal([]byte(voiceStateRaw), &cachedVoiceState); err != nil {
-			continue
+			return nil, err
 		}
 
 		var cachedMember member.CachedMember
 		if len(memberRaw) > 0 {
 			if err := json.Unmarshal([]byte(memberRaw), &cachedMember); err != nil {
-				continue
+				return nil, err
 			}
 		}
 
 		var cachedUser user.CachedUser
 		if len(memberRaw) > 0 {
 			if err := json.Unmarshal([]byte(userRaw), &cachedUser); err != nil {
-				continue
+				return nil, err
 			}
 		}
 
 		states = append(states, cachedVoiceState.ToVoiceState(userId, cachedMember.ToMember(cachedUser.ToUser(userId))))
 	}
 
-	return
+	return states, nil
 }
 
-func (c *PgCache) DeleteVoiceState(userId, guildId uint64) {
-	if c.Options.Emojis {
-		_, _ = c.Exec(context.Background(), `DELETE FROM voice_states WHERE "user_id" = $1 AND "guild_id" = $2;`, userId, guildId)
-	}
+func (c *PgCache) DeleteVoiceState(ctx context.Context, userId, guildId uint64) error {
+	_, err := c.Exec(ctx, queryDeleteVoiceState, userId, guildId)
+	return err
 }
 
-func (c *PgCache) StoreSelf(self user.User) {
+func (c *PgCache) StoreSelf(ctx context.Context, self user.User) error {
 	c.selfLock.Lock()
 	c.self = self
 	c.selfLock.Unlock()
+	return nil
 }
 
-func (c *PgCache) GetSelf() (user.User, bool) {
+func (c *PgCache) GetSelf(ctx context.Context) (user.User, error) {
 	c.selfLock.RLock()
 	self := c.self
 	c.selfLock.RUnlock()
 
-	return self, self.Id != 0
+	if self.Id == 0 {
+		return user.User{}, ErrNotFound
+	}
+
+	return self, nil
+}
+
+func batchStore[T any, U any](
+	ctx context.Context,
+	c *PgCache,
+	query string,
+	items []T,
+	convertFunc func(T) U,
+	argFunc func(item T, encoded string) []interface{},
+) error {
+	batch := &pgx.Batch{}
+
+	for _, item := range items {
+		encoded, err := json.Marshal(convertFunc(item))
+		if err != nil {
+			return err
+		}
+
+		batch.Queue(query, argFunc(item, string(encoded))...)
+	}
+
+	br := c.SendBatch(ctx, batch)
+	defer br.Close()
+
+	_, err := br.Exec()
+	return err
 }

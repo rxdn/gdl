@@ -1,0 +1,1 @@
+DELETE FROM voice_states WHERE "user_id" = $1 AND "guild_id" = $2;

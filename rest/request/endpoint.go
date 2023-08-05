@@ -2,10 +2,11 @@ package request
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/pasztorpisti/qs"
+	"github.com/pkg/errors"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -56,15 +57,23 @@ var Client = http.Client{
 	Timeout: time.Second * 3,
 }
 
-func (e *Endpoint) Request(token string, body any, response any) (error, *ResponseWithContent) {
+func (e *Endpoint) Request(ctx context.Context, token string, body any, response any) (error, *ResponseWithContent) {
 	url := BASE_URL + e.Endpoint
 
 	// Ratelimit
 	if e.RateLimiter != nil {
 		ch := make(chan error)
 		go e.RateLimiter.ExecuteCall(e.Route, ch)
-		if err := <-ch; err != nil {
-			return err, nil
+
+		fmt.Println(ctx.Deadline())
+
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "context deadline exceeded while waiting for ratelimit"), nil
+		case err := <-ch:
+			if err != nil {
+				return err, nil
+			}
 		}
 	}
 
@@ -72,7 +81,7 @@ func (e *Endpoint) Request(token string, body any, response any) (error, *Respon
 	var req *http.Request
 	var err error
 	if body == nil || e.ContentType == Nil {
-		req, err = http.NewRequest(string(e.RequestType), url, nil)
+		req, err = http.NewRequestWithContext(ctx, string(e.RequestType), url, nil)
 	} else {
 		contentType := string(e.ContentType)
 
@@ -106,7 +115,7 @@ func (e *Endpoint) Request(token string, body any, response any) (error, *Respon
 		}
 
 		buff := bytes.NewBuffer(encoded)
-		req, err = http.NewRequest(string(e.RequestType), url, buff)
+		req, err = http.NewRequestWithContext(ctx, string(e.RequestType), url, buff)
 		if err != nil {
 			return err, nil
 		}

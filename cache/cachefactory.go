@@ -13,13 +13,6 @@ func PgCacheFactory(db *pgxpool.Pool, options CacheOptions) CacheFactory {
 	}
 }
 
-func BoltCacheFactory(cacheOptions CacheOptions, boltOptions BoltOptions) CacheFactory {
-	return func() Cache {
-		c := NewBoltCache(cacheOptions, boltOptions)
-		return &c
-	}
-}
-
 func MemoryCacheFactory(cacheOptions CacheOptions) CacheFactory {
 	return func() Cache {
 		c := NewMemoryCache(cacheOptions)

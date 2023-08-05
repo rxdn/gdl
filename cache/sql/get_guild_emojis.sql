@@ -1,0 +1,1 @@
+SELECT "emoji_id", "data" FROM emojis WHERE "guild_id" = $1;

@@ -1,0 +1,1 @@
+DELETE FROM guilds WHERE "guild_id" = $1;

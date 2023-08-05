@@ -1,0 +1,1 @@
+SELECT data FROM guilds WHERE guild_id = $1;

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/auditlog"
 	"github.com/rxdn/gdl/rest/ratelimit"
@@ -39,7 +40,7 @@ func (d *GetGuildAuditLogData) Query() string {
 	return query.Encode()
 }
 
-func GetGuildAuditLog(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data GetGuildAuditLogData) (log auditlog.AuditLog, err error) {
+func GetGuildAuditLog(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64, data GetGuildAuditLogData) (log auditlog.AuditLog, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -48,6 +49,6 @@ func GetGuildAuditLog(token string, rateLimiter *ratelimit.Ratelimiter, guildId 
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &log)
+	err, _ = endpoint.Request(ctx, token, nil, &log)
 	return
 }

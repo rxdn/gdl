@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/embed"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
+func GetChannel(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -26,7 +27,7 @@ func GetChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, nil, &channel); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &channel); err != nil {
 		return channel, err
 	}
 
@@ -53,7 +54,7 @@ type ThreadMetadataModifyData struct {
 	Invitable           *bool   `json:"invitable,omitempty"`
 }
 
-func ModifyChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
+func ModifyChannel(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ModifyChannelData) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -63,14 +64,14 @@ func ModifyChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, data, &channel); err != nil {
+	if err, _ := endpoint.Request(ctx, token, data, &channel); err != nil {
 		return channel, err
 	}
 
 	return channel, nil
 }
 
-func DeleteChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
+func DeleteChannel(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -80,7 +81,7 @@ func DeleteChannel(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 	}
 
 	var channel channel.Channel
-	if err, _ := endpoint.Request(token, nil, &channel); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &channel); err != nil {
 		return channel, err
 	}
 
@@ -118,7 +119,7 @@ func (o *GetChannelMessagesData) Query() string {
 	return query.Encode()
 }
 
-func GetChannelMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data GetChannelMessagesData) ([]message.Message, error) {
+func GetChannelMessages(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data GetChannelMessagesData) ([]message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -128,14 +129,14 @@ func GetChannelMessages(token string, rateLimiter *ratelimit.Ratelimiter, channe
 	}
 
 	var messages []message.Message
-	if err, _ := endpoint.Request(token, nil, &messages); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &messages); err != nil {
 		return nil, err
 	}
 
 	return messages, nil
 }
 
-func GetChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) (message.Message, error) {
+func GetChannelMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) (message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -145,7 +146,7 @@ func GetChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, nil, &message); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &message); err != nil {
 		return message, err
 	}
 
@@ -169,7 +170,7 @@ func (d CreateMessageData) GetAttachments() []request.Attachment {
 	return d.Attachments
 }
 
-func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateMessageData) (message.Message, error) {
+func CreateMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateMessageData) (message.Message, error) {
 	var endpoint request.Endpoint
 	if len(data.Attachments) == 0 {
 		endpoint = request.Endpoint{
@@ -190,7 +191,7 @@ func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, data, &message); err != nil {
+	if err, _ := endpoint.Request(ctx, token, data, &message); err != nil {
 		return message, err
 	}
 
@@ -198,7 +199,7 @@ func CreateMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId u
 }
 
 // emoji is the raw unicode emoji
-func CreateReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
+func CreateReaction(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -207,12 +208,12 @@ func CreateReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId,
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
 // emoji is the raw unicode emoji
-func DeleteOwnReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
+func DeleteOwnReaction(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -221,12 +222,12 @@ func DeleteOwnReaction(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
 // emoji is the raw unicode emoji
-func DeleteUserReaction(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId, userId uint64, emoji string) error {
+func DeleteUserReaction(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId, userId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -235,7 +236,7 @@ func DeleteUserReaction(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
@@ -264,7 +265,7 @@ func (o *GetReactionsData) Query() string {
 	return query.Encode()
 }
 
-func GetReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string, data GetReactionsData) ([]user.User, error) {
+func GetReactions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string, data GetReactionsData) ([]user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -274,14 +275,14 @@ func GetReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, m
 	}
 
 	var users []user.User
-	if err, _ := endpoint.Request(token, nil, &users); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &users); err != nil {
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func DeleteAllReactions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
+func DeleteAllReactions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -290,11 +291,11 @@ func DeleteAllReactions(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
+func DeleteAllReactionsEmoji(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, emoji string) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -303,7 +304,7 @@ func DeleteAllReactionsEmoji(token string, rateLimiter *ratelimit.Ratelimiter, c
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
@@ -314,7 +315,7 @@ type EditMessageData struct {
 	Components []component.Component `json:"components"`
 }
 
-func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data EditMessageData) (message.Message, error) {
+func EditMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data EditMessageData) (message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -324,14 +325,14 @@ func EditMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, me
 	}
 
 	var message message.Message
-	if err, _ := endpoint.Request(token, data, &message); err != nil {
+	if err, _ := endpoint.Request(ctx, token, data, &message); err != nil {
 		return message, err
 	}
 
 	return message, nil
 }
 
-func DeleteMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
+func DeleteMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -340,11 +341,11 @@ func DeleteMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, 
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func BulkDeleteMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, messages []uint64) error {
+func BulkDeleteMessages(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, messages []uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -357,11 +358,11 @@ func BulkDeleteMessages(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		"messages": utils.Uint64StringSlice(messages),
 	}
 
-	err, _ := endpoint.Request(token, body, nil)
+	err, _ := endpoint.Request(ctx, token, body, nil)
 	return err
 }
 
-func EditChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, updated channel.PermissionOverwrite) error {
+func EditChannelPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, updated channel.PermissionOverwrite) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.ApplicationJson,
@@ -372,11 +373,11 @@ func EditChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, ch
 
 	updated.Id = 0
 
-	err, _ := endpoint.Request(token, updated, nil)
+	err, _ := endpoint.Request(ctx, token, updated, nil)
 	return err
 }
 
-func GetChannelInvites(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]invite.InviteMetadata, error) {
+func GetChannelInvites(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]invite.InviteMetadata, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -386,7 +387,7 @@ func GetChannelInvites(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	}
 
 	var invites []invite.InviteMetadata
-	if err, _ := endpoint.Request(token, nil, &invites); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &invites); err != nil {
 		return nil, err
 	}
 
@@ -402,7 +403,7 @@ type CreateInviteData struct {
 	TargetUserType int    `json:"target_user_type,omitempty"`
 }
 
-func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateInviteData) (invite.Invite, error) {
+func CreateChannelInvite(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data CreateInviteData) (invite.Invite, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -412,14 +413,14 @@ func CreateChannelInvite(token string, rateLimiter *ratelimit.Ratelimiter, chann
 	}
 
 	var invite invite.Invite
-	if err, _ := endpoint.Request(token, data, &invite); err != nil {
+	if err, _ := endpoint.Request(ctx, token, data, &invite); err != nil {
 		return invite, err
 	}
 
 	return invite, nil
 }
 
-func DeleteChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, channelId, overwriteId uint64) error {
+func DeleteChannelPermissions(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, overwriteId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.ApplicationJson,
@@ -428,11 +429,11 @@ func DeleteChannelPermissions(token string, rateLimiter *ratelimit.Ratelimiter, 
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func TriggerTypingIndicator(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) error {
+func TriggerTypingIndicator(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.Nil,
@@ -441,11 +442,11 @@ func TriggerTypingIndicator(token string, rateLimiter *ratelimit.Ratelimiter, ch
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func GetPinnedMessages(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]message.Message, error) {
+func GetPinnedMessages(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) ([]message.Message, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -455,14 +456,14 @@ func GetPinnedMessages(token string, rateLimiter *ratelimit.Ratelimiter, channel
 	}
 
 	var messages []message.Message
-	if err, _ := endpoint.Request(token, nil, &messages); err != nil {
+	if err, _ := endpoint.Request(ctx, token, nil, &messages); err != nil {
 		return nil, err
 	}
 
 	return messages, nil
 }
 
-func AddPinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
+func AddPinnedChannelMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -471,11 +472,11 @@ func AddPinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, c
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
+func DeletePinnedChannelMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -484,11 +485,11 @@ func DeletePinnedChannelMessage(token string, rateLimiter *ratelimit.Ratelimiter
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func JoinThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
+func JoinThread(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -497,11 +498,11 @@ func JoinThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
-func AddThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
+func AddThreadMember(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PUT,
 		ContentType: request.Nil,
@@ -510,11 +511,11 @@ func AddThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
-func LeaveThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
+func LeaveThread(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -523,11 +524,11 @@ func LeaveThread(token string, rateLimiter *ratelimit.Ratelimiter, channelId uin
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
-func RemoveThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
+func RemoveThreadMember(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -536,11 +537,11 @@ func RemoveThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channe
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, nil)
+	err, _ = endpoint.Request(ctx, token, nil, nil)
 	return
 }
 
-func GetThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (member channel.ThreadMember, err error) {
+func GetThreadMember(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, userId uint64) (member channel.ThreadMember, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -549,11 +550,11 @@ func GetThreadMember(token string, rateLimiter *ratelimit.Ratelimiter, channelId
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &member)
+	err, _ = endpoint.Request(ctx, token, nil, &member)
 	return
 }
 
-func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (members []channel.ThreadMember, err error) {
+func ListThreadMembers(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64) (members []channel.ThreadMember, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -562,7 +563,7 @@ func ListThreadMembers(token string, rateLimiter *ratelimit.Ratelimiter, channel
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &members)
+	err, _ = endpoint.Request(ctx, token, nil, &members)
 	return
 }
 
@@ -571,7 +572,7 @@ type StartThreadWithMessageData struct {
 	AutoArchiveDuration uint16 `json:"auto_archive_duration"`
 }
 
-func StartThreadWithMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data StartThreadWithMessageData) (ch channel.Channel, err error) {
+func StartThreadWithMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId, messageId uint64, data StartThreadWithMessageData) (ch channel.Channel, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -580,7 +581,7 @@ func StartThreadWithMessage(token string, rateLimiter *ratelimit.Ratelimiter, ch
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &ch)
+	err, _ = endpoint.Request(ctx, token, data, &ch)
 	return
 }
 
@@ -591,7 +592,7 @@ type StartThreadWithoutMessageData struct {
 	Invitable           bool                `json:"invitable"`
 }
 
-func StartThreadWithoutMessage(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data StartThreadWithoutMessageData) (ch channel.Channel, err error) {
+func StartThreadWithoutMessage(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data StartThreadWithoutMessageData) (ch channel.Channel, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -600,7 +601,7 @@ func StartThreadWithoutMessage(token string, rateLimiter *ratelimit.Ratelimiter,
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, data, &ch)
+	err, _ = endpoint.Request(ctx, token, data, &ch)
 	return
 }
 
@@ -610,7 +611,7 @@ type ThreadsResponse struct {
 	HasMore bool                   `json:"has_more"`
 }
 
-func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) (threads ThreadsResponse, err error) {
+func ListActiveThreads(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) (threads ThreadsResponse, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -619,7 +620,7 @@ func ListActiveThreads(token string, rateLimiter *ratelimit.Ratelimiter, guildId
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &threads)
+	err, _ = endpoint.Request(ctx, token, nil, &threads)
 	return
 }
 
@@ -642,7 +643,7 @@ func (d *ListThreadsData) Query() string {
 	return query.Encode()
 }
 
-func ListPublicArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+func ListPublicArchivedThreads(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -651,11 +652,11 @@ func ListPublicArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter,
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &threads)
+	err, _ = endpoint.Request(ctx, token, nil, &threads)
 	return
 }
 
-func ListPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+func ListPrivateArchivedThreads(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -664,11 +665,11 @@ func ListPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &threads)
+	err, _ = endpoint.Request(ctx, token, nil, &threads)
 	return
 }
 
-func ListJoinedPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
+func ListJoinedPrivateArchivedThreads(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, channelId uint64, data ListThreadsData) (threads ThreadsResponse, err error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -677,6 +678,6 @@ func ListJoinedPrivateArchivedThreads(token string, rateLimiter *ratelimit.Ratel
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ = endpoint.Request(token, nil, &threads)
+	err, _ = endpoint.Request(ctx, token, nil, &threads)
 	return
 }

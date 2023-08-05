@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
@@ -12,7 +13,7 @@ import (
 	"strconv"
 )
 
-func GetCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter) (user.User, error) {
+func GetCurrentUser(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -22,11 +23,11 @@ func GetCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter) (user.User
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, nil, &user)
+	err, _ := endpoint.Request(ctx, token, nil, &user)
 	return user, err
 }
 
-func GetUser(token string, rateLimiter *ratelimit.Ratelimiter, userId uint64) (user.User, error) {
+func GetUser(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, userId uint64) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -36,7 +37,7 @@ func GetUser(token string, rateLimiter *ratelimit.Ratelimiter, userId uint64) (u
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, nil, &user)
+	err, _ := endpoint.Request(ctx, token, nil, &user)
 	return user, err
 }
 
@@ -45,7 +46,7 @@ type ModifyUserData struct {
 	Avatar   string `json:"avatar,omitempty"`
 }
 
-func ModifyCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter, data ModifyUserData) (user.User, error) {
+func ModifyCurrentUser(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, data ModifyUserData) (user.User, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.PATCH,
 		ContentType: request.ApplicationJson,
@@ -55,7 +56,7 @@ func ModifyCurrentUser(token string, rateLimiter *ratelimit.Ratelimiter, data Mo
 	}
 
 	var user user.User
-	err, _ := endpoint.Request(token, data, &user)
+	err, _ := endpoint.Request(ctx, token, data, &user)
 	return user, err
 }
 
@@ -84,7 +85,7 @@ func (d *CurrentUserGuildsData) Query() string {
 	return query.Encode()
 }
 
-func GetCurrentUserGuilds(token string, rateLimiter *ratelimit.Ratelimiter, data CurrentUserGuildsData) ([]guild.Guild, error) {
+func GetCurrentUserGuilds(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, data CurrentUserGuildsData) ([]guild.Guild, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -94,11 +95,11 @@ func GetCurrentUserGuilds(token string, rateLimiter *ratelimit.Ratelimiter, data
 	}
 
 	var guilds []guild.Guild
-	err, _ := endpoint.Request(token, nil, &guilds)
+	err, _ := endpoint.Request(ctx, token, nil, &guilds)
 	return guilds, err
 }
 
-func LeaveGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) error {
+func LeaveGuild(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64) error {
 	endpoint := request.Endpoint{
 		RequestType: request.DELETE,
 		ContentType: request.Nil,
@@ -107,11 +108,11 @@ func LeaveGuild(token string, rateLimiter *ratelimit.Ratelimiter, guildId uint64
 		RateLimiter: rateLimiter,
 	}
 
-	err, _ := endpoint.Request(token, nil, nil)
+	err, _ := endpoint.Request(ctx, token, nil, nil)
 	return err
 }
 
-func CreateDM(token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint64) (channel.Channel, error) {
+func CreateDM(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint64) (channel.Channel, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.POST,
 		ContentType: request.ApplicationJson,
@@ -125,11 +126,11 @@ func CreateDM(token string, rateLimiter *ratelimit.Ratelimiter, recipientId uint
 	}
 
 	var channel channel.Channel
-	err, _ := endpoint.Request(token, body, &channel)
+	err, _ := endpoint.Request(ctx, token, body, &channel)
 	return channel, err
 }
 
-func GetUserConnections(token string, rateLimiter *ratelimit.Ratelimiter) ([]integration.Connection, error) {
+func GetUserConnections(ctx context.Context, token string, rateLimiter *ratelimit.Ratelimiter) ([]integration.Connection, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -139,6 +140,6 @@ func GetUserConnections(token string, rateLimiter *ratelimit.Ratelimiter) ([]int
 	}
 
 	var connections []integration.Connection
-	err, _ := endpoint.Request(token, nil, &connections)
+	err, _ := endpoint.Request(ctx, token, nil, &connections)
 	return connections, err
 }

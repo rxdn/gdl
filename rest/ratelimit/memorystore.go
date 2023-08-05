@@ -23,6 +23,8 @@ type MemoryStore struct {
 
 func NewMemoryStore() *MemoryStore {
 	cache := ttlcache.NewCache()
+	cache.SkipTtlExtensionOnHit(true)
+
 	return &MemoryStore{
 		Cache: cache,
 	}
@@ -43,9 +45,8 @@ func (s *MemoryStore) getTTLAndDecrease(route Route) (time.Duration, error) {
 		remaining := item.Data.(int)
 		ttl := item.ExpireAt.Sub(time.Now())
 
-		s.Cache.SetWithTTL(key, remaining-1, ttl)
-
 		if remaining > 0 {
+			s.Cache.SetWithTTL(key, remaining-1, ttl)
 			return 0, nil
 		} else {
 			return ttl, nil

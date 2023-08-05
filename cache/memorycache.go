@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
@@ -57,15 +58,15 @@ func (c *MemoryCache) Size() string {
 	return fmt.Sprintf("%d channels %d members %d roles %d emojis %d voice states %d users", len(c.channels), len(c.members), len(c.roles), len(c.emojis), len(c.voiceStates), len(c.users))
 }
 
-func (c *MemoryCache) GetOptions() CacheOptions {
+func (c *MemoryCache) Options() CacheOptions {
 	return c.options
 }
 
-func (c *MemoryCache) StoreUser(u user.User) {
-	c.StoreUsers([]user.User{u})
+func (c *MemoryCache) StoreUser(ctx context.Context, u user.User) error {
+	return c.StoreUsers(ctx, []user.User{u})
 }
 
-func (c *MemoryCache) StoreUsers(users []user.User) {
+func (c *MemoryCache) StoreUsers(ctx context.Context, users []user.User) error {
 	if c.options.Users {
 		c.userLock.Lock()
 		defer c.userLock.Unlock()
@@ -74,22 +75,23 @@ func (c *MemoryCache) StoreUsers(users []user.User) {
 			c.users[user.Id] = user.ToCachedUser()
 		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetUser(userId uint64) (u user.User, found bool) {
+func (c *MemoryCache) GetUser(ctx context.Context, userId uint64) (user.User, error) {
 	c.userLock.RLock()
 	defer c.userLock.RUnlock()
 
-	var cached user.CachedUser
-	cached, found = c.users[userId]
+	cached, found := c.users[userId]
 	if found {
-		return cached.ToUser(userId), found
+		return cached.ToUser(userId), nil
 	} else {
-		return
+		return user.User{}, ErrNotFound
 	}
 }
 
-func (c *MemoryCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
+func (c *MemoryCache) GetUsers(ctx context.Context, ids []uint64) (map[uint64]user.User, error) {
 	c.userLock.RLock()
 	defer c.userLock.RUnlock()
 
@@ -104,11 +106,11 @@ func (c *MemoryCache) GetUsers(ids []uint64) (map[uint64]user.User, error) {
 	return users, nil
 }
 
-func (c *MemoryCache) StoreGuild(g guild.Guild) {
-	c.StoreGuilds([]guild.Guild{g})
+func (c *MemoryCache) StoreGuild(ctx context.Context, g guild.Guild) error {
+	return c.StoreGuilds(ctx, []guild.Guild{g})
 }
 
-func (c *MemoryCache) StoreGuilds(guilds []guild.Guild) {
+func (c *MemoryCache) StoreGuilds(ctx context.Context, guilds []guild.Guild) error {
 	if c.options.Guilds {
 		c.guildLock.Lock()
 
@@ -133,72 +135,75 @@ func (c *MemoryCache) StoreGuilds(guilds []guild.Guild) {
 	}
 
 	for _, guild := range guilds {
-		c.StoreChannels(guild.Channels)
-		c.StoreMembers(guild.Members, guild.Id)
-		c.StoreRoles(guild.Roles, guild.Id)
-		c.StoreEmojis(guild.Emojis, guild.Id)
-		c.StoreVoiceStates(guild.VoiceStates)
+		if err := c.StoreChannels(ctx, guild.Channels); err != nil {
+			return err
+		}
+
+		if err := c.StoreMembers(ctx, guild.Members, guild.Id); err != nil {
+			return err
+		}
+
+		if err := c.StoreRoles(ctx, guild.Roles, guild.Id); err != nil {
+			return err
+		}
+
+		if err := c.StoreEmojis(ctx, guild.Emojis, guild.Id); err != nil {
+			return err
+		}
+
+		if err := c.StoreVoiceStates(ctx, guild.VoiceStates); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetGuild(guildId uint64) (guild.Guild, bool) {
+func (c *MemoryCache) GetGuild(ctx context.Context, guildId uint64) (guild.Guild, error) {
 	c.guildLock.RLock()
 	cached, found := c.guilds[guildId]
 	c.guildLock.RUnlock()
 
 	if found {
-		return cached.ToGuild(guildId), true
+		return cached.ToGuild(guildId), nil
 	} else {
-		return guild.Guild{}, false
+		return guild.Guild{}, ErrNotFound
 	}
 }
 
-// You should never use this
-func (c *MemoryCache) GetGuilds() (guilds []guild.Guild) {
-	c.guildLock.RLock()
-	defer c.guildLock.RUnlock()
-
-	guilds = make([]guild.Guild, len(c.guilds))
-	i := 0
-
-	for guildId, guild := range c.guilds {
-		guilds[i] = guild.ToGuild(guildId)
-		i++
-	}
-
-	return
-}
-
-func (c *MemoryCache) DeleteGuild(guildId uint64) {
+func (c *MemoryCache) DeleteGuild(ctx context.Context, guildId uint64) error {
 	c.guildLock.Lock()
 	delete(c.guilds, guildId)
 	c.guildLock.Unlock()
+
+	return nil
 }
 
-func (c *MemoryCache) GetGuildCount() (count int) {
+func (c *MemoryCache) GetGuildCount(ctx context.Context) (int, error) {
 	c.guildLock.RLock()
-	count = len(c.guilds)
+	count := len(c.guilds)
 	c.guildLock.RUnlock()
-	return
+
+	return count, nil
 }
 
-func (c *MemoryCache) GetGuildOwner(guildId uint64) (uint64, bool) {
+func (c *MemoryCache) GetGuildOwner(ctx context.Context, guildId uint64) (uint64, error) {
 	c.guildLock.RLock()
 	guild, ok := c.guilds[guildId]
 	c.guildLock.RUnlock()
 
 	if !ok {
-		return 0, false
+		return 0, ErrNotFound
 	}
 
-	return guild.OwnerId, true
+	return guild.OwnerId, nil
 }
 
-func (c *MemoryCache) StoreMember(m member.Member, guildId uint64) {
-	c.StoreMembers([]member.Member{m}, guildId)
+func (c *MemoryCache) StoreMember(ctx context.Context, m member.Member, guildId uint64) error {
+	return c.StoreMembers(ctx, []member.Member{m}, guildId)
 }
 
-func (c *MemoryCache) StoreMembers(members []member.Member, guildId uint64) {
+func (c *MemoryCache) StoreMembers(ctx context.Context, members []member.Member, guildId uint64) error {
 	if c.options.Members {
 		c.memberLock.Lock()
 		defer c.memberLock.Unlock()
@@ -211,69 +216,80 @@ func (c *MemoryCache) StoreMembers(members []member.Member, guildId uint64) {
 			c.members[guildId][member.User.Id] = member.ToCachedMember()
 		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetMember(guildId, userId uint64) (m member.Member, found bool) {
-	var cached member.CachedMember
-
-	c.memberLock.RLock()
-
-	if c.members[guildId] == nil {
-		c.memberLock.RUnlock()
-		return
-	}
-
-	cached, found = c.members[guildId][userId]
-	if found {
-		u, userFound := c.GetUser(userId)
-		if !userFound {
-			u = user.User{Id: userId}
-		}
-
-		m = cached.ToMember(u)
-	}
-
-	c.memberLock.RUnlock()
-	return
-}
-
-func (c *MemoryCache) GetGuildMembers(guildId uint64, withUserData bool) (members []member.Member) {
+func (c *MemoryCache) GetMember(ctx context.Context, guildId, userId uint64) (member.Member, error) {
 	c.memberLock.RLock()
 	defer c.memberLock.RUnlock()
 
 	if c.members[guildId] == nil {
-		return
+		return member.Member{}, ErrNotFound
 	}
 
+	cached, found := c.members[guildId][userId]
+	if found {
+		u, err := c.GetUser(ctx, userId)
+		if err == ErrNotFound {
+			u = user.User{Id: userId}
+		} else if err != nil {
+			return member.Member{}, err
+		}
+
+		return cached.ToMember(u), nil
+	} else {
+		return member.Member{}, ErrNotFound
+	}
+}
+
+func (c *MemoryCache) GetGuildMembers(ctx context.Context, guildId uint64, withUserData bool) ([]member.Member, error) {
+	c.memberLock.RLock()
+	defer c.memberLock.RUnlock()
+
+	if c.members[guildId] == nil {
+		return []member.Member{}, ErrNotFound
+	}
+
+	var members []member.Member
 	for userId, cachedMember := range c.members[guildId] {
-		// get user
-		u := user.User{Id: userId}
+		// Get user
+		var u user.User
 		if withUserData {
-			if cachedUser, foundUser := c.GetUser(userId); foundUser {
+			cachedUser, err := c.GetUser(ctx, userId)
+			if err == ErrNotFound {
+				u = user.User{Id: userId}
+			} else if err != nil {
+				return nil, err
+			} else {
 				u = cachedUser
 			}
+		} else {
+			u = user.User{Id: userId}
 		}
 
 		members = append(members, cachedMember.ToMember(u))
 	}
 
-	return
+	return members, nil
 }
 
-func (c *MemoryCache) DeleteMember(userId, guildId uint64) {
+func (c *MemoryCache) DeleteMember(ctx context.Context, userId, guildId uint64) error {
 	c.memberLock.Lock()
 	defer c.memberLock.Unlock()
 
 	if c.members[guildId] != nil {
 		delete(c.members[guildId], userId)
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) StoreChannel(ch channel.Channel) {
-	c.StoreChannels([]channel.Channel{ch})
+func (c *MemoryCache) StoreChannel(ctx context.Context, ch channel.Channel) error {
+	return c.StoreChannels(ctx, []channel.Channel{ch})
 }
 
-func (c *MemoryCache) StoreChannels(channels []channel.Channel) {
+func (c *MemoryCache) StoreChannels(ctx context.Context, channels []channel.Channel) error {
 	if c.options.Channels {
 		c.channelLock.Lock()
 		defer c.channelLock.Unlock()
@@ -301,26 +317,33 @@ func (c *MemoryCache) StoreChannels(channels []channel.Channel) {
 			c.guildLock.Unlock()
 		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetChannel(channelId uint64) (ch channel.Channel, found bool) {
+func (c *MemoryCache) GetChannel(ctx context.Context, channelId uint64) (channel.Channel, error) {
 	var cached channel.CachedChannel
 
 	c.channelLock.RLock()
-	cached, found = c.channels[channelId]
+	cached, found := c.channels[channelId]
 	c.channelLock.RUnlock()
 
-	ch = cached.ToChannel(channelId, cached.GuildId)
-	return
+	if found {
+		return cached.ToChannel(channelId, cached.GuildId), nil
+	} else {
+		return channel.Channel{}, ErrNotFound
+	}
 }
 
-func (c *MemoryCache) GetGuildChannels(guildId uint64) (channels []channel.Channel) {
+func (c *MemoryCache) GetGuildChannels(ctx context.Context, guildId uint64) ([]channel.Channel, error) {
 	c.guildLock.RLock()
 	guild, found := c.guilds[guildId]
 	c.guildLock.RUnlock()
 	if !found {
-		return
+		return nil, ErrNotFound
 	}
+
+	var channels []channel.Channel
 
 	c.channelLock.RLock()
 	for _, channelId := range guild.Channels {
@@ -330,10 +353,10 @@ func (c *MemoryCache) GetGuildChannels(guildId uint64) (channels []channel.Chann
 	}
 	c.channelLock.RUnlock()
 
-	return channels
+	return channels, nil
 }
 
-func (c *MemoryCache) DeleteChannel(channelId uint64) {
+func (c *MemoryCache) DeleteChannel(ctx context.Context, channelId uint64) error {
 	c.channelLock.Lock()
 	cached, found := c.channels[channelId]
 	delete(c.channels, channelId)
@@ -360,15 +383,17 @@ func (c *MemoryCache) DeleteChannel(channelId uint64) {
 		}
 		c.guildLock.Unlock()
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) DeleteGuildChannels(guildId uint64) {
+func (c *MemoryCache) DeleteGuildChannels(ctx context.Context, guildId uint64) error {
 	c.guildLock.Lock()
 	defer c.guildLock.Unlock()
 
 	guild, ok := c.guilds[guildId]
 	if !ok {
-		return
+		return ErrNotFound
 	}
 
 	c.channelLock.Lock()
@@ -380,13 +405,15 @@ func (c *MemoryCache) DeleteGuildChannels(guildId uint64) {
 
 	guild.Channels = nil
 	c.guilds[guildId] = guild
+
+	return nil
 }
 
-func (c *MemoryCache) StoreRole(role guild.Role, guildId uint64) {
-	c.StoreRoles([]guild.Role{role}, guildId)
+func (c *MemoryCache) StoreRole(ctx context.Context, role guild.Role, guildId uint64) error {
+	return c.StoreRoles(ctx, []guild.Role{role}, guildId)
 }
 
-func (c *MemoryCache) StoreRoles(roles []guild.Role, guildId uint64) {
+func (c *MemoryCache) StoreRoles(ctx context.Context, roles []guild.Role, guildId uint64) error {
 	if c.options.Roles {
 		c.roleLock.Lock()
 		defer c.roleLock.Unlock()
@@ -414,21 +441,23 @@ func (c *MemoryCache) StoreRoles(roles []guild.Role, guildId uint64) {
 			c.guildLock.Unlock()
 		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetRole(roleId uint64) (role guild.Role, found bool) {
-	var cachedRole guild.CachedRole
-
+func (c *MemoryCache) GetRole(ctx context.Context, roleId uint64) (guild.Role, error) {
 	c.roleLock.RLock()
 	defer c.roleLock.RUnlock()
 
-	cachedRole, found = c.roles[roleId]
-	role = cachedRole.ToRole(roleId)
-
-	return
+	cachedRole, found := c.roles[roleId]
+	if found {
+		return cachedRole.ToRole(roleId), nil
+	} else {
+		return guild.Role{}, ErrNotFound
+	}
 }
 
-func (c *MemoryCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
+func (c *MemoryCache) GetRoles(ctx context.Context, guildId uint64, ids []uint64) (map[uint64]guild.Role, error) {
 	c.roleLock.RLock()
 	defer c.roleLock.RUnlock()
 
@@ -444,29 +473,30 @@ func (c *MemoryCache) GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.R
 	return roles, nil
 }
 
-func (c *MemoryCache) GetGuildRoles(guildId uint64) (roles []guild.Role) {
+func (c *MemoryCache) GetGuildRoles(ctx context.Context, guildId uint64) ([]guild.Role, error) {
 	// get guild
 	c.guildLock.RLock()
-	guild, found := c.guilds[guildId]
+	g, found := c.guilds[guildId]
 	c.guildLock.RUnlock()
 
 	if !found {
-		return
+		return nil, ErrNotFound
 	}
 
 	c.roleLock.RLock()
 	defer c.roleLock.RUnlock()
 
-	for _, roleId := range guild.Roles {
+	var roles []guild.Role
+	for _, roleId := range g.Roles {
 		if role, found := c.roles[roleId]; found {
 			roles = append(roles, role.ToRole(roleId))
 		}
 	}
 
-	return roles
+	return roles, nil
 }
 
-func (c *MemoryCache) DeleteRole(roleId uint64) {
+func (c *MemoryCache) DeleteRole(ctx context.Context, roleId uint64) error {
 	c.roleLock.Lock()
 	cached, found := c.roles[roleId]
 	delete(c.roles, roleId)
@@ -493,15 +523,17 @@ func (c *MemoryCache) DeleteRole(roleId uint64) {
 		}
 		c.guildLock.Unlock()
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) DeleteGuildRoles(guildId uint64) {
+func (c *MemoryCache) DeleteGuildRoles(ctx context.Context, guildId uint64) error {
 	c.guildLock.Lock()
 	defer c.guildLock.Unlock()
 
 	guild, ok := c.guilds[guildId]
 	if !ok {
-		return
+		return ErrNotFound
 	}
 
 	c.roleLock.Lock()
@@ -513,13 +545,15 @@ func (c *MemoryCache) DeleteGuildRoles(guildId uint64) {
 
 	guild.Roles = nil
 	c.guilds[guildId] = guild
+
+	return nil
 }
 
-func (c *MemoryCache) StoreEmoji(e emoji.Emoji, guildId uint64) {
-	c.StoreEmojis([]emoji.Emoji{e}, guildId)
+func (c *MemoryCache) StoreEmoji(ctx context.Context, e emoji.Emoji, guildId uint64) error {
+	return c.StoreEmojis(ctx, []emoji.Emoji{e}, guildId)
 }
 
-func (c *MemoryCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
+func (c *MemoryCache) StoreEmojis(ctx context.Context, emojis []emoji.Emoji, guildId uint64) error {
 	c.emojiLock.Lock()
 
 	for _, emoji := range emojis {
@@ -546,59 +580,62 @@ func (c *MemoryCache) StoreEmojis(emojis []emoji.Emoji, guildId uint64) {
 	}
 
 	c.emojiLock.Unlock()
+	return nil
 }
 
-func (c *MemoryCache) GetEmoji(emojiId uint64) (e emoji.Emoji, found bool) {
-	var cached emoji.CachedEmoji
-
+func (c *MemoryCache) GetEmoji(ctx context.Context, emojiId uint64) (emoji.Emoji, error) {
 	c.emojiLock.RLock()
-	cached, found = c.emojis[emojiId]
+	cached, found := c.emojis[emojiId]
 	c.emojiLock.RUnlock()
 
 	if !found {
-		return
+		return emoji.Emoji{}, ErrNotFound
 	}
 
-	u, userFound := c.GetUser(cached.User)
-	if !userFound {
+	u, err := c.GetUser(ctx, cached.User)
+	if err == ErrNotFound {
 		u = user.User{Id: cached.User}
+	} else if err != nil {
+		return emoji.Emoji{}, err
 	}
 
-	e = cached.ToEmoji(emojiId, u)
-	return
+	return cached.ToEmoji(emojiId, u), nil
 }
 
-func (c *MemoryCache) GetGuildEmojis(guildId uint64) (emojis []emoji.Emoji) {
+func (c *MemoryCache) GetGuildEmojis(ctx context.Context, guildId uint64) ([]emoji.Emoji, error) {
 	// get guild
 	c.guildLock.RLock()
 	guild, found := c.guilds[guildId]
 	c.guildLock.RUnlock()
 
 	if !found {
-		return
+		return nil, ErrNotFound
 	}
 
 	c.emojiLock.RLock()
 	defer c.emojiLock.RUnlock()
 
+	var emojis []emoji.Emoji
 	for _, emojiId := range guild.Emojis {
 		cached, found := c.emojis[emojiId]
 		if !found {
 			continue
 		}
 
-		u, userFound := c.GetUser(cached.User)
-		if !userFound {
+		u, err := c.GetUser(ctx, cached.User)
+		if err == ErrNotFound {
 			u = user.User{Id: cached.User}
+		} else if err != nil {
+			return nil, err
 		}
 
 		emojis = append(emojis, cached.ToEmoji(emojiId, u))
 	}
 
-	return
+	return emojis, nil
 }
 
-func (c *MemoryCache) DeleteEmoji(emojiId uint64) {
+func (c *MemoryCache) DeleteEmoji(ctx context.Context, emojiId uint64) error {
 	c.emojiLock.Lock()
 	cached, found := c.emojis[emojiId]
 	delete(c.emojis, emojiId)
@@ -625,13 +662,15 @@ func (c *MemoryCache) DeleteEmoji(emojiId uint64) {
 		}
 		c.guildLock.Unlock()
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) StoreVoiceState(state guild.VoiceState) {
-	c.StoreVoiceStates([]guild.VoiceState{state})
+func (c *MemoryCache) StoreVoiceState(ctx context.Context, state guild.VoiceState) error {
+	return c.StoreVoiceStates(ctx, []guild.VoiceState{state})
 }
 
-func (c *MemoryCache) StoreVoiceStates(states []guild.VoiceState) {
+func (c *MemoryCache) StoreVoiceStates(ctx context.Context, states []guild.VoiceState) error {
 	if c.options.VoiceStates {
 		c.voiceStateLock.Lock()
 		defer c.voiceStateLock.Unlock()
@@ -644,81 +683,94 @@ func (c *MemoryCache) StoreVoiceStates(states []guild.VoiceState) {
 			c.voiceStates[state.GuildId][state.UserId] = state.ToCachedVoiceState()
 		}
 	}
+
+	return nil
 }
 
-func (c *MemoryCache) GetVoiceState(userId, guildId uint64) (state guild.VoiceState, found bool) {
+func (c *MemoryCache) GetVoiceState(ctx context.Context, userId, guildId uint64) (guild.VoiceState, error) {
 	var cached guild.CachedVoiceState
 
 	c.voiceStateLock.RLock()
 	defer c.voiceStateLock.RUnlock()
 	if c.voiceStates[guildId] == nil {
-		return
+		return guild.VoiceState{}, ErrNotFound
 	}
 
-	cached, found = c.voiceStates[guildId][userId]
+	cached, found := c.voiceStates[guildId][userId]
 	if found {
 		// get member
-		m, memberFound := c.GetMember(guildId, userId)
-		if !memberFound {
+		m, err := c.GetMember(ctx, guildId, userId)
+		if err == ErrNotFound {
 			m = member.Member{
 				User: user.User{
 					Id: userId,
 				},
 			}
+		} else if err != nil {
+			return guild.VoiceState{}, err
 		}
 
-		state = cached.ToVoiceState(guildId, m)
+		return cached.ToVoiceState(guildId, m), nil
+	} else {
+		return guild.VoiceState{}, ErrNotFound
 	}
-
-	return
 }
 
-func (c *MemoryCache) GetGuildVoiceStates(guildId uint64) (states []guild.VoiceState) {
+func (c *MemoryCache) GetGuildVoiceStates(ctx context.Context, guildId uint64) ([]guild.VoiceState, error) {
 	c.voiceStateLock.RLock()
 	defer c.voiceStateLock.RUnlock()
 
 	if c.voiceStates[guildId] == nil {
-		return
+		return nil, ErrNotFound
 	}
 
+	var states []guild.VoiceState
 	for userId, cached := range c.voiceStates[guildId] {
 		// get member
-		m, memberFound := c.GetMember(guildId, userId)
-		if !memberFound {
+		m, err := c.GetMember(ctx, guildId, userId)
+		if err == ErrNotFound {
 			m = member.Member{
 				User: user.User{
 					Id: userId,
 				},
 			}
+		} else if err != nil {
+			return nil, err
 		}
 
 		states = append(states, cached.ToVoiceState(guildId, m))
 	}
 
-	return
+	return states, nil
 }
 
-func (c *MemoryCache) DeleteVoiceState(userId, guildId uint64) {
+func (c *MemoryCache) DeleteVoiceState(ctx context.Context, userId, guildId uint64) error {
 	c.voiceStateLock.Lock()
 	defer c.voiceStateLock.Unlock()
 
 	if c.voiceStates[guildId] == nil {
-		return
+		return ErrNotFound
 	}
 
 	delete(c.voiceStates[guildId], userId)
+	return nil
 }
 
-func (c *MemoryCache) StoreSelf(self user.User) {
+func (c *MemoryCache) StoreSelf(ctx context.Context, self user.User) error {
 	c.selfLock.Lock()
 	c.self = self
 	c.selfLock.Unlock()
+	return nil
 }
 
-func (c *MemoryCache) GetSelf() (user.User, bool) {
+func (c *MemoryCache) GetSelf(ctx context.Context) (user.User, error) {
 	c.selfLock.RLock()
 	self := c.self
 	c.selfLock.RUnlock()
 
-	return self, self.Id != 0
+	if self.Id == 0 {
+		return user.User{}, ErrNotFound
+	} else {
+		return self, nil
+	}
 }

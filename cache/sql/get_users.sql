@@ -1,0 +1,1 @@
+SELECT "user_id", "data" FROM users WHERE "user_id" = ANY($1);

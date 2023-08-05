@@ -1,13 +1,14 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/rxdn/gdl/rest/request"
 )
 
-func ListVoiceRegions(token string) ([]guild.VoiceRegion, error) {
+func ListVoiceRegions(ctx context.Context, token string) ([]guild.VoiceRegion, error) {
 	endpoint := request.Endpoint{
 		RequestType: request.GET,
 		ContentType: request.Nil,
@@ -16,6 +17,6 @@ func ListVoiceRegions(token string) ([]guild.VoiceRegion, error) {
 	}
 
 	var voiceRegions []guild.VoiceRegion
-	err, _ := endpoint.Request(token, nil, &voiceRegions)
+	err, _ := endpoint.Request(ctx, token, nil, &voiceRegions)
 	return voiceRegions, err
 }

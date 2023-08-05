@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"context"
+	"errors"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild"
 	"github.com/rxdn/gdl/objects/guild/emoji"
@@ -8,55 +10,56 @@ import (
 	"github.com/rxdn/gdl/objects/user"
 )
 
+var ErrNotFound = errors.New("object not found in cache")
+
 type Cache interface {
-	GetOptions() CacheOptions
+	Options() CacheOptions
 
-	StoreUser(user user.User)
-	StoreUsers(user []user.User)
-	GetUser(id uint64) (user.User, bool)
-	GetUsers(ids []uint64) (map[uint64]user.User, error)
+	StoreUser(ctx context.Context, user user.User) error
+	StoreUsers(ctx context.Context, user []user.User) error
+	GetUser(ctx context.Context, id uint64) (user.User, error)
+	GetUsers(ctx context.Context, ids []uint64) (map[uint64]user.User, error)
 
-	StoreGuild(guild guild.Guild)
-	StoreGuilds(guilds []guild.Guild)
-	GetGuild(id uint64) (guild.Guild, bool)
-	GetGuilds() []guild.Guild // Note: Guilds will not have Channels, Roles, Members etc to reduce cache lookup time
-	DeleteGuild(id uint64)
-	GetGuildCount() int
-	GetGuildOwner(guildId uint64) (uint64, bool) // Utility function
+	StoreGuild(ctx context.Context, guild guild.Guild) error
+	StoreGuilds(ctx context.Context, guilds []guild.Guild) error
+	GetGuild(ctx context.Context, id uint64) (guild.Guild, error)
+	DeleteGuild(ctx context.Context, id uint64) error
+	GetGuildCount(ctx context.Context) (int, error)
+	GetGuildOwner(ctx context.Context, guildId uint64) (uint64, error)
 
-	StoreMember(member member.Member, guildId uint64)
-	StoreMembers(members []member.Member, guildId uint64)
-	GetMember(guildId, userId uint64) (member.Member, bool)
-	GetGuildMembers(guildId uint64, withUserData bool) []member.Member
-	DeleteMember(userId, guildId uint64)
+	StoreMember(ctx context.Context, member member.Member, guildId uint64) error
+	StoreMembers(ctx context.Context, members []member.Member, guildId uint64) error
+	GetMember(ctx context.Context, guildId, userId uint64) (member.Member, error)
+	GetGuildMembers(ctx context.Context, guildId uint64, withUserData bool) ([]member.Member, error)
+	DeleteMember(ctx context.Context, userId, guildId uint64) error
 
-	StoreChannel(channel channel.Channel)
-	StoreChannels(channel []channel.Channel)
-	GetChannel(id uint64) (channel.Channel, bool)
-	GetGuildChannels(guildId uint64) []channel.Channel
-	DeleteChannel(channelId uint64)
-	DeleteGuildChannels(guildId uint64)
+	StoreChannel(ctx context.Context, channel channel.Channel) error
+	StoreChannels(ctx context.Context, channel []channel.Channel) error
+	GetChannel(ctx context.Context, id uint64) (channel.Channel, error)
+	GetGuildChannels(ctx context.Context, guildId uint64) ([]channel.Channel, error)
+	DeleteChannel(ctx context.Context, channelId uint64) error
+	DeleteGuildChannels(ctx context.Context, guildId uint64) error
 
-	StoreRole(role guild.Role, guildId uint64)
-	StoreRoles(roles []guild.Role, guildId uint64)
-	GetRole(id uint64) (guild.Role, bool)
-	GetRoles(guildId uint64, ids []uint64) (map[uint64]guild.Role, error)
-	GetGuildRoles(guildId uint64) []guild.Role
-	DeleteRole(roleId uint64)
-	DeleteGuildRoles(guildId uint64)
+	StoreRole(ctx context.Context, role guild.Role, guildId uint64) error
+	StoreRoles(ctx context.Context, roles []guild.Role, guildId uint64) error
+	GetRole(ctx context.Context, id uint64) (guild.Role, error)
+	GetRoles(ctx context.Context, guildId uint64, ids []uint64) (map[uint64]guild.Role, error)
+	GetGuildRoles(ctx context.Context, guildId uint64) ([]guild.Role, error)
+	DeleteRole(ctx context.Context, roleId uint64) error
+	DeleteGuildRoles(ctx context.Context, guildId uint64) error
 
-	StoreEmoji(emoji emoji.Emoji, guildId uint64)
-	StoreEmojis(emojis []emoji.Emoji, guildId uint64)
-	GetEmoji(id uint64) (emoji.Emoji, bool)
-	GetGuildEmojis(id uint64) []emoji.Emoji
-	DeleteEmoji(emojiId uint64)
+	StoreEmoji(ctx context.Context, emoji emoji.Emoji, guildId uint64) error
+	StoreEmojis(ctx context.Context, emojis []emoji.Emoji, guildId uint64) error
+	GetEmoji(ctx context.Context, id uint64) (emoji.Emoji, error)
+	GetGuildEmojis(ctx context.Context, id uint64) ([]emoji.Emoji, error)
+	DeleteEmoji(ctx context.Context, emojiId uint64) error
 
-	StoreVoiceState(voiceState guild.VoiceState)
-	StoreVoiceStates(voiceStates []guild.VoiceState)
-	GetVoiceState(userId, guildId uint64) (guild.VoiceState, bool)
-	GetGuildVoiceStates(guildId uint64) []guild.VoiceState
-	DeleteVoiceState(userId, guildId uint64)
+	StoreVoiceState(ctx context.Context, voiceState guild.VoiceState) error
+	StoreVoiceStates(ctx context.Context, voiceStates []guild.VoiceState) error
+	GetVoiceState(ctx context.Context, userId, guildId uint64) (guild.VoiceState, error)
+	GetGuildVoiceStates(ctx context.Context, guildId uint64) ([]guild.VoiceState, error)
+	DeleteVoiceState(ctx context.Context, userId, guildId uint64) error
 
-	StoreSelf(self user.User)
-	GetSelf() (user.User, bool)
+	StoreSelf(ctx context.Context, self user.User) error
+	GetSelf(ctx context.Context) (user.User, error)
 }
