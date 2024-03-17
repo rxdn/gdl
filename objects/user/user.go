@@ -6,6 +6,7 @@ type User struct {
 	Id            uint64        `json:"id,string"`
 	Username      string        `json:"username"`
 	Discriminator Discriminator `json:"discriminator"`
+	GlobalName    *string       `json:"global_name"`
 	Avatar        Avatar        `json:"avatar"`
 	Bot           bool          `json:"bot"`
 	MfaEnabled    bool          `json:"mfa_enabled"`
@@ -32,6 +33,14 @@ func (u *User) AvatarUrl(size int) string {
 	}
 
 	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%d/%s.%s?size=%d", u.Id, u.Avatar.String(), extension, size)
+}
+
+func (u *User) EffectiveName() string {
+	if u.GlobalName != nil && len(*u.GlobalName) > 0 {
+		return *u.GlobalName
+	}
+
+	return u.Username
 }
 
 func (u *User) Mention() string {
