@@ -1,26 +1,36 @@
 package permission
 
-import "github.com/rxdn/gdl/gateway"
+import (
+	"context"
+	"errors"
+	"github.com/rxdn/gdl/cache"
+	"github.com/rxdn/gdl/gateway"
+)
 
-func CanSelfInteractWith(shard *gateway.Shard, guildId, targetId uint64) bool {
-	self, found := shard.Cache.GetSelf()
-	if !found {
-		return false
+func CanSelfInteractWith(ctx context.Context, shard *gateway.Shard, guildId, targetId uint64) (bool, error) {
+	self, err := shard.Cache.GetSelf(ctx)
+	if err != nil {
+		if errors.Is(err, cache.ErrNotFound) {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
-
-	return CanInteractWith(shard, self.Id, guildId, targetId)
+	return CanInteractWith(ctx, shard, self.Id, guildId, targetId), nil
 }
 
-func CanInteractWith(shard *gateway.Shard, guildId, userId, targetId uint64) bool {
-	return GetHighestRolePosition(shard, guildId, userId) > GetHighestRolePosition(shard, guildId, targetId)
+func CanInteractWith(ctx context.Context, shard *gateway.Shard, guildId, userId, targetId uint64) bool {
+	return GetHighestRolePosition(ctx, shard, guildId, userId) > GetHighestRolePosition(ctx, shard, guildId, targetId)
 }
 
-func GetHighestRolePosition(shard *gateway.Shard, guildId, userId uint64) int {
-	member, err := shard.GetGuildMember(guildId, userId); if err != nil {
+func GetHighestRolePosition(ctx context.Context, shard *gateway.Shard, guildId, userId uint64) int {
+	member, err := shard.GetGuildMember(ctx, guildId, userId)
+	if err != nil {
 		return 0
 	}
 
-	roles, err := shard.GetGuildRoles(guildId); if err != nil {
+	roles, err := shard.GetGuildRoles(ctx, guildId)
+	if err != nil {
 		return 0
 	}
 
