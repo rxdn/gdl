@@ -56,6 +56,7 @@ func (u *User) ToCachedUser() CachedUser {
 	return CachedUser{
 		Username:      u.Username,
 		Discriminator: uint16(u.Discriminator),
+		GlobalName:    u.GlobalName,
 		Avatar:        u.Avatar.String(),
 		Bot:           u.Bot,
 		Flags:         u.Flags,

@@ -1,10 +1,12 @@
 package guild
 
 import (
+	"fmt"
 	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/guild/emoji"
 	"github.com/rxdn/gdl/objects/member"
+	"strings"
 	"time"
 )
 
@@ -54,6 +56,19 @@ type Guild struct {
 	ApproximatePresenceCount    int                       `json:"approximate_presence_count"` // Returned on GET /guild/:id
 	WelcomeScreen               WelcomeScreen             `json:"welcome_screen"`
 	Nsfw                        bool                      `json:"nsfw"`
+}
+
+func (g *Guild) IconUrl() string {
+	if g.Icon == "" {
+		return ""
+	}
+
+	extension := "png"
+	if strings.HasPrefix(g.Icon, "a_") {
+		extension = "gif"
+	}
+
+	return fmt.Sprintf("https://cdn.discordapp.com/icons/%d/%s.%s", g.Id, g.Icon, extension)
 }
 
 func (g *Guild) ToCachedGuild() (cached CachedGuild) {
