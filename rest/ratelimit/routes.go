@@ -210,4 +210,8 @@ const (
 	RouteGetFollowupMessage
 	RouteEditFollowupMessage
 	RouteDeleteFollowupMessage
+
+	// /applications/@me
+	RouteGetCurrentApplication
+	RouteEditCurrentApplication
 )
