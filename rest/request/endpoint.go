@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rxdn/gdl/rest/ratelimit"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,14 +39,27 @@ type ResponseWithContent struct {
 // figure out a better way to do this
 // token, request
 var (
-	hooks   []func(string, *http.Request)
-	hooksMu sync.RWMutex
+	preRequestHooks   []func(string, *http.Request)
+	preRequestHooksMu sync.RWMutex
+
+	postRequestHooks   []func(string, *http.Response)
+	postRequestHooksMu sync.RWMutex
 )
 
 func RegisterHook(hook func(string, *http.Request)) {
-	hooksMu.Lock()
-	hooks = append(hooks, hook)
-	hooksMu.Unlock()
+	RegisterPreRequestHook(hook)
+}
+
+func RegisterPreRequestHook(hook func(string, *http.Request)) {
+	preRequestHooksMu.Lock()
+	preRequestHooks = append(preRequestHooks, hook)
+	preRequestHooksMu.Unlock()
+}
+
+func RegisterPostRequestHook(hook func(string, *http.Response)) {
+	postRequestHooksMu.Lock()
+	postRequestHooks = append(postRequestHooks, hook)
+	postRequestHooksMu.Unlock()
 }
 
 // TODO: Allow users to specify custom timeouts
@@ -64,8 +77,6 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 	if e.RateLimiter != nil {
 		ch := make(chan error)
 		go e.RateLimiter.ExecuteCall(e.Route, ch)
-
-		fmt.Println(ctx.Deadline())
 
 		select {
 		case <-ctx.Done():
@@ -142,7 +153,7 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 	}
 
 	// Execute hooks
-	executeHooks(token, req)
+	executePreRequestHooks(token, req)
 
 	res, err := Client.Do(req)
 	if err != nil {
@@ -150,11 +161,13 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 	}
 	defer res.Body.Close()
 
+	executePostRequestHooks(token, res)
+
 	if e.RateLimiter != nil {
 		e.applyNewRatelimits(res.Header)
 	}
 
-	content, err := ioutil.ReadAll(res.Body)
+	content, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err, nil
 	}
@@ -210,11 +223,20 @@ func (e *Endpoint) applyNewRatelimits(header http.Header) {
 	}
 }
 
-func executeHooks(token string, req *http.Request) {
-	hooksMu.RLock()
-	defer hooksMu.RUnlock()
+func executePreRequestHooks(token string, req *http.Request) {
+	preRequestHooksMu.RLock()
+	defer preRequestHooksMu.RUnlock()
 
-	for _, hook := range hooks {
+	for _, hook := range preRequestHooks {
 		hook(token, req)
+	}
+}
+
+func executePostRequestHooks(token string, res *http.Response) {
+	postRequestHooksMu.RLock()
+	defer postRequestHooksMu.RUnlock()
+
+	for _, hook := range postRequestHooks {
+		hook(token, res)
 	}
 }
