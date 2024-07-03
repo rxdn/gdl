@@ -5,14 +5,20 @@ import (
 )
 
 type Role struct {
-	Id          uint64 `json:"id,string"`
-	Name        string `json:"name"`
-	Color       int    `json:"color"`
-	Hoist       bool   `json:"hoist"`
-	Position    int    `json:"position"`
-	Permissions uint64 `json:"permissions,string"`
-	Managed     bool   `json:"managed"`
-	Mentionable bool   `json:"mentionable"`
+	Id          uint64   `json:"id,string"`
+	Name        string   `json:"name"`
+	Color       int      `json:"color"`
+	Hoist       bool     `json:"hoist"`
+	Position    int      `json:"position"`
+	Permissions uint64   `json:"permissions,string"`
+	Managed     bool     `json:"managed"`
+	Mentionable bool     `json:"mentionable"`
+	Tags        RoleTags `json:"tags"`
+}
+
+type RoleTags struct {
+	BotId         *uint64 `json:"bot_id,string,omitempty"`
+	IntegrationId *uint64 `json:"integration_id,string,omitempty"`
 }
 
 func (r *Role) Mention() string {
