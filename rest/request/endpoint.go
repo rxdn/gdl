@@ -164,8 +164,6 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 	}
 	defer res.Body.Close()
 
-	executePostRequestHooks(res)
-
 	if e.RateLimiter != nil {
 		e.applyNewRatelimits(res.Header)
 	}
