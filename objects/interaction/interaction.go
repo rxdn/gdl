@@ -4,6 +4,7 @@ import (
 	"github.com/rxdn/gdl/objects"
 	"github.com/rxdn/gdl/objects/channel"
 	"github.com/rxdn/gdl/objects/channel/message"
+	"github.com/rxdn/gdl/objects/entitlement"
 	"github.com/rxdn/gdl/objects/interaction/component"
 	"github.com/rxdn/gdl/objects/member"
 	"github.com/rxdn/gdl/objects/user"
@@ -27,6 +28,7 @@ type InteractionMetadata struct {
 	AppPermissions uint64                    `json:"app_permissions,string"`
 	Locale         string                    `json:"locale"`
 	GuildLocale    string                    `json:"guild_locale"`
+	Entitlements   []entitlement.Entitlement `json:"entitlements"`
 }
 
 type InteractionType uint8

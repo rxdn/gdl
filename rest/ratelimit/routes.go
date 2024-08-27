@@ -214,4 +214,10 @@ const (
 	// /applications/@me
 	RouteGetCurrentApplication
 	RouteEditCurrentApplication
+
+	///applications/:id/entitlements
+	RouteListEntitlements
+	RouteConsumeEntitlement
+	RouteCreateTestEntitlement
+	RouteDeleteTestEntitlement
 )

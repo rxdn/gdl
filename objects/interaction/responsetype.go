@@ -12,4 +12,5 @@ const (
 	ResponseTypeUpdateMessage
 	ResponseTypeApplicationCommandAutoCompleteResult
 	ResponseTypeModal
+	ResponseTypePremiumRequired
 )

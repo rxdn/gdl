@@ -11,6 +11,9 @@ type Event interface {
 		ChannelUpdate |
 		ChannelDelete |
 		ChannelPinsUpdate |
+		EntitlementCreate |
+		EntitlementUpdate |
+		EntitlementDelete |
 		GuildCreate |
 		GuildUpdate |
 		GuildDelete |
@@ -58,6 +61,9 @@ var EventTypes = map[EventType]reflect.Type{
 	CHANNEL_UPDATE:                reflect.TypeOf(ChannelUpdate{}),
 	CHANNEL_DELETE:                reflect.TypeOf(ChannelDelete{}),
 	CHANNEL_PINS_UPDATE:           reflect.TypeOf(ChannelPinsUpdate{}),
+	ENTITLEMENT_CREATE:            reflect.TypeOf(EntitlementCreate{}),
+	ENTITLEMENT_UPDATE:            reflect.TypeOf(EntitlementUpdate{}),
+	ENTITLEMENT_DELETE:            reflect.TypeOf(EntitlementDelete{}),
 	GUILD_CREATE:                  reflect.TypeOf(GuildCreate{}),
 	GUILD_UPDATE:                  reflect.TypeOf(GuildUpdate{}),
 	GUILD_DELETE:                  reflect.TypeOf(GuildDelete{}),

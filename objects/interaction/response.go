@@ -152,3 +152,20 @@ func NewModalResponse(customId, title string, components []component.Component) 
 		},
 	}
 }
+
+// ========================================================
+// Premium Required Response
+// ========================================================
+type PremiumRequiredResponse struct {
+	Response
+	Data struct{} `json:"data"`
+}
+
+func NewPremiumRequiredResponse() PremiumRequiredResponse {
+	return PremiumRequiredResponse{
+		Response: Response{
+			Type: ResponseTypePremiumRequired,
+		},
+		Data: struct{}{},
+	}
+}
