@@ -21,7 +21,7 @@ type EntitlementQueryOptions struct {
 }
 
 func (o *EntitlementQueryOptions) Query() string {
-	var query url.Values
+	query := url.Values{}
 
 	if o.UserId != nil {
 		query.Add("user_id", strconv.FormatUint(*o.UserId, 10))

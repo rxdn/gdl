@@ -10,6 +10,7 @@ type Button struct {
 	CustomId string       `json:"custom_id"`
 	Style    ButtonStyle  `json:"style"`
 	Emoji    *emoji.Emoji `json:"emoji,omitempty"`
+	SkuId    *uint64      `json:"sku_id,omitempty"`
 	Url      *string      `json:"url,omitempty"`
 	Disabled bool         `json:"disabled"`
 }
@@ -26,6 +27,7 @@ const (
 	ButtonStyleSuccess
 	ButtonStyleDanger
 	ButtonStyleLink
+	ButtonStylePremium
 )
 
 func (b Button) MarshalJSON() ([]byte, error) {
