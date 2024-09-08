@@ -3,18 +3,17 @@ package user
 import "fmt"
 
 type User struct {
-	Id            uint64        `json:"id,string"`
-	Username      string        `json:"username"`
-	Discriminator Discriminator `json:"discriminator"`
-	GlobalName    *string       `json:"global_name"`
-	Avatar        Avatar        `json:"avatar"`
-	Bot           bool          `json:"bot"`
-	MfaEnabled    bool          `json:"mfa_enabled"`
-	Locale        string        `json:"locale"`
-	Verified      bool          `json:"verified"`
-	Email         string        `json:"email"`
-	Flags         uint32        `json:"flags"`
-	PremiumType   int           `json:"premium_type"`
+	Id          uint64  `json:"id,string"`
+	Username    string  `json:"username"`
+	GlobalName  *string `json:"global_name"`
+	Avatar      Avatar  `json:"avatar"`
+	Bot         bool    `json:"bot"`
+	MfaEnabled  bool    `json:"mfa_enabled"`
+	Locale      string  `json:"locale"`
+	Verified    bool    `json:"verified"`
+	Email       string  `json:"email"`
+	Flags       uint32  `json:"flags"`
+	PremiumType int     `json:"premium_type"`
 }
 
 // shortcut, ignores errors
@@ -47,19 +46,13 @@ func (u *User) Mention() string {
 	return fmt.Sprintf("<@%d>", u.Id)
 }
 
-// converts a discrim of 1 => 0001
-func (u *User) PadDiscriminator() string {
-	return fmt.Sprintf("%04d", u.Discriminator)
-}
-
 func (u *User) ToCachedUser() CachedUser {
 	return CachedUser{
-		Username:      u.Username,
-		Discriminator: uint16(u.Discriminator),
-		GlobalName:    u.GlobalName,
-		Avatar:        u.Avatar.String(),
-		Bot:           u.Bot,
-		Flags:         u.Flags,
-		PremiumType:   u.PremiumType,
+		Username:    u.Username,
+		GlobalName:  u.GlobalName,
+		Avatar:      u.Avatar.String(),
+		Bot:         u.Bot,
+		Flags:       u.Flags,
+		PremiumType: u.PremiumType,
 	}
 }
