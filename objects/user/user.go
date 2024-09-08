@@ -12,7 +12,7 @@ type User struct {
 	Locale      string  `json:"locale"`
 	Verified    bool    `json:"verified"`
 	Email       string  `json:"email"`
-	Flags       uint32  `json:"flags"`
+	Flags       uint64  `json:"flags"`
 	PremiumType int     `json:"premium_type"`
 }
 

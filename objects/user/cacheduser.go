@@ -7,7 +7,7 @@ type CachedUser struct {
 	GlobalName  *string `json:"global_name"`
 	Avatar      string  `json:"avatar"`
 	Bot         bool    `json:"bot"`
-	Flags       uint32  `json:"flags"`
+	Flags       uint64  `json:"flags"`
 	PremiumType int     `json:"premium_type"`
 }
 
