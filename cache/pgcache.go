@@ -641,6 +641,36 @@ func (c *PgCache) StoreChannels(ctx context.Context, channels []channel.Channel)
 	return err
 }
 
+func (c *PgCache) ReplaceChannels(ctx context.Context, guildId uint64, channels []channel.Channel) error {
+	if !c.options.Channels {
+		return nil
+	}
+
+	tx, err := c.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, queryDeleteGuildChannels, guildId); err != nil {
+		return err
+	}
+
+	for _, ch := range channels {
+		encoded, err := json.Marshal(ch.ToCachedChannel())
+		if err != nil {
+			return err
+		}
+
+		if _, err := tx.Exec(ctx, queryInsertChannel, ch.Id, ch.GuildId, string(encoded)); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (c *PgCache) GetChannel(ctx context.Context, channelId uint64) (channel.Channel, error) {
 	if !c.options.Channels {
 		return channel.Channel{}, ErrNotFound
