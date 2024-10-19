@@ -42,7 +42,7 @@ var (
 	preRequestHooks   []func(string, *http.Request)
 	preRequestHooksMu sync.RWMutex
 
-	postRequestHooks   []func(*http.Response)
+	postRequestHooks   []func(*http.Response, []byte)
 	postRequestHooksMu sync.RWMutex
 )
 
@@ -56,7 +56,7 @@ func RegisterPreRequestHook(hook func(string, *http.Request)) {
 	preRequestHooksMu.Unlock()
 }
 
-func RegisterPostRequestHook(hook func(*http.Response)) {
+func RegisterPostRequestHook(hook func(*http.Response, []byte)) {
 	postRequestHooksMu.Lock()
 	postRequestHooks = append(postRequestHooks, hook)
 	postRequestHooksMu.Unlock()
@@ -153,10 +153,11 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 	}
 
 	var res *http.Response
+	var content []byte
 
 	// Execute hooks
 	executePreRequestHooks(token, req)
-	defer executePostRequestHooks(res)
+	defer executePostRequestHooks(res, content)
 
 	res, err = Client.Do(req)
 	if err != nil {
@@ -168,7 +169,7 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 		e.applyNewRatelimits(res.Header)
 	}
 
-	content, err := io.ReadAll(res.Body)
+	content, err = io.ReadAll(res.Body)
 	if err != nil {
 		return err, nil
 	}
@@ -233,11 +234,11 @@ func executePreRequestHooks(token string, req *http.Request) {
 	}
 }
 
-func executePostRequestHooks(res *http.Response) {
+func executePostRequestHooks(res *http.Response, body []byte) {
 	postRequestHooksMu.RLock()
 	defer postRequestHooksMu.RUnlock()
 
 	for _, hook := range postRequestHooks {
-		hook(res)
+		hook(res, body)
 	}
 }
