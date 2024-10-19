@@ -157,7 +157,9 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 
 	// Execute hooks
 	executePreRequestHooks(token, req)
-	defer executePostRequestHooks(res, content)
+	defer func() {
+		executePostRequestHooks(res, content)
+	}()
 
 	res, err = Client.Do(req)
 	if err != nil {
