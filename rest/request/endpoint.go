@@ -152,6 +152,8 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 		req.Header.Set(key, value)
 	}
 
+	req.Header.Set("User-Agent", "DiscordBot (https://github.com/rxdn/gdl, 1.0.0)")
+
 	var res *http.Response
 	var content []byte
 
