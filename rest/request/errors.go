@@ -120,6 +120,14 @@ func (e *ApiV8Error) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (e *ApiV8Error) FirstErrorCode() interface{} {
+	if len(e.Errors) == 0 {
+		return ""
+	}
+
+	return e.Errors[0].Code
+}
+
 func deFieldError(fieldName string, data map[string]interface{}) (err FieldError) {
 	err.FieldName = fieldName
 	err.Code = data["code"]
