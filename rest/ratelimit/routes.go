@@ -220,4 +220,8 @@ const (
 	RouteConsumeEntitlement
 	RouteCreateTestEntitlement
 	RouteDeleteTestEntitlement
+
+	// /oauth2/
+	RouteOauth2TokenExchange
+	RouteOauth2TokenRevoke
 )

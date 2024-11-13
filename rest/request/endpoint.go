@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	BASE_URL             = "https://discord.com/api/v10"
+	BaseUrl              = "https://discord.com/api/v10"
 	AuditLogReasonHeader = "X-Audit-Log-Reason"
 )
 
@@ -71,7 +71,7 @@ var Client = http.Client{
 }
 
 func (e *Endpoint) Request(ctx context.Context, token string, body any, response any) (error, *ResponseWithContent) {
-	url := BASE_URL + e.Endpoint
+	url := BaseUrl + e.Endpoint
 
 	// Ratelimit
 	if e.RateLimiter != nil {
@@ -140,7 +140,8 @@ func (e *Endpoint) Request(ctx context.Context, token string, body any, response
 
 	if token != "" {
 		var header string
-		if !strings.HasPrefix(token, "Bot ") && !strings.HasPrefix(token, "Bearer ") {
+		if !strings.HasPrefix(token, "Bot ") && !strings.HasPrefix(token, "Bearer ") &&
+			!strings.HasPrefix(token, "Basic") {
 			header += "Bot "
 		}
 

@@ -6,6 +6,15 @@ import (
 	"strings"
 )
 
+type OAuthError struct {
+	ErrorCode        string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+func (e OAuthError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode, e.ErrorDescription)
+}
+
 type RestError struct {
 	StatusCode int
 	ApiError   ApiV8Error
