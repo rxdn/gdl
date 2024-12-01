@@ -3,6 +3,8 @@ package request
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/constraints"
+	"strconv"
 	"strings"
 )
 
@@ -44,7 +46,7 @@ func (r RestError) Error() string {
 }
 
 type ApiV8Error struct {
-	Code    interface{} // Can be int or string
+	Code    int
 	Errors  []FieldError
 	Message string
 }
@@ -60,70 +62,38 @@ func (e FieldError) Error() string {
 }
 
 func (e *ApiV8Error) UnmarshalJSON(data []byte) error {
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
 
-	e.Code = raw["code"]
-	if f, ok := e.Code.(float64); ok {
-		e.Code = int(f)
+	if err := deNum(raw, "code", &e.Code); err != nil {
+		return err
 	}
 
-	var ok bool
-	e.Message, ok = raw["message"].(string)
-	if !ok {
-		return fmt.Errorf("message was not a string")
+	if err := de(raw, "message", &e.Message); err != nil {
+		return err
 	}
 
-	errors, ok := raw["errors"].(map[string]interface{})
-	if ok { // Only 400s have this field
-		for fieldName, value := range errors {
-			value, ok := value.(map[string]interface{})
-			if !ok {
-				return fmt.Errorf("%s value is not an object", fieldName)
-			}
+	var errors map[string]any
+	if err := de(raw, "errors", &errors); err != nil {
+		return err
+	}
 
-			errors, ok := value["_errors"].([]interface{})
-			if ok { // Is object error
-				for _, err := range errors {
-					err, ok := err.(map[string]interface{})
-					if !ok {
-						return fmt.Errorf("%s _errors field value is not an object", fieldName)
-					}
-
-					e.Errors = append(e.Errors, deFieldError(fieldName, err))
-				}
-			} else { // Is array error
-				for i, entry := range value {
-					value, ok := entry.(map[string]interface{})
-					if !ok {
-						return fmt.Errorf("%s value is not an object", fieldName)
-					}
-
-					for fieldName, value := range value {
-						value, ok := value.(map[string]interface{})
-						if !ok {
-							return fmt.Errorf("%s value is not an object", fieldName)
-						}
-
-						errors, ok := value["_errors"].([]interface{})
-						if !ok {
-							return fmt.Errorf("%s array entry %s: _errors field is not an array", fieldName, i)
-						}
-
-						for _, err := range errors {
-							err, ok := err.(map[string]interface{})
-							if !ok {
-								return fmt.Errorf("%s _errors field value is not an object", fieldName)
-							}
-
-							e.Errors = append(e.Errors, deFieldError(fieldName, err))
-						}
-					}
-				}
-			}
+	for fieldName, value := range errors {
+		var inner map[string]any
+		if tmp, ok := value.(map[string]any); ok {
+			inner = tmp
+		} else {
+			return fmt.Errorf("%s value is not an object", fieldName)
 		}
+
+		fieldErrors, err := deArray(inner, fieldName)
+		if err != nil {
+			return err
+		}
+
+		e.Errors = fieldErrors
 	}
 
 	return nil
@@ -137,14 +107,92 @@ func (e *ApiV8Error) FirstErrorCode() interface{} {
 	return e.Errors[0].Code
 }
 
-func deFieldError(fieldName string, data map[string]interface{}) (err FieldError) {
-	err.FieldName = fieldName
-	err.Code = data["code"]
-	err.Message, _ = data["message"].(string)
-
-	if f, ok := err.Code.(float64); ok {
-		err.Code = int(f)
+func deArray(root map[string]any, fieldName string) ([]FieldError, error) {
+	_, isObject := root["_errors"]
+	if isObject {
+		return deObj(root, fieldName)
 	}
 
-	return
+	var fieldErrors []FieldError
+	for key, value := range root {
+		var inner map[string]any
+		if tmp, ok := value.(map[string]any); ok {
+			inner = tmp
+		} else {
+			return nil, fmt.Errorf("%s value is not an object", key)
+		}
+
+		var innerFieldName string
+		if _, err := strconv.Atoi(key); err == nil {
+			innerFieldName = fmt.Sprintf("%s[%s]", fieldName, key)
+		} else {
+			innerFieldName = fmt.Sprintf("%s.%s", fieldName, key)
+		}
+
+		innerErrors, err := deArray(inner, innerFieldName)
+		if err != nil {
+			return nil, err
+		}
+
+		fieldErrors = append(fieldErrors, innerErrors...)
+	}
+
+	return fieldErrors, nil
+}
+
+func deObj(root map[string]any, fieldName string) ([]FieldError, error) {
+	var errors []any
+	if err := de(root, "_errors", &errors); err != nil {
+		return nil, err
+	}
+
+	var fieldErrors []FieldError
+	for _, err := range errors {
+		var inner map[string]any
+		if tmp, ok := err.(map[string]any); ok {
+			inner = tmp
+		} else {
+			return nil, fmt.Errorf("%s _errors field value is not an object", fieldName)
+		}
+
+		var fieldError FieldError
+		fieldError.FieldName = fieldName
+
+		if err := de(inner, "code", &fieldError.Code); err != nil {
+			return nil, err
+		}
+
+		if err := de(inner, "message", &fieldError.Message); err != nil {
+			return nil, err
+		}
+
+		fieldErrors = append(fieldErrors, fieldError)
+	}
+
+	return fieldErrors, nil
+}
+
+func deNum[T constraints.Integer | constraints.Float](obj map[string]interface{}, key string, v *T) error {
+	var f float64
+	if err := de(obj, key, &f); err != nil {
+		return err
+	}
+
+	*v = T(f)
+	return nil
+}
+
+func de[T any](obj map[string]interface{}, key string, v *T) error {
+	value, ok := obj[key]
+	if !ok {
+		return fmt.Errorf("%s was missing", key)
+	}
+
+	result, ok := value.(T)
+	if !ok {
+		return fmt.Errorf("%s was not a %T; got a %T", key, v, value)
+	}
+
+	*v = result
+	return nil
 }
