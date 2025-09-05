@@ -27,7 +27,7 @@ type CachedGuild struct {
 	WidgetEnabled               bool                      `json:"widget_enabled"`
 	WidgetChannelId             objects.NullableSnowflake `json:"widget_channel_id"`
 	SystemChannelId             objects.NullableSnowflake `json:"system_channel_id"`
-	SystemChannelFlags          uint8                     `json:"system_channel_flags"`
+	SystemChannelFlags          uint16                     `json:"system_channel_flags"`
 	RulesChannelId              objects.NullableSnowflake `json:"rules_channel_id,omitempty"`
 	JoinedAt                    time.Time                 `json:"joined_at"`
 	Large                       bool                      `json:"large"`
